@@ -2,16 +2,11 @@ package forms
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/google/uuid"
 
 	"github.com/asaskevich/govalidator"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
-)
-
-var (
-	ErrUnableReadGrpcMetadata          = errors.New("unable to read grpc metadata")
-	ErrUnableGetWalletUUIDFromMetadata = errors.New("unable to get wallet uuid from metadata")
 )
 
 type GetDerivationAddressForm struct {
@@ -28,9 +23,19 @@ type GetDerivationAddressForm struct {
 func (f *GetDerivationAddressForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.DerivationAddressRequest,
 ) (valid bool, err error) {
+	if req.WalletIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
+	}
 	f.WalletUUID = req.WalletIdentity.WalletUUID
+
+	if req.MnemonicIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "MnemonicWallet identity")
+	}
 	f.MnemonicWalletUUID = req.MnemonicIdentity.WalletUUID
 
+	if req.AddressIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity")
+	}
 	f.AccountIndex = req.AddressIdentity.AccountIndex
 	f.InternalIndex = req.AddressIdentity.InternalIndex
 	f.AddressIndex = req.AddressIdentity.AddressIndex

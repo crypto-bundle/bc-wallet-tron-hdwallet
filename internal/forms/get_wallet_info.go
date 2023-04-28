@@ -2,6 +2,7 @@ package forms
 
 import (
 	"context"
+	"fmt"
 
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
@@ -17,6 +18,9 @@ type GetWalletInfoForm struct {
 func (f *GetWalletInfoForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.GetWalletInfoRequest,
 ) (valid bool, err error) {
+	if req.WalletIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
+	}
 	f.WalletUUID = req.WalletIdentity.WalletUUID
 
 	_, err = govalidator.ValidateStruct(f)

@@ -2,6 +2,7 @@ package forms
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 
 	"github.com/asaskevich/govalidator"
@@ -23,7 +24,14 @@ type DerivationAddressByRangeForm struct {
 func (f *DerivationAddressByRangeForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.DerivationAddressByRangeRequest,
 ) (valid bool, err error) {
+	if req.WalletIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
+	}
 	f.WalletUUID = req.WalletIdentity.WalletUUID
+
+	if req.MnemonicIdentity == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "MnemonicWallet identity")
+	}
 	f.MnemonicWalletUUID = req.MnemonicIdentity.WalletUUID
 
 	f.AccountIndex = req.AccountIndex
