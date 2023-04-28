@@ -95,6 +95,10 @@ vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/updater \
   NATS_PASSWORD=password
 ```
 
+## Contributors
+
+* Author and maintainer - [@gudron (Alex V Kotelnikov)](https://github.com/gudron)
+
 ## Licence
 
 **bc-wallet-tron-hdwallet** has a proprietary license.
