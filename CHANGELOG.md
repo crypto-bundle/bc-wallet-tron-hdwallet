@@ -5,7 +5,7 @@
 ### Changed
 
 #### Switching to a proprietary license.
-License of **bc-wallet-tron-hdwallet** repository changed to proprietary.
+License of **bc-wallet-tron-hdwallet** repository changed to proprietary - commit revision number **323a3a909a30e3ff455672da1a7bd630e936c9e4**.
 
 Origin repository - https://github.com/crypto-bundle/bc-wallet-tron-hdwallet
 
