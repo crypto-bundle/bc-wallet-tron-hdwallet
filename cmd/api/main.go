@@ -1,50 +1,26 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package main
 
 import (
 	"context"
-	commonRedis "github.com/crypto-bundle/bc-wallet-common-lib-redis/pkg/redis"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
-	grpcHandlers "github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/grpc"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_data"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_manager"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/config"
+	grpcHandlers "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/grpc"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_data"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_manager"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api"
 
-	commonHealthcheck "github.com/crypto-bundle/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
-	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
-	commonPostgres "github.com/crypto-bundle/bc-wallet-common-lib-postgres/pkg/postgres"
-	commonNats "github.com/crypto-bundle/bc-wallet-common/pkg/nats"
+	commonHealthcheck "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
+	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
+	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
+	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
+	commonRedis "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis/pkg/redis"
 
 	_ "github.com/mailru/easyjson/gen"
 	"go.uber.org/zap"
@@ -109,11 +85,11 @@ func main() {
 		loggerEntry.Fatal(err.Error(), zap.Error(err))
 	}
 
-	natsSvc, err := commonNats.NewConnection(ctx, appCfg)
+	natsConnSvc := commonNats.NewConnection(ctx, appCfg, loggerEntry)
+	err = natsConnSvc.Connect()
 	if err != nil {
 		loggerEntry.Fatal(err.Error(), zap.Error(err))
 	}
-	natsConn := natsSvc.GetConnection()
 
 	redisSvc := commonRedis.NewConnection(ctx, appCfg, loggerEntry)
 	if err != nil {
@@ -128,7 +104,7 @@ func main() {
 
 	walletDataSrv := wallet_data.NewService(loggerEntry, pgConn)
 	mnemonicWalletDataSrv, err := mnemonic_wallet_data.NewService(loggerEntry, appCfg,
-		pgConn, redisClient, natsConn)
+		pgConn, redisClient, natsConnSvc)
 	if err != nil {
 		loggerEntry.Fatal(err.Error(), zap.Error(err))
 	}

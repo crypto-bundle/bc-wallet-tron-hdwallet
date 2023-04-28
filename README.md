@@ -97,4 +97,6 @@ vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/updater \
 
 ## Licence
 
-bc-wallet-tron-hdwallet is licensed under the [MIT](./LICENSE) License.
+**bc-wallet-tron-hdwallet** has a proprietary license.
+
+Switched to proprietary license from MIT - [CHANGELOG.MD - v0.0.24](./CHANGELOG.md)

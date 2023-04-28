@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package hdwallet_api;
 
-option go_package = "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc";
+option go_package = "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc";
 
 enum WalletMakerStrategy {
   PLACEHOLDER_STRATEGY_TYPE = 0;

@@ -2,8 +2,8 @@ package wallet_data
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
 	"github.com/google/uuid"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
 )
 
 type dbStoreService interface {

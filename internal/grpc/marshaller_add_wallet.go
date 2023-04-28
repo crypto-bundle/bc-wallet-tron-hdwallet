@@ -1,9 +1,9 @@
 package grpc
 
 import (
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
 
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 )
 
 func (m *grpcMarshaller) MarshallCreateWalletData(

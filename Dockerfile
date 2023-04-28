@@ -3,7 +3,7 @@ FROM golang:1.19-alpine AS gobuild
 ENV GO111MODULE on
 ENV GOSUMDB off
 # add go-base repo to exceptions as a private repository.
-ENV GOPRIVATE $GOPRIVATE,github.com/crypto-bundle
+ENV GOPRIVATE $GOPRIVATE,gitlab.heronodes.io/bc-platform
 
 # add private github token
 ARG GITHUB_TOKEN

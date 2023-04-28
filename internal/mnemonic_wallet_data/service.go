@@ -3,18 +3,19 @@ package mnemonic_wallet_data
 import (
 	"context"
 
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/nats_store"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/pg_store"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/redis_store"
+	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
 
-	commonPostgres "github.com/crypto-bundle/bc-wallet-common-lib-postgres/pkg/postgres"
-	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/nats_store"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/pg_store"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data/redis_store"
+
+	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
+	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )
 
@@ -161,7 +162,7 @@ func NewService(logger *zap.Logger,
 	configSvc configurationService,
 	pgConn *commonPostgres.Connection,
 	redisClient *redis.Client,
-	natsConn *nats.Conn,
+	natsConn *commonNats.Connection,
 ) (*Service, error) {
 	l := logger.Named("mnemonic_wallet_data.service")
 	persistentStoreSrv := pg_store.NewPostgresStore(logger, pgConn)
@@ -171,7 +172,7 @@ func NewService(logger *zap.Logger,
 		return nil, err
 	}
 
-	natsJetSteamContext, err := natsConn.JetStream()
+	natsJetSteamContext, err := natsConn.GetConnection().JetStream()
 	if err != nil {
 		return nil, err
 	}

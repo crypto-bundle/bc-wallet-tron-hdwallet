@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
 
 	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/google/uuid"

@@ -1,40 +1,16 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package config
 
 import (
+	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
 	"time"
 
-	commonEnvConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/envconfig"
-	commonHealthcheck "github.com/crypto-bundle/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
-	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
-	commonPostgres "github.com/crypto-bundle/bc-wallet-common-lib-postgres/pkg/postgres"
-	commonRedis "github.com/crypto-bundle/bc-wallet-common-lib-redis/pkg/redis"
-	commonVault "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault"
-	commonVaultTokenClient "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault/client/token"
-	commonNatsConfig "github.com/crypto-bundle/bc-wallet-common/pkg/nats/config"
+	commonConfig "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config/pkg/config"
+	commonHealthcheck "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
+	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
+	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
+	commonRedis "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis/pkg/redis"
+	commonVault "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault"
+	commonVaultTokenClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault/client/token"
 )
 
 type VaultWrappedConfig struct {
@@ -47,12 +23,12 @@ type Config struct {
 	// -------------------
 	// External common configs
 	// -------------------
-	*commonEnvConfig.BaseConfig
+	*commonConfig.BaseConfig
 	*commonLogger.LoggerConfig
 	*commonHealthcheck.HealthcheckHTTPConfig
 	*VaultWrappedConfig
 	*commonPostgres.PostgresConfig
-	*commonNatsConfig.NatsConfig
+	*commonNats.NatsConfig
 	*commonRedis.RedisConfig
 	// -------------------
 	// Internal configs

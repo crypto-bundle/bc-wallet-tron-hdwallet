@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
 	"time"
 
 	"github.com/google/uuid"
