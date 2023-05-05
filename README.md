@@ -13,6 +13,49 @@ Service has a GRPC-api - api doc [here](./docs/hdwallet_api/hdwallet_proto.md)
 
 Mnemonic wallets stored in Postgresql database as encrypted Hashicord **Vault** data
 
+## Requirements
+
+### k8s
+Helm deploy describes in [./deploy/helm/api](./deploy/helm/api)
+
+### PostgreSQL
+* Database: bc-wallet-tron-hdwallet
+* Users:
+  * bc-wallet-tron-hdwallet-api - SELECT, INSERT, UPDATE privileges
+  * bc-wallet-tron-hdwallet-migrator - CREATE, DELETE, DROP, SELECT, INSERT, UPDATE privileges
+  * bc-wallet-tron-hdwallet-updater - CREATE, DELETE, DROP, SELECT, INSERT, UPDATE privileges
+
+### Nats
+* Users:
+  * bc-wallet-tron-hdwallet-api
+  * bc-wallet-tron-hdwallet-migrator
+  * bc-wallet-tron-hdwallet-updater
+* KV buckets:
+  * <STAGE_PREFIX>__BC_WALLET_TRON_HDWALLET__MNEMONIC-WALLETS
+
+### Vault
+* Users:
+  * bc-wallet-tron-hdwallet-api
+  * bc-wallet-tron-hdwallet-migrator
+  * bc-wallet-tron-hdwallet-updater
+* Tokens:
+  * vault token create -display-name bc-wallet-tron-hdwallet-api
+  * vault token create -display-name bc-wallet-tron-hdwallet-migrator
+  * vault token create -display-name bc-wallet-tron-hdwallet-updater
+* Buckets:
+    * kv/crypto-bundle/bc-wallet-tron-hdwallet/commo
+    * kv/crypto-bundle/bc-wallet-tron-hdwallet/api
+    * kv/crypto-bundle/bc-wallet-tron-hdwallet/migrator
+    * kv/crypto-bundle/bc-wallet-tron-hdwallet/updater
+* Transit
+  * vault write -f transit/keys/crypto-bundle/bc-wallet-tron-hdwallet
+
+### k8s secrets
+* Vault tokens:
+    * vault_bc_wallet_tron_hdwallet_api_user_token
+    * vault_bc_wallet_tron_hdwallet_migrator_user_token
+    * vault_bc_wallet_tron_hdwallet_updater_user_token
+
 ## Deployment
 
 ### K8s
