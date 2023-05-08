@@ -2,10 +2,13 @@ package wallet_manager
 
 import (
 	"context"
+
 	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
-	"github.com/google/uuid"
+
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

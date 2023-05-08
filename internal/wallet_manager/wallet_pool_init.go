@@ -2,9 +2,11 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/google/uuid"
+
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 

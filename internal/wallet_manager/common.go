@@ -2,13 +2,14 @@ package wallet_manager
 
 import (
 	"context"
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
-	"github.com/google/uuid"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
 	"time"
 
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+
+	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
+	"github.com/google/uuid"
 )
 
 type configService interface {

@@ -6,8 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/ethereum/go-ethereum/crypto"
 	"sync"
 	"time"
 
@@ -16,6 +14,8 @@ import (
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
 
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/ethereum/go-ethereum/crypto"
 	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
