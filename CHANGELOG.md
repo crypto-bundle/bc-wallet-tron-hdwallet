@@ -20,7 +20,8 @@ The commit is signed with the key -
 gudron2s@gmail.com
 E456BB23A18A9347E952DBC6655133DD561BF3EC
 
-## [v0.0.25] - 14.05.2023
+## [v0.0.26] - 14.05.2023
 
 ### Changed
 * Docker container build
+* Fixed Nats-kv cache bucket bugs
