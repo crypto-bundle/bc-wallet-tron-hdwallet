@@ -19,4 +19,6 @@ const (
 	HDWalletInternalIndexTag = "hd_wallet_internal_index"
 	HDWalletAddressIndexTag  = "hd_wallet_address_index"
 	HDWalletAddressTag       = "hd_wallet_address"
+
+	NatsCacheBucketNameTag = "nats_kv_bucket_name"
 )

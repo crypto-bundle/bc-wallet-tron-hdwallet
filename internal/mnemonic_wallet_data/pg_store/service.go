@@ -182,7 +182,6 @@ func (s *pgRepository) GetMnemonicWalletsByUUIDList(ctx context.Context,
 			return err
 		}
 		defer returnedRows.Close()
-
 		wallets = make([]*entities.MnemonicWallet, 0)
 
 		for returnedRows.Next() {

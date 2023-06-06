@@ -142,11 +142,27 @@ func NewNatsStore(logger *zap.Logger,
 
 	kvBucket, err := natsConn.KeyValue(bucketName)
 	if err != nil {
-		if errors.Is(err, originNats.ErrBucketNotFound) {
-			logger.Error("nats kv bucket not found. plz create it", zap.Error(err))
+		if !errors.Is(err, originNats.ErrBucketNotFound) {
+			return nil, err
 		}
 
-		return nil, err
+		logger.Error("nats kv bucket not found. lets create it", zap.Error(err),
+			zap.String(app.NatsCacheBucketNameTag, bucketName))
+
+		kvStore, createErr := natsConn.CreateKeyValue(&originNats.KeyValueConfig{
+			Bucket:   bucketName,
+			History:  3,
+			Replicas: 1,
+			Storage:  originNats.MemoryStorage,
+		})
+		if createErr != nil {
+			logger.Error("unable to create kv-bucket", zap.Error(createErr),
+				zap.String(app.NatsCacheBucketNameTag, bucketName))
+
+			return nil, createErr
+		}
+
+		kvBucket = kvStore
 	}
 
 	return &natsStore{
