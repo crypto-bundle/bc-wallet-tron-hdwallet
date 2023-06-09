@@ -25,3 +25,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ### Changed
 * Docker container build
 * Fixed Nats-kv cache bucket bugs
+
+## [v0.0.27] - 09.06.2023
+### Added 
+* Logs in main.go

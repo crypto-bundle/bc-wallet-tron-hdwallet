@@ -82,31 +82,34 @@ func main() {
 	pgConn := commonPostgres.NewConnection(context.Background(), appCfg, loggerEntry)
 	_, err = pgConn.Connect()
 	if err != nil {
-		loggerEntry.Fatal(err.Error(), zap.Error(err))
+		loggerEntry.Fatal("unable to connect to postgresql", zap.Error(err))
 	}
+	loggerEntry.Info("postgresql connected")
 
 	natsConnSvc := commonNats.NewConnection(ctx, appCfg, loggerEntry)
 	err = natsConnSvc.Connect()
 	if err != nil {
-		loggerEntry.Fatal(err.Error(), zap.Error(err))
+		loggerEntry.Fatal("unable to connect to nats", zap.Error(err))
 	}
+	loggerEntry.Info("nats connected")
 
 	redisSvc := commonRedis.NewConnection(ctx, appCfg, loggerEntry)
 	if err != nil {
-		loggerEntry.Fatal(err.Error(), zap.Error(err))
+		loggerEntry.Fatal("unable create redis connection", zap.Error(err))
 	}
 
 	redisConn, err := redisSvc.Connect(ctx)
 	if err != nil {
-		loggerEntry.Fatal(err.Error(), zap.Error(err))
+		loggerEntry.Fatal("unable to connect to redis", zap.Error(err))
 	}
 	redisClient := redisConn.GetClient()
+	loggerEntry.Info("redis connected")
 
 	walletDataSrv := wallet_data.NewService(loggerEntry, pgConn)
 	mnemonicWalletDataSrv, err := mnemonic_wallet_data.NewService(loggerEntry, appCfg,
 		pgConn, redisClient, natsConnSvc)
 	if err != nil {
-		loggerEntry.Fatal(err.Error(), zap.Error(err))
+		loggerEntry.Fatal("unable to create mnemonic wallet data service", zap.Error(err))
 	}
 
 	mnemonicGenerator := mnemonic.NewMnemonicGenerator(loggerEntry,
