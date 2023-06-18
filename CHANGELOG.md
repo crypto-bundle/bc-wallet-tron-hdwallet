@@ -29,3 +29,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ## [v0.0.27] - 09.06.2023
 ### Added 
 * Logs in main.go
+
+## [v0.0.28] - 13.06.2023
+### Fixed
+* Create wallet bug. Bug in restoration from cache MnemonicWalletItem entity
