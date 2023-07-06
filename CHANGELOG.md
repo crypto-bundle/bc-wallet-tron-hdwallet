@@ -33,3 +33,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ## [v0.0.28] - 13.06.2023
 ### Fixed
 * Create wallet bug. Bug in restoration from cache MnemonicWalletItem entity
+
+## [v0.0.29] - 06.07.2023
+### Fixed
+* Application can't process init stage with empty wallets table

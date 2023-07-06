@@ -78,6 +78,10 @@ func (pi *poolInitializer) loadWallets(ctx context.Context) error {
 }
 
 func (pi *poolInitializer) prepareMnemonicUnits(_ context.Context) error {
+	if len(pi.mnemonicItems) == 0 {
+		return nil
+	}
+	
 	groupedByWalletUUID := make(map[uuid.UUID][]walletPoolMnemonicUnitService, len(pi.walletUUIDList))
 
 	// prepare map of mnemonic units grouped by wallet uuid
@@ -105,6 +109,10 @@ func (pi *poolInitializer) prepareMnemonicUnits(_ context.Context) error {
 
 // prepareWalletPoolUnits is method for create and save in memory wallet pool units
 func (pi *poolInitializer) prepareWalletPoolUnits(_ context.Context) error {
+	if len(pi.wallets) == 0 {
+		return nil
+	}
+
 	pi.walletUnits = make(map[uuid.UUID]WalletPoolUnitService, len(pi.wallets))
 
 	for i := 0; i != len(pi.wallets); i++ {
