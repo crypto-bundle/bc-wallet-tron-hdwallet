@@ -3,6 +3,7 @@ package hdwallet_api
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/credentials/insecure"
 
 	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
@@ -33,7 +34,13 @@ type Client struct {
 // Init bc-wallet-tron-hdwallet GRPC-client service
 // nolint:revive // fixme (autofix)
 func (s *Client) Init(ctx context.Context) error {
-	options := commonGRPCClient.DefaultDialOptions()
+	options := []originGRPC.DialOption{
+		originGRPC.WithTransportCredentials(insecure.NewCredentials()),
+		// grpc.WithContextDialer(Dialer), // use it if u need load balancing via dns
+		originGRPC.WithBlock(),
+		originGRPC.WithKeepaliveParams(commonGRPCClient.DefaultKeepaliveClientOptions()),
+		originGRPC.WithChainUnaryInterceptor(commonGRPCClient.DefaultInterceptorsOptions()...),
+	}
 	msgSizeOptions := originGRPC.WithDefaultCallOptions(
 		originGRPC.MaxCallRecvMsgSize(commonGRPCClient.DefaultClientMaxReceiveMessageSize),
 		originGRPC.MaxCallSendMsgSize(commonGRPCClient.DefaultClientMaxSendMessageSize),

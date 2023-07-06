@@ -33,7 +33,7 @@ func (s *Service) Init(ctx context.Context) error {
 
 	loadedWallets := s.walletPoolInitializerSrv.GetWalletPoolUnits()
 	if loadedWallets != nil {
-		err = s.walletPoolSrv.SetWalletUnits(ctx, s.walletPoolInitializerSrv.GetWalletPoolUnits())
+		err = s.walletPoolSrv.SetWalletUnits(ctx, loadedWallets)
 		if err != nil {
 			return err
 		}
