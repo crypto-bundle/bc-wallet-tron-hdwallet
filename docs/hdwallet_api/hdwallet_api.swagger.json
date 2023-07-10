@@ -34,6 +34,10 @@
         "MnemonicIdentity": {
           "$ref": "#/definitions/hdwallet_apiMnemonicWalletIdentity"
         },
+        "AddressIdentitiesCount": {
+          "type": "string",
+          "format": "uint64"
+        },
         "AddressIdentities": {
           "type": "array",
           "items": {
@@ -121,6 +125,27 @@
         },
         "WalletHash": {
           "type": "string"
+        }
+      }
+    },
+    "hdwallet_apiRangeRequestUnit": {
+      "type": "object",
+      "properties": {
+        "AccountIndex": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "InternalIndex": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "AddressIndexFrom": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "AddressIndexTo": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

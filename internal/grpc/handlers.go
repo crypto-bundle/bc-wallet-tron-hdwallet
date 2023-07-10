@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"sync"
 
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/config"
@@ -69,13 +70,17 @@ func New(ctx context.Context,
 	loggerSrv *zap.Logger,
 
 	walletSrv walletManagerService,
-) (pbApi.HdWalletApiServer, error) {
+) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
 		zap.String(app.ApplicationNameTag, app.ApplicationName),
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
-	marshallerSrv := newGRPCMarshaller(loggerSrv)
+	addrRespPool := &sync.Pool{New: func() any {
+		return new(pbApi.DerivationAddressIdentity)
+	}}
+
+	marshallerSrv := newGRPCMarshaller(loggerSrv, addrRespPool)
 
 	return &grpcServerHandle{
 		UnimplementedHdWalletApiServer: &pbApi.UnimplementedHdWalletApiServer{},
@@ -84,11 +89,12 @@ func New(ctx context.Context,
 		walletSrv:     walletSrv,
 		marshallerSrv: marshallerSrv,
 
-		addNewWalletHandler:                MakeAddNewWalletHandler(l, walletSrv, marshallerSrv),
-		getDerivationAddressHandler:        MakeGetDerivationAddressHandler(l, walletSrv, marshallerSrv),
-		getEnabledWalletsHandler:           MakeGetEnabledWalletsHandler(l, walletSrv, marshallerSrv),
-		getDerivationAddressByRangeHandler: MakeGetDerivationAddressByRangeHandler(l, walletSrv, marshallerSrv),
-		signTransactionHandle:              MakeSignTransactionsHandler(l, walletSrv, marshallerSrv),
-		getWalletInfoHandler:               MakeGetWalletInfoHandler(l, walletSrv, marshallerSrv),
-	}, nil
+		addNewWalletHandler:         MakeAddNewWalletHandler(l, walletSrv, marshallerSrv),
+		getDerivationAddressHandler: MakeGetDerivationAddressHandler(l, walletSrv, marshallerSrv, addrRespPool),
+		getEnabledWalletsHandler:    MakeGetEnabledWalletsHandler(l, walletSrv, marshallerSrv),
+		getDerivationAddressByRangeHandler: MakeGetDerivationAddressByRangeHandler(l, walletSrv,
+			marshallerSrv, addrRespPool),
+		signTransactionHandle: MakeSignTransactionsHandler(l, walletSrv, marshallerSrv),
+		getWalletInfoHandler:  MakeGetWalletInfoHandler(l, walletSrv, marshallerSrv),
+	}
 }

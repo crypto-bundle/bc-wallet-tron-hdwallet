@@ -4,7 +4,6 @@ import (
 	"context"
 	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/forms"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -31,7 +30,7 @@ func (h *GetWalletInfoHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &forms.GetWalletInfoForm{}
+	vf := &GetWalletInfoForm{}
 	valid, err := vf.LoadAndValidate(ctx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))

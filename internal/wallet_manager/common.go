@@ -61,11 +61,8 @@ type WalletPoolUnitService interface {
 	) (string, error)
 	GetAddressesByPathByRange(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
-		accountIndex uint32,
-		internalIndex uint32,
-		addressIndexFrom uint32,
-		addressIndexTo uint32,
-		marshallerCallback func(addressIdx, position uint32, address string),
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 	SignTransaction(ctx context.Context,
 		mnemonicUUID uuid.UUID,
@@ -88,11 +85,8 @@ type walletPoolMnemonicUnitService interface {
 		account, change, index uint32,
 	) (string, error)
 	GetAddressesByPathByRange(ctx context.Context,
-		accountIndex uint32,
-		internalIndex uint32,
-		addressIndexFrom uint32,
-		addressIndexTo uint32,
-		marshallerCallback func(addressIdx, position uint32, address string),
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 	SignTransaction(ctx context.Context,
 		account, change, index uint32,
@@ -125,11 +119,8 @@ type walletPoolService interface {
 	GetAddressesByPathByRange(ctx context.Context,
 		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,
-		accountIndex uint32,
-		internalIndex uint32,
-		addressIndexFrom uint32,
-		addressIndexTo uint32,
-		marshallerCallback func(addressIdx, position uint32, address string),
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 	GetWalletByUUID(ctx context.Context, walletUUID uuid.UUID) (*types.PublicWalletData, error)
 	GetEnabledWallets(ctx context.Context) ([]*types.PublicWalletData, error)

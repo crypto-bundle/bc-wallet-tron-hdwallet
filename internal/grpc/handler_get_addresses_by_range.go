@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/forms"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
 	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
@@ -24,7 +23,7 @@ type GetDerivationAddressByRangeHandler struct {
 	l             *zap.Logger
 	walletSrv     walletManagerService
 	marshallerSrv marshallerService
-	respPool      sync.Pool
+	respPool      *sync.Pool
 }
 
 type respAddrList []*pbApi.DerivationAddressIdentity
@@ -44,7 +43,7 @@ func (h *GetDerivationAddressByRangeHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &forms.DerivationAddressByRangeForm{}
+	vf := &derivationAddressByRangeForm{}
 	valid, err := vf.LoadAndValidate(ctx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))
@@ -75,20 +74,19 @@ func (h *GetDerivationAddressByRangeHandler) Handle(ctx context.Context,
 }
 
 func (h *GetDerivationAddressByRangeHandler) processRequest(ctx context.Context,
-	vf *forms.DerivationAddressByRangeForm,
+	vf *derivationAddressByRangeForm,
 	walletPubData *types.PublicWalletData,
 	mnemoWalletData *types.PublicMnemonicWalletData,
 ) (*pbApi.DerivationAddressByRangeResponse, error) {
 	var err error
 
-	rangeSize := (vf.AddressIndexTo - vf.AddressIndexFrom) + 1
-	filedData := make([]*pbApi.DerivationAddressIdentity, rangeSize)
+	filedData := make([]*pbApi.DerivationAddressIdentity, vf.RangeSize)
 
-	marshallerCallback := func(addressIdx, position uint32, address string) {
+	marshallerCallback := func(accountIndex, internalIndex, addressIdx, position uint32, address string) {
 		addressEntity := h.respPool.Get().(*pbApi.DerivationAddressIdentity)
 
-		addressEntity.AccountIndex = vf.AccountIndex
-		addressEntity.InternalIndex = vf.AccountIndex
+		addressEntity.AccountIndex = accountIndex
+		addressEntity.InternalIndex = internalIndex
 		addressEntity.AddressIndex = addressIdx
 		addressEntity.Address = address
 
@@ -97,15 +95,15 @@ func (h *GetDerivationAddressByRangeHandler) processRequest(ctx context.Context,
 	}
 
 	err = h.walletSrv.GetAddressesByPathByRange(ctx, vf.WalletUUIDRaw, vf.MnemonicWalletUUIDRaw,
-		vf.AccountIndex, vf.InternalIndex,
-		vf.AddressIndexFrom, vf.AddressIndexTo, marshallerCallback)
+		vf, marshallerCallback)
 	if err != nil {
 		h.l.Error("unable get derivative addresses by range", zap.Error(err))
 
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	response, err := h.marshallerSrv.MarshallGetAddressByRange(walletPubData, mnemoWalletData, filedData)
+	response, err := h.marshallerSrv.MarshallGetAddressByRange(walletPubData, mnemoWalletData,
+		filedData, uint64(vf.RangeSize))
 	if err != nil {
 		h.l.Error("unable to marshall get addresses data", zap.Error(err))
 		return nil, status.Error(codes.Internal, err.Error())
@@ -117,7 +115,7 @@ func (h *GetDerivationAddressByRangeHandler) processRequest(ctx context.Context,
 				h.respPool.Put(filedData[i])
 			}
 		}(clearedSize)
-	}(rangeSize)
+	}(vf.RangeSize)
 
 	return response, nil
 }
@@ -125,13 +123,12 @@ func (h *GetDerivationAddressByRangeHandler) processRequest(ctx context.Context,
 func MakeGetDerivationAddressByRangeHandler(loggerEntry *zap.Logger,
 	walletSrv walletManagerService,
 	marshallerSrv marshallerService,
+	pbAddrPool *sync.Pool,
 ) *GetDerivationAddressByRangeHandler {
 	return &GetDerivationAddressByRangeHandler{
 		l:             loggerEntry.With(zap.String(MethodNameTag, MethodGetDerivationAddressByRange)),
 		walletSrv:     walletSrv,
 		marshallerSrv: marshallerSrv,
-		respPool: sync.Pool{New: func() any {
-			return new(pbApi.DerivationAddressIdentity)
-		}},
+		respPool:      pbAddrPool,
 	}
 }

@@ -8,6 +8,14 @@ import (
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 )
 
+type configService interface {
+	IsDev() bool
+	IsDebug() bool
+	IsLocal() bool
+
+	GetBindPort() string
+}
+
 type walletManagerService interface {
 	CreateNewWallet(ctx context.Context,
 		strategy types.WalletMakerStrategy,
@@ -23,11 +31,8 @@ type walletManagerService interface {
 	GetAddressesByPathByRange(ctx context.Context,
 		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,
-		accountIndex uint32,
-		internalIndex uint32,
-		addressIndexFrom uint32,
-		addressIndexTo uint32,
-		marshallerCallback func(addressIdx, position uint32, address string),
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 
 	GetWalletByUUID(ctx context.Context, walletUUID uuid.UUID) (*types.PublicWalletData, error)
@@ -46,12 +51,13 @@ type marshallerService interface {
 	MarshallGetAddressData(
 		walletPublicData *types.PublicWalletData,
 		mnemonicWalletPublicData *types.PublicMnemonicWalletData,
-		addressPublicData *types.PublicDerivationAddressData,
+		addressPublicData *pbApi.DerivationAddressIdentity,
 	) (*pbApi.DerivationAddressResponse, error)
 	MarshallGetAddressByRange(
 		walletPublicData *types.PublicWalletData,
 		mnemonicWalletPublicData *types.PublicMnemonicWalletData,
 		addressesData []*pbApi.DerivationAddressIdentity,
+		size uint64,
 	) (*pbApi.DerivationAddressByRangeResponse, error)
 	MarshallGetEnabledWallets([]*types.PublicWalletData) (*pbApi.GetEnabledWalletsResponse, error)
 	MarshallSignTransaction(
