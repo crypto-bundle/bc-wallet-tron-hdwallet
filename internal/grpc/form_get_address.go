@@ -1,12 +1,13 @@
-package forms
+package grpc
 
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
+
+	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
 	"github.com/asaskevich/govalidator"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	"github.com/google/uuid"
 )
 
 type GetDerivationAddressForm struct {
@@ -15,9 +16,9 @@ type GetDerivationAddressForm struct {
 	MnemonicWalletUUID    string `valid:"type(string),uuid,required"`
 	MnemonicWalletUUIDRaw uuid.UUID
 
-	AccountIndex  uint32 `valid:"type(uint32),int,required"`
-	InternalIndex uint32 `valid:"type(uint32),int,required"`
-	AddressIndex  uint32 `valid:"type(uint32),int,required"`
+	AccountIndex  uint32 `valid:"type(uint32),int"`
+	InternalIndex uint32 `valid:"type(uint32),int"`
+	AddressIndex  uint32 `valid:"type(uint32),int"`
 }
 
 func (f *GetDerivationAddressForm) LoadAndValidate(ctx context.Context,

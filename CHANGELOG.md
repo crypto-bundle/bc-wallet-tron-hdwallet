@@ -37,3 +37,11 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ## [v0.0.29] - 06.07.2023
 ### Fixed
 * Application can't process init stage with empty wallets table
+
+## [v0.0.30] - 11.07.2023
+### Added
+* sync.Pool usage in GetDerivationAddress gRPC method
+* AddressIdentitiesCount parameter to GetDerivationAddressByRange response
+### Changed
+* GetDerivationAddressByRange gRPC method - added support of multiple ranges per request
+* Added iterator pattern to request form - DerivationAddressByRangeForm

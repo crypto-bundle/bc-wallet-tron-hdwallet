@@ -153,11 +153,8 @@ func (p *Pool) GetEnabledWallets(ctx context.Context) ([]*types.PublicWalletData
 func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 	walletUUID uuid.UUID,
 	mnemonicWalletUUID uuid.UUID,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	poolUnit, isExists := p.walletUnits[walletUUID]
 	if !isExists {
@@ -165,8 +162,7 @@ func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 	}
 
 	return poolUnit.GetAddressesByPathByRange(ctx, mnemonicWalletUUID,
-		accountIndex, internalIndex,
-		addressIndexFrom, addressIndexTo, marshallerCallback)
+		rangeIterable, marshallerCallback)
 }
 
 func (p *Pool) SignTransaction(ctx context.Context,

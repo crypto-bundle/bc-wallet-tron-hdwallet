@@ -103,18 +103,14 @@ func (u *singleMnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 
 func (u *singleMnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	if mnemonicWalletUUID != u.mnemonicUnit.GetMnemonicUUID() {
 		return ErrPassedMnemonicWalletNotFound
 	}
 
-	return u.mnemonicUnit.GetAddressesByPathByRange(ctx, accountIndex, internalIndex,
-		addressIndexFrom, addressIndexTo, marshallerCallback)
+	return u.mnemonicUnit.GetAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
 }
 
 func newSingleMnemonicWalletPoolUnit(logger *zap.Logger,

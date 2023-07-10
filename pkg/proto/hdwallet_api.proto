@@ -77,19 +77,24 @@ message DerivationAddressResponse {
   DerivationAddressIdentity AddressIdentity = 3;
 }
 
-message DerivationAddressByRangeRequest {
-  WalletIdentity WalletIdentity = 1;
-  MnemonicWalletIdentity MnemonicIdentity = 2;
+message RangeRequestUnit {
   uint32 AccountIndex = 3;
   uint32 InternalIndex = 4;
   uint32 AddressIndexFrom = 5;
   uint32 AddressIndexTo = 6;
 }
 
+message DerivationAddressByRangeRequest {
+  WalletIdentity WalletIdentity = 1;
+  MnemonicWalletIdentity MnemonicIdentity = 2;
+  repeated RangeRequestUnit Ranges = 3;
+}
+
 message DerivationAddressByRangeResponse {
   WalletIdentity WalletIdentity = 1;
   MnemonicWalletIdentity MnemonicIdentity= 2;
-  repeated DerivationAddressIdentity AddressIdentities = 3;
+  uint64 AddressIdentitiesCount = 3;
+  repeated DerivationAddressIdentity AddressIdentities = 4;
 }
 
 message SignTransactionRequest {

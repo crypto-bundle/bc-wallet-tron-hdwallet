@@ -123,19 +123,15 @@ func (u *multipleMnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 
 func (u *multipleMnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	mnemonicUnit, isExists := u.mnemonicUnitsByUUID[mnemonicWalletUUID]
 	if !isExists {
 		return ErrPassedMnemonicWalletNotFound
 	}
 
-	return mnemonicUnit.GetAddressesByPathByRange(ctx, accountIndex, internalIndex,
-		addressIndexFrom, addressIndexTo, marshallerCallback)
+	return mnemonicUnit.GetAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
 }
 
 func (u *multipleMnemonicWalletUnit) SignTransaction(ctx context.Context,

@@ -247,19 +247,15 @@ func (u *MnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 }
 
 func (u *MnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	if u.isWalletLoaded {
 		defer u.onAirTicker.Reset(u.unloadTimerInterval)
-		return u.getAddressesByPathByRange(ctx, accountIndex, internalIndex,
-			addressIndexFrom, addressIndexTo, marshallerCallback)
+		return u.getAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
 	}
 
 	err := u.loadWallet(ctx)
@@ -267,44 +263,47 @@ func (u *MnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
 		return err
 	}
 
-	return u.getAddressesByPathByRange(ctx, accountIndex, internalIndex,
-		addressIndexFrom, addressIndexTo, marshallerCallback)
+	return u.getAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
 }
 
 func (u *MnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	var err error
-	rangeSize := (addressIndexTo - addressIndexFrom) + 1
 	wg := sync.WaitGroup{}
-	wg.Add(int(rangeSize))
+	wg.Add(int(rangeIterable.GetRangesSize()))
 
-	for i, j := addressIndexFrom, uint32(0); i <= addressIndexTo; i++ {
-		go func(i, j uint32) {
-			defer wg.Done()
+	position := uint32(0)
+	for {
+		rangeUnit := rangeIterable.GetNext()
+		if rangeUnit == nil {
+			break
+		}
 
-			address, getAddrErr := u.getAddressByPath(ctx, accountIndex,
-				internalIndex, i)
-			if getAddrErr != nil {
-				u.logger.Error("unable to get address by path", zap.Error(getAddrErr),
-					zap.Uint32(app.HDWalletAccountIndexTag, accountIndex),
-					zap.Uint32(app.HDWalletInternalIndexTag, internalIndex),
-					zap.Uint32(app.HDWalletAddressIndexTag, i))
+		for addressIndex := rangeUnit.AddressIndexFrom; addressIndex <= rangeUnit.AddressIndexTo; addressIndex++ {
+			go func(accountIdx, internalIdx, i, position uint32) {
+				defer wg.Done()
 
-				err = getAddrErr
+				address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
+					rangeUnit.InternalIndex, i)
+				if getAddrErr != nil {
+					u.logger.Error("unable to get address by path", zap.Error(getAddrErr),
+						zap.Uint32(app.HDWalletAccountIndexTag, rangeUnit.AccountIndex),
+						zap.Uint32(app.HDWalletInternalIndexTag, rangeUnit.InternalIndex),
+						zap.Uint32(app.HDWalletAddressIndexTag, i))
+
+					err = getAddrErr
+					return
+				}
+
+				marshallerCallback(accountIdx, internalIdx, i, position, address)
+
 				return
-			}
+			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)
 
-			marshallerCallback(i, j, address)
-
-			return
-		}(i, j)
-
-		j++
+			position++
+		}
 	}
 
 	wg.Wait()
@@ -406,6 +405,8 @@ func (u *MnemonicWalletUnit) unloadWallet(ctx context.Context) error {
 
 		delete(u.addressPool, key)
 	}
+
+	u.addressPool = make(map[string]*addressData, 0)
 
 	u.isWalletLoaded = false
 

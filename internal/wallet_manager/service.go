@@ -94,14 +94,11 @@ func (s *Service) GetAddressByPath(ctx context.Context,
 func (s *Service) GetAddressesByPathByRange(ctx context.Context,
 	walletUUID uuid.UUID,
 	mnemonicWalletUUID uuid.UUID,
-	accountIndex uint32,
-	internalIndex uint32,
-	addressIndexFrom uint32,
-	addressIndexTo uint32,
-	marshallerCallback func(addressIdx, position uint32, address string),
+	rangeIterable types.AddrRangeIterable,
+	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
 	return s.walletPoolSrv.GetAddressesByPathByRange(ctx, walletUUID, mnemonicWalletUUID,
-		accountIndex, internalIndex, addressIndexFrom, addressIndexTo, marshallerCallback)
+		rangeIterable, marshallerCallback)
 }
 
 func (s *Service) CreateNewWallet(ctx context.Context,

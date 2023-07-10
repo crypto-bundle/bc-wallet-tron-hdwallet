@@ -7,6 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	commonHealthcheck "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
+	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
+	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
+	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
+	commonRedis "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis/pkg/redis"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/config"
 	grpcHandlers "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/grpc"
@@ -14,13 +19,6 @@ import (
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_data"
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_manager"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api"
-
-	commonHealthcheck "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
-	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
-	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
-	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
-	commonRedis "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis/pkg/redis"
 
 	_ "github.com/mailru/easyjson/gen"
 	"go.uber.org/zap"
@@ -122,12 +120,9 @@ func main() {
 		loggerEntry.Fatal("unable to create wallet service instance", zap.Error(err))
 	}
 
-	apiHandlers, err := grpcHandlers.New(ctx, loggerEntry, walletService)
-	if err != nil {
-		loggerEntry.Fatal("unable to init grpc handlers", zap.Error(err))
-	}
+	apiHandlers := grpcHandlers.New(ctx, loggerEntry, walletService)
 
-	srv, err := hdwallet_api.NewServer(ctx, loggerEntry, appCfg, apiHandlers)
+	srv, err := grpcHandlers.NewServer(ctx, loggerEntry, appCfg, apiHandlers)
 	if err != nil {
 		loggerEntry.Fatal("unable to create grpc server instance", zap.Error(err),
 			zap.String("port", appCfg.GetBindPort()))

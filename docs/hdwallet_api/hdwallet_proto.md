@@ -17,6 +17,7 @@
     - [GetWalletInfoResponse](#hdwallet_api.GetWalletInfoResponse)
     - [MnemonicWalletData](#hdwallet_api.MnemonicWalletData)
     - [MnemonicWalletIdentity](#hdwallet_api.MnemonicWalletIdentity)
+    - [RangeRequestUnit](#hdwallet_api.RangeRequestUnit)
     - [SignTransactionRequest](#hdwallet_api.SignTransactionRequest)
     - [SignTransactionResponse](#hdwallet_api.SignTransactionResponse)
     - [WalletBookmarks](#hdwallet_api.WalletBookmarks)
@@ -80,10 +81,7 @@
 | ----- | ---- | ----- | ----------- |
 | WalletIdentity | [WalletIdentity](#hdwallet_api.WalletIdentity) |  |  |
 | MnemonicIdentity | [MnemonicWalletIdentity](#hdwallet_api.MnemonicWalletIdentity) |  |  |
-| AccountIndex | [uint32](#uint32) |  |  |
-| InternalIndex | [uint32](#uint32) |  |  |
-| AddressIndexFrom | [uint32](#uint32) |  |  |
-| AddressIndexTo | [uint32](#uint32) |  |  |
+| Ranges | [RangeRequestUnit](#hdwallet_api.RangeRequestUnit) | repeated |  |
 
 
 
@@ -100,6 +98,7 @@
 | ----- | ---- | ----- | ----------- |
 | WalletIdentity | [WalletIdentity](#hdwallet_api.WalletIdentity) |  |  |
 | MnemonicIdentity | [MnemonicWalletIdentity](#hdwallet_api.MnemonicWalletIdentity) |  |  |
+| AddressIdentitiesCount | [uint64](#uint64) |  |  |
 | AddressIdentities | [DerivationAddressIdentity](#hdwallet_api.DerivationAddressIdentity) | repeated |  |
 
 
@@ -242,6 +241,24 @@
 | ----- | ---- | ----- | ----------- |
 | WalletUUID | [string](#string) |  |  |
 | WalletHash | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="hdwallet_api.RangeRequestUnit"></a>
+
+### RangeRequestUnit
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| AccountIndex | [uint32](#uint32) |  |  |
+| InternalIndex | [uint32](#uint32) |  |  |
+| AddressIndexFrom | [uint32](#uint32) |  |  |
+| AddressIndexTo | [uint32](#uint32) |  |  |
 
 
 
