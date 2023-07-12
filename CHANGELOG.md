@@ -45,3 +45,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ### Changed
 * GetDerivationAddressByRange gRPC method - added support of multiple ranges per request
 * Added iterator pattern to request form - DerivationAddressByRangeForm
+
+## [v0.0.31] - 13.07.2023
+### Added
+* GetDerivationAddressByRange method to gRPC-client wrapper
