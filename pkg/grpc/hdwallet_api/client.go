@@ -167,6 +167,40 @@ func (s *Client) GetDerivationAddress(ctx context.Context,
 	return address, nil
 }
 
+// GetDerivationAddressByRange is function for getting address from bc-wallet-tron-hdwallet
+func (s *Client) GetDerivationAddressByRange(ctx context.Context,
+	walletUUID string,
+	mnemonicWalletUUID string,
+	ranges []*pbApi.RangeRequestUnit,
+) (*pbApi.DerivationAddressByRangeResponse, error) {
+	request := &pbApi.DerivationAddressByRangeRequest{
+		WalletIdentity: &pbApi.WalletIdentity{
+			WalletUUID: walletUUID,
+		},
+		MnemonicIdentity: &pbApi.MnemonicWalletIdentity{
+			WalletUUID: mnemonicWalletUUID,
+		},
+		Ranges: ranges,
+	}
+
+	address, err := s.client.GetDerivationAddressByRange(ctx, request)
+	if err != nil {
+		grpcStatus, ok := status.FromError(err)
+		if !ok {
+			return nil, ErrUnableDecodeGrpcErrorStatus
+		}
+
+		switch grpcStatus.Code() {
+		case codes.NotFound:
+			return nil, nil
+		default:
+			return nil, err
+		}
+	}
+
+	return address, nil
+}
+
 // GetWalletInfo is function for getting full wallet info from bc-wallet-tron-hdwallet
 func (s *Client) GetWalletInfo(ctx context.Context,
 	walletUUID string,
