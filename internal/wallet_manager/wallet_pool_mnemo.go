@@ -281,23 +281,45 @@ func (u *MnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 			break
 		}
 
+		if rangeUnit.AddressIndexFrom == rangeUnit.AddressIndexTo { // if one item in range
+			address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
+				rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom)
+			if getAddrErr != nil {
+				u.logger.Error("unable to get address by path", zap.Error(getAddrErr),
+					zap.Uint32(app.HDWalletAccountIndexTag, rangeUnit.AccountIndex),
+					zap.Uint32(app.HDWalletInternalIndexTag, rangeUnit.InternalIndex),
+					zap.Uint32(app.HDWalletAddressIndexTag, rangeUnit.InternalIndex))
+
+				err = getAddrErr
+
+				continue
+			}
+
+			marshallerCallback(rangeUnit.AccountIndex, rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom,
+				position, address)
+
+			wg.Done()
+
+			continue
+		}
+
 		for addressIndex := rangeUnit.AddressIndexFrom; addressIndex <= rangeUnit.AddressIndexTo; addressIndex++ {
-			go func(accountIdx, internalIdx, i, position uint32) {
+			go func(accountIdx, internalIdx, adressIdx, position uint32) {
 				defer wg.Done()
 
 				address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
-					rangeUnit.InternalIndex, i)
+					rangeUnit.InternalIndex, adressIdx)
 				if getAddrErr != nil {
 					u.logger.Error("unable to get address by path", zap.Error(getAddrErr),
 						zap.Uint32(app.HDWalletAccountIndexTag, rangeUnit.AccountIndex),
 						zap.Uint32(app.HDWalletInternalIndexTag, rangeUnit.InternalIndex),
-						zap.Uint32(app.HDWalletAddressIndexTag, i))
+						zap.Uint32(app.HDWalletAddressIndexTag, adressIdx))
 
 					err = getAddrErr
 					return
 				}
 
-				marshallerCallback(accountIdx, internalIdx, i, position, address)
+				marshallerCallback(accountIdx, internalIdx, adressIdx, position, address)
 
 				return
 			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)

@@ -66,10 +66,12 @@ func (f *derivationAddressByRangeForm) LoadAndValidate(ctx context.Context,
 	}
 	f.RangesCount = uint32(len(req.Ranges))
 	f.Ranges = make([]*types.PublicDerivationAddressRangeData, len(req.Ranges))
-	f.RangeSize = f.RangesCount // including last item of every range - from 5 to 15 with included 15.
 	for i := uint32(0); i != f.RangesCount; i++ {
 		data := req.Ranges[i]
-		diff := data.AddressIndexTo - data.AddressIndexFrom
+		diff := (data.AddressIndexTo - data.AddressIndexFrom) + 1
+		if data.AddressIndexTo == data.AddressIndexFrom {
+			diff = 1
+		}
 
 		f.Ranges[i] = &types.PublicDerivationAddressRangeData{
 			AccountIndex:     data.AccountIndex,
