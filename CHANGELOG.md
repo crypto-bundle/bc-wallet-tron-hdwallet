@@ -49,3 +49,8 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ## [v0.0.31] - 13.07.2023
 ### Added
 * GetDerivationAddressByRange method to gRPC-client wrapper
+
+## [v0.0.32] - 14.07.2023
+### Fixed
+* Calculation of requested addresses count by range with GetDerivationAddressByRange gRPC method
+* Added case of range with one address item - AddressRangeFrom is equals to AddressRangeTo
