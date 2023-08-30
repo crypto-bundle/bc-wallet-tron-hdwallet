@@ -54,3 +54,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ### Fixed
 * Calculation of requested addresses count by range with GetDerivationAddressByRange gRPC method
 * Added case of range with one address item - AddressRangeFrom is equals to AddressRangeTo
+
+## [v0.0.33] - 30.08.2023
+### Fixed
+* GetAddressesByRange method - problem with gRPC-request cancel context. 

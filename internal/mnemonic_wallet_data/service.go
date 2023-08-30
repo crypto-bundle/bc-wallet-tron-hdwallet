@@ -40,7 +40,7 @@ func (s *Service) AddNewMnemonicWallet(ctx context.Context,
 	}
 
 	go func(item entities.MnemonicWallet) {
-		_, err = s.redisCacheStore.SetMnemonicWalletItem(ctx, &item)
+		_, err = s.redisCacheStore.SetMnemonicWalletItem(context.Background(), &item)
 		if err != nil {
 			s.logger.Error("unable to save mnemonic wallet item in redis cache store", zap.Error(err),
 				zap.String(app.MnemonicWalletUUIDTag, item.UUID.String()),
@@ -49,7 +49,7 @@ func (s *Service) AddNewMnemonicWallet(ctx context.Context,
 	}(*mnemoWalletItem)
 
 	go func(item entities.MnemonicWallet) {
-		_, err = s.natsKVCacheStore.SetMnemonicWalletItem(ctx, &item)
+		_, err = s.natsKVCacheStore.SetMnemonicWalletItem(context.Background(), &item)
 		if err != nil {
 			s.logger.Error("unable to save mnemonic wallet item in nats kv cache store", zap.Error(err),
 				zap.String(app.MnemonicWalletUUIDTag, item.UUID.String()),

@@ -304,22 +304,22 @@ func (u *MnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 		}
 
 		for addressIndex := rangeUnit.AddressIndexFrom; addressIndex <= rangeUnit.AddressIndexTo; addressIndex++ {
-			go func(accountIdx, internalIdx, adressIdx, position uint32) {
+			go func(accountIdx, internalIdx, addressIdx, position uint32) {
 				defer wg.Done()
 
 				address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
-					rangeUnit.InternalIndex, adressIdx)
+					rangeUnit.InternalIndex, addressIdx)
 				if getAddrErr != nil {
 					u.logger.Error("unable to get address by path", zap.Error(getAddrErr),
 						zap.Uint32(app.HDWalletAccountIndexTag, rangeUnit.AccountIndex),
 						zap.Uint32(app.HDWalletInternalIndexTag, rangeUnit.InternalIndex),
-						zap.Uint32(app.HDWalletAddressIndexTag, adressIdx))
+						zap.Uint32(app.HDWalletAddressIndexTag, addressIdx))
 
 					err = getAddrErr
 					return
 				}
 
-				marshallerCallback(accountIdx, internalIdx, adressIdx, position, address)
+				marshallerCallback(accountIdx, internalIdx, addressIdx, position, address)
 
 				return
 			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)
