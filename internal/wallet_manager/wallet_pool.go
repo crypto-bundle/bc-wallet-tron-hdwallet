@@ -15,6 +15,8 @@ type Pool struct {
 	logger *zap.Logger
 	cfg    configService
 
+	runTimeCtx context.Context
+
 	walletsDataSrv         walletsDataService
 	mnemonicWalletsDataSrv mnemonicWalletsDataService
 	encryptSrv             encryptService
@@ -35,6 +37,8 @@ func (p *Pool) Init(ctx context.Context) error {
 }
 
 func (p *Pool) Run(ctx context.Context) error {
+	p.runTimeCtx = ctx
+
 	for _, walletUnit := range p.walletUnits {
 		initErr := walletUnit.Run(ctx)
 		if initErr != nil {
@@ -88,7 +92,7 @@ func (p *Pool) AddAWalletUnit(ctx context.Context,
 	return nil
 }
 
-func (p *Pool) AddAndStartWalletUnit(ctx context.Context,
+func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	walletUUID uuid.UUID,
 	walletUnit WalletPoolUnitService,
 ) error {
@@ -97,12 +101,12 @@ func (p *Pool) AddAndStartWalletUnit(ctx context.Context,
 		return ErrPassedWalletAlreadyExists
 	}
 
-	err := walletUnit.Init(ctx)
+	err := walletUnit.Init(p.runTimeCtx)
 	if err != nil {
 		return err
 	}
 
-	err = walletUnit.Run(ctx)
+	err = walletUnit.Run(p.runTimeCtx)
 	if err != nil {
 		return err
 	}

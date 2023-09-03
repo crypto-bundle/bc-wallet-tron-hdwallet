@@ -57,4 +57,8 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 
 ## [v0.0.33] - 30.08.2023
 ### Fixed
-* GetAddressesByRange method - problem with gRPC-request cancel context. 
+* GetAddressesByRange method - problem with gRPC-request cancel context.
+
+## [v0.0.34] - 03.09.2023
+### Fixed
+* AddNewWallet method - problem with infinite context.Done() call. Because of wrong usage gRPC-request context
