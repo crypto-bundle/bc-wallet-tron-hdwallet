@@ -6,7 +6,6 @@ ENV GOSUMDB off
 ENV GOPRIVATE $GOPRIVATE,gitlab.heronodes.io/bc-platform
 
 # add private github token
-ARG GITHUB_TOKEN
 RUN apk add --no-cache git openssh build-base && \
     mkdir -p -m 0700 ~/.ssh && \
     ssh-keyscan gitlab.heronodes.io >> ~/.ssh/known_hosts && \

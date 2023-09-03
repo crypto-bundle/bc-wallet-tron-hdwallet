@@ -59,6 +59,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ### Fixed
 * GetAddressesByRange method - problem with gRPC-request cancel context.
 
-## [v0.0.34] - 03.09.2023
+## [v0.0.34 - v0.0.35] - 03.09.2023
 ### Fixed
 * AddNewWallet method - problem with infinite context.Done() call. Because of wrong usage gRPC-request context
+* Local deployment Makefile changes. Now supports building a Docker image via Podman
