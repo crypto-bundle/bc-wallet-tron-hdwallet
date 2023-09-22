@@ -67,7 +67,7 @@ kubectl create secret generic bc-wallet-tron-hdwallet \
   --from-literal=vault_api_user_token='<insert_token_here>' \
   --from-literal=vault_migrator_user_token='<insert_token_here>' \
   --from-literal=vault_updater_user_token='<insert_token_here>' \
-  --from-literal=vault_transit_secret_key='bc-wallet-tron-hdwallet'
+  --from-literal=vault_transit_secret_key='crypto-bundle-bc-wallet-tron-hdwallet'
 ```
 
 ### DB
@@ -114,7 +114,7 @@ vault token create -display-name bc-wallet-tron-hdwallet-api
 vault token create -display-name bc-wallet-tron-hdwallet-migrator
 vault token create -display-name bc-wallet-tron-hdwallet-updater
 
-vault write -f transit/keys/crypto-bundle/bc-wallet-tron-hdwallet
+vault write -f transit/keys/crypto-bundle-bc-wallet-tron-hdwallet
 
 vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/common DB_DATABASE=bc-wallet-tron-hdwallet
 vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/api \
@@ -125,15 +125,15 @@ vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/migrator \
   DB_USERNAME=bc-wallet-tron-hdwallet-migrator \
   DB_PASSWORD=password \
   REDIS_USER=bc-wallet-tron-hdwallet-migrator \
-  REDIS_PASSWORD=password
+  REDIS_PASSWORD=password \
   NATS_USER=bc-wallet-tron-hdwallet-migrator \
   NATS_PASSWORD=password
   
 vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/updater \
   DB_USERNAME=bc-wallet-tron-hdwallet-updater \
-  DB_PASSWORD=password
+  DB_PASSWORD=password \
   REDIS_USER=bc-wallet-tron-hdwallet-updater \
-  REDIS_PASSWORD=password
+  REDIS_PASSWORD=password \
   NATS_USER=bc-wallet-tron-hdwallet-updater \
   NATS_PASSWORD=password
 ```

@@ -28,7 +28,7 @@ deploy:
 	docker buildx build --platform linux/amd64,linux/arm64 -t $(container_registry):$(build_tag) .
 	docker push $(container_registry):$(build_tag)
 
-	helm --kube-context k0s-dev-cluster upgrade \
+	helm --kube-context $(cluster_context) upgrade \
 		--install bc-wallet-tron-hdwallet-api \
 		--set "global.container_registry=$(container_registry)" \
 		--set "global.build_tag=$(build_tag)" \

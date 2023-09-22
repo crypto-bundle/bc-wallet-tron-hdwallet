@@ -2,13 +2,9 @@ package config
 
 import (
 	"context"
-	"log"
-
 	commonConfig "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config/pkg/config"
 	commonVault "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault"
 	commonVaultTokenClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault/client/token"
-
-	"github.com/joho/godotenv"
 )
 
 func PrepareVault(ctx context.Context, baseCfgSrv baseConfigService) (*commonVault.Service, error) {
@@ -98,11 +94,9 @@ func PrepareBaseConfig(ctx context.Context,
 		return nil, err
 	}
 
-	if baseCfg.IsDev() {
-		loadErr := godotenv.Load(".env")
-		if loadErr != nil {
-			log.Fatal(loadErr)
-		}
+	err = commonConfig.LoadLocalEnvIfDev()
+	if err != nil {
+		return nil, err
 	}
 
 	return baseCfg, nil
