@@ -87,14 +87,14 @@ func PrepareBaseConfig(ctx context.Context,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS)
 
-	baseCfgPreparerSrv := commonConfig.NewConfigManager()
-	baseCfg := commonConfig.NewBaseConfig(applicationName)
-	err := baseCfgPreparerSrv.PrepareTo(baseCfg).With(flagManagerSrv).Do(ctx)
+	err := commonConfig.LoadLocalEnvIfDev()
 	if err != nil {
 		return nil, err
 	}
 
-	err = commonConfig.LoadLocalEnvIfDev()
+	baseCfgPreparerSrv := commonConfig.NewConfigManager()
+	baseCfg := commonConfig.NewBaseConfig(applicationName)
+	err = baseCfgPreparerSrv.PrepareTo(baseCfg).With(flagManagerSrv).Do(ctx)
 	if err != nil {
 		return nil, err
 	}

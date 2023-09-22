@@ -64,7 +64,7 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 * AddNewWallet method - problem with infinite context.Done() call. Because of wrong usage gRPC-request context
 * Local deployment Makefile changes. Now supports building a Docker image via Podman
 
-## [v0.0.36] - 23.09.2023
+## [v0.0.36 - v0.0.37] - 23.09.2023
 ### Added
 * Added examples of env-file for api and migrator applications
 * Deployment k8s cluster context in Makefile helm deployment 
