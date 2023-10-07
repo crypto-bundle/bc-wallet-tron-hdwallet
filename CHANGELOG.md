@@ -70,3 +70,8 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 * Deployment k8s cluster context in Makefile helm deployment 
 ### Changed
 * Loading of local .env file from path in APP_LOCAL_ENV_FILE_PATH environment variable
+
+## [v0.0.38] - 08.10.2023
+### Added
+* AddNewWallet method to gRPC-client wrapper
+* HotWalletIndex to response in add_wallet gRPC method
