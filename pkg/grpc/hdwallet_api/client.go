@@ -3,17 +3,17 @@ package hdwallet_api
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/credentials/insecure"
 
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
 	commonGRPCClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc/pkg/client"
 
+	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
 	originGRPC "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -74,6 +74,35 @@ func (s *Client) Shutdown(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// AddNewWallet is function for add new wallet
+func (s *Client) AddNewWallet(ctx context.Context,
+	title, purpose string,
+	strategy uint32,
+) (*pbApi.AddNewWalletResponse, error) {
+	request := &pbApi.AddNewWalletRequest{
+		Title:    title,
+		Purpose:  purpose,
+		Strategy: pbApi.WalletMakerStrategy(strategy),
+	}
+
+	walletResp, err := s.client.AddNewWallet(ctx, request)
+	if err != nil {
+		grpcStatus, ok := status.FromError(err)
+		if !ok {
+			return nil, ErrUnableDecodeGrpcErrorStatus
+		}
+
+		switch grpcStatus.Code() {
+		case codes.NotFound:
+			return nil, nil
+		default:
+			return nil, err
+		}
+	}
+
+	return walletResp, nil
 }
 
 // GetEnabledWallets is function for getting address from bc-wallet-tron-hdwallet
