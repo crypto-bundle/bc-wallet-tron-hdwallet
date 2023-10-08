@@ -22,13 +22,17 @@ hdwallet_proto:
 default: hdwallet
 
 deploy:
-	$(eval build_tag=$(env)-$(shell git rev-parse --short HEAD)-$(shell date +%s))
-	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-hdwallet)
+	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))
 
-	docker buildx build --platform linux/amd64,linux/arm64 -t $(container_registry):$(build_tag) .
+	$(eval build_tag=$(env)-$(shell git rev-parse --short HEAD)-$(shell date +%s))
+	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-currency-srv)
+	$(eval context=$(or $(context),k0s-dev-cluster))
+	$(eval platform=$(or $(platform),linux/amd64))
+
+	docker build --no-cache --platform $(platform) --tag $(container_registry):$(build_tag) .
 	docker push $(container_registry):$(build_tag)
 
-	helm --kube-context $(cluster_context) upgrade \
+	helm --kube-context $(context) upgrade \
 		--install bc-wallet-tron-hdwallet-api \
 		--set "global.container_registry=$(container_registry)" \
 		--set "global.build_tag=$(build_tag)" \
