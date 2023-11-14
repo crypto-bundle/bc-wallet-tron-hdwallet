@@ -8,9 +8,9 @@ import (
 
 	commonGRPCClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc/pkg/client"
 
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
+	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 	originGRPC "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

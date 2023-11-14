@@ -1,8 +1,8 @@
 package types
 
 import (
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/google/uuid"
+	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 )
 
 type WalletMakerStrategy uint8

@@ -75,3 +75,10 @@ E456BB23A18A9347E952DBC6655133DD561BF3EC
 ### Added
 * AddNewWallet method to gRPC-client wrapper
 * HotWalletIndex to response in add_wallet gRPC method
+
+## [v0.0.39] - 14.11.2023
+### Changed
+* New version of bc-connector-common library - v1.3.21
+* Migrated to usage of internal proto files descriptions
+    * "github.com/fbsobreira/gotron-sdk/pkg/proto/api" replaced by "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/api"
+    * "github.com/fbsobreira/gotron-sdk/pkg/proto/core" replaced by "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
