@@ -2,10 +2,13 @@ package grpc
 
 import (
 	"context"
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
-	"github.com/google/uuid"
+
 	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+
+	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+
+	"github.com/google/uuid"
 )
 
 type configService interface {

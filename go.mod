@@ -7,17 +7,17 @@ require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/ethereum/go-ethereum v1.11.6
-	github.com/fbsobreira/gotron-sdk v0.0.0-20230418195951-b7bfbf1c0ade
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/joho/godotenv v1.5.1
 	github.com/mailru/easyjson v0.7.7
 	github.com/nats-io/nats.go v1.25.0
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/shengdoushi/base58 v1.0.0
 	github.com/tyler-smith/go-bip39 v1.1.0
+	gitlab.heronodes.io/bc-platform/bc-connector-common v1.3.21
 	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config v0.1.10
 	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc v0.0.5
 	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck v0.0.3
@@ -70,6 +70,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.6.0 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
 	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -85,7 +86,6 @@ require (
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/run v1.0.0 // indirect
-	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
