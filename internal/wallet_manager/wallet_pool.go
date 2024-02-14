@@ -3,11 +3,10 @@ package wallet_manager
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/google/uuid"
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 	"go.uber.org/zap"
 )
 
@@ -173,7 +172,7 @@ func (p *Pool) SignTransaction(ctx context.Context,
 	walletUUID uuid.UUID,
 	mnemonicUUID uuid.UUID,
 	account, change, index uint32,
-	transaction *tronCore.Transaction,
+	transactionData []byte,
 ) (*types.PublicSignTxData, error) {
 	poolUnit, isExists := p.walletUnits[walletUUID]
 	if !isExists {
@@ -181,7 +180,7 @@ func (p *Pool) SignTransaction(ctx context.Context,
 		return nil, ErrPassedWalletNotFound
 	}
 
-	return poolUnit.SignTransaction(ctx, mnemonicUUID, account, change, index, transaction)
+	return poolUnit.SignTransaction(ctx, mnemonicUUID, account, change, index, transactionData)
 }
 
 func newWalletPool(logger *zap.Logger,

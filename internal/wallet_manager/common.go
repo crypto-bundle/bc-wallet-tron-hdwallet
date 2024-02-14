@@ -4,12 +4,11 @@ import (
 	"context"
 	"time"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/google/uuid"
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 )
 
 type configService interface {
@@ -67,7 +66,7 @@ type WalletPoolUnitService interface {
 	SignTransaction(ctx context.Context,
 		mnemonicUUID uuid.UUID,
 		account, change, index uint32,
-		transaction *tronCore.Transaction,
+		transactionData []byte,
 	) (*types.PublicSignTxData, error)
 }
 
@@ -90,7 +89,7 @@ type walletPoolMnemonicUnitService interface {
 	) error
 	SignTransaction(ctx context.Context,
 		account, change, index uint32,
-		transaction *tronCore.Transaction,
+		transactionData []byte,
 	) (*types.PublicSignTxData, error)
 }
 
@@ -128,7 +127,7 @@ type walletPoolService interface {
 		walletUUID uuid.UUID,
 		mnemonicUUID uuid.UUID,
 		account, change, index uint32,
-		transaction *tronCore.Transaction,
+		transactionData []byte,
 	) (*types.PublicSignTxData, error)
 }
 

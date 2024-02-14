@@ -3,8 +3,8 @@ package wallet_manager
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -81,7 +81,7 @@ func (pi *poolInitializer) prepareMnemonicUnits(_ context.Context) error {
 	if len(pi.mnemonicItems) == 0 {
 		return nil
 	}
-	
+
 	groupedByWalletUUID := make(map[uuid.UUID][]walletPoolMnemonicUnitService, len(pi.walletUUIDList))
 
 	// prepare map of mnemonic units grouped by wallet uuid

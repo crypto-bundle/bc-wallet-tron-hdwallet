@@ -3,10 +3,10 @@ package grpc
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
-	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
+	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

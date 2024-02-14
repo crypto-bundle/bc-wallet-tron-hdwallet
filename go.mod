@@ -1,4 +1,4 @@
-module gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet
+module github.com/crypto-bundle/bc-wallet-tron-hdwallet
 
 go 1.19
 
@@ -6,6 +6,15 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.3
+	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.2
+	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.2
+	github.com/crypto-bundle/bc-wallet-common-lib-logger v0.0.2
+	github.com/crypto-bundle/bc-wallet-common-lib-nats-queue v0.1.9
+	github.com/crypto-bundle/bc-wallet-common-lib-postgres v0.0.5
+	github.com/crypto-bundle/bc-wallet-common-lib-redis v0.0.4
+	github.com/crypto-bundle/bc-wallet-common-lib-tracer v0.0.3
+	github.com/crypto-bundle/bc-wallet-common-lib-vault v0.0.7
 	github.com/ethereum/go-ethereum v1.11.6
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
@@ -17,16 +26,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/shengdoushi/base58 v1.0.0
 	github.com/tyler-smith/go-bip39 v1.1.0
-	gitlab.heronodes.io/bc-platform/bc-connector-common v1.3.21
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config v0.1.10
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc v0.0.5
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck v0.0.3
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger v0.0.12
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue v0.1.9
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres v0.0.8
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis v0.0.5
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer v0.0.4
-	gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault v0.0.14
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.7.0
 	google.golang.org/grpc v1.54.0

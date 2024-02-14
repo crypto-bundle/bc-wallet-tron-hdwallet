@@ -3,17 +3,14 @@ package grpc
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
-	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
-
+	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -62,15 +59,9 @@ func (h *SignTransactionHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.NotFound, "mnemonic wallet not found")
 	}
 
-	createdTx := &tronCore.Transaction{}
-	err = proto.Unmarshal(req.CreatedTxData, createdTx)
-	if err != nil {
-		return nil, err
-	}
-
 	signedTxData, err := h.walletSrv.SignTransaction(ctx, walletPubData.UUID, mnemoWalletData.UUID,
 		req.AddressIdentity.AccountIndex, req.AddressIdentity.InternalIndex, req.AddressIdentity.AddressIndex,
-		createdTx)
+		req.CreatedTxData)
 	if err != nil {
 		h.l.Error("unable to sign transaction", zap.Error(err))
 		return nil, status.Error(codes.Internal, err.Error())

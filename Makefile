@@ -25,7 +25,7 @@ deploy:
 	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))
 
 	$(eval build_tag=$(env)-$(shell git rev-parse --short HEAD)-$(shell date +%s))
-	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-currency-srv)
+	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-hdwallet)
 	$(eval context=$(or $(context),k0s-dev-cluster))
 	$(eval platform=$(or $(platform),linux/amd64))
 

@@ -7,24 +7,25 @@ import (
 	"os/signal"
 	"syscall"
 
-	commonHealthcheck "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
-	commonLogger "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-logger/pkg/logger"
-	commonNats "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-nats-queue/pkg/nats"
-	commonPostgres "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-postgres/pkg/postgres"
-	commonRedis "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-redis/pkg/redis"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/config"
-	grpcHandlers "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/grpc"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_data"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/wallet_manager"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
+	grpcHandlers "github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/grpc"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic_wallet_data"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_data"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_manager"
+
+	commonHealthcheck "github.com/crypto-bundle/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
+	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
+	commonNats "github.com/crypto-bundle/bc-wallet-common-lib-nats-queue/pkg/nats"
+	commonPostgres "github.com/crypto-bundle/bc-wallet-common-lib-postgres/pkg/postgres"
+	commonRedis "github.com/crypto-bundle/bc-wallet-common-lib-redis/pkg/redis"
 
 	_ "github.com/mailru/easyjson/gen"
 	"go.uber.org/zap"
 )
 
-// DO NOT EDIT THIS VARIABLES DIRECTLY. These are build-time constants
+// DO NOT EDIT THESE VARIABLES DIRECTLY. These are build-time constants
 // DO NOT USE THESE VARIABLES IN APPLICATION CODE. USE commonConfig.NewLdFlagsManager SERVICE-COMPONENT INSTEAD OF IT
 var (
 	// Version - version time.RFC3339.

@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	"strings"
 
-	tracer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
+	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
 
 	originNats "github.com/nats-io/nats.go"
 	"go.uber.org/zap"
@@ -132,7 +132,7 @@ func NewNatsStore(logger *zap.Logger,
 	cfg configurationService,
 	natsConn originNats.JetStreamContext,
 ) (*natsStore, error) {
-	bucketName := strings.ToUpper(fmt.Sprintf("%s__%s__%s", cfg.GetStageName(), app.ApplicationName,
+	bucketName := strings.ToUpper(fmt.Sprintf("%s__%s__%s", cfg.GetStageName(), app.ApplicationManagerName,
 		NatsMnemonicWalletBucketName),
 	)
 

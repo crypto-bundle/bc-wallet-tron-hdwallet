@@ -1,14 +1,8 @@
 package app
 
 const (
-	ApplicationName = "bc-wallet-tron-hdwallet"
-
-	DatabaseConfigPrefix = "DB"
-	APIConfigPrefix      = "API"
-	HDWalletConfigPrefix = "HDWALLET"
-	VaultConfigPrefix    = "VAULT"
-
-	WalletMnemoName = "TRON_WALLET"
+	ApplicationManagerName  = "bc-wallet-common-hdwallet-manager"
+	ApplicationHdWalletName = "bc-wallet-tron-hdwallet"
 
 	BlockChainName = "TRON"
 )

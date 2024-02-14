@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/config"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
 	"go.uber.org/zap"
 )
@@ -16,7 +16,7 @@ type grpcServerHandle struct {
 	*pbApi.UnimplementedHdWalletApiServer
 
 	logger *zap.Logger
-	cfg    *config.Config
+	cfg    *config.MangerConfig
 
 	walletSrv     walletManagerService
 	marshallerSrv marshallerService
@@ -73,7 +73,6 @@ func New(ctx context.Context,
 ) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
-		zap.String(app.ApplicationNameTag, app.ApplicationName),
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
 	addrRespPool := &sync.Pool{New: func() any {

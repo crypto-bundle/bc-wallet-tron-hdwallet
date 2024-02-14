@@ -4,10 +4,10 @@ import (
 	"context"
 	"net"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
-	commonGRPCServer "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc/pkg/server"
+	commonGRPCServer "github.com/crypto-bundle/bc-wallet-common-lib-grpc/pkg/server"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
@@ -93,7 +93,7 @@ func NewServer(ctx context.Context,
 	handlers pbApi.HdWalletApiServer,
 ) (*Server, error) {
 	l := loggerSrv.Named("grpc.server").With(
-		zap.String(app.ApplicationNameTag, app.ApplicationName),
+		zap.String(app.ApplicationNameTag, app.ApplicationManagerName),
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
 	srv := &Server{

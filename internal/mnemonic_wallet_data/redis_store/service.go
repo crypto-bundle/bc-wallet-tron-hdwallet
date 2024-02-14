@@ -3,11 +3,11 @@ package redis_store
 import (
 	"context"
 	"fmt"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/google/uuid"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
 	"strings"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
 
 	redis "github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
@@ -124,7 +124,7 @@ func NewRedisStore(logger *zap.Logger,
 	cfgSvc configurationService,
 	redisClient *redis.Client,
 ) (*redisStore, error) {
-	prefixName := strings.ToUpper(fmt.Sprintf("%s__%s__%s", cfgSvc.GetStageName(), app.ApplicationName,
+	prefixName := strings.ToUpper(fmt.Sprintf("%s__%s__%s", cfgSvc.GetStageName(), app.ApplicationManagerName,
 		RedisMnemonicWalletPrefix),
 	)
 

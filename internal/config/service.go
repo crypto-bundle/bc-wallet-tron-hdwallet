@@ -2,9 +2,9 @@ package config
 
 import (
 	"context"
-	commonConfig "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-config/pkg/config"
-	commonVault "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault"
-	commonVaultTokenClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-vault/pkg/vault/client/token"
+	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
+	commonVault "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault"
+	commonVaultTokenClient "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault/client/token"
 )
 
 func PrepareVault(ctx context.Context, baseCfgSrv baseConfigService) (*commonVault.Service, error) {
@@ -44,7 +44,7 @@ func Prepare(ctx context.Context,
 	buildNumber,
 	buildDateTS uint64,
 	applicationName string,
-) (*Config, *commonVault.Service, error) {
+) (*MangerConfig, *commonVault.Service, error) {
 	baseCfgSrv, err := PrepareBaseConfig(ctx, version, releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS, applicationName)
@@ -63,7 +63,7 @@ func Prepare(ctx context.Context,
 	}
 
 	appCfgPreparerSrv := commonConfig.NewConfigManager()
-	wrappedConfig := &Config{}
+	wrappedConfig := &MangerConfig{}
 	err = appCfgPreparerSrv.PrepareTo(wrappedConfig).With(baseCfgSrv, vaultSecretSrv).Do(ctx)
 	if err != nil {
 		return nil, nil, err

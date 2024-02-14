@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/google/uuid"
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 )
 
 type WalletMakerStrategy uint8
@@ -51,5 +50,5 @@ type PublicSignTxData struct {
 	MnemonicUUID uuid.UUID
 	MnemonicHash string
 	AddressData  *PublicDerivationAddressData
-	SignedTx     *tronCore.Transaction
+	SignedTx     []byte
 }

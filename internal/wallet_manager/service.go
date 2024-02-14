@@ -3,10 +3,9 @@ package wallet_manager
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/google/uuid"
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 	"go.uber.org/zap"
 )
 
@@ -135,10 +134,10 @@ func (s *Service) SignTransaction(ctx context.Context,
 	walletUUID uuid.UUID,
 	mnemonicUUID uuid.UUID,
 	account, change, index uint32,
-	transaction *tronCore.Transaction,
+	transactionData []byte,
 ) (*types.PublicSignTxData, error) {
 	return s.walletPoolSrv.SignTransaction(ctx, walletUUID, mnemonicUUID,
-		account, change, index, transaction)
+		account, change, index, transactionData)
 }
 
 func NewService(logger *zap.Logger,

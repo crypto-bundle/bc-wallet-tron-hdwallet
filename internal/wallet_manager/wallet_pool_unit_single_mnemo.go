@@ -3,10 +3,8 @@ package wallet_manager
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
-
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -71,13 +69,13 @@ func (u *singleMnemonicWalletUnit) GetWalletPublicData() *types.PublicWalletData
 func (u *singleMnemonicWalletUnit) SignTransaction(ctx context.Context,
 	mnemonicUUID uuid.UUID,
 	account, change, index uint32,
-	transaction *tronCore.Transaction,
+	transactionData []byte,
 ) (*types.PublicSignTxData, error) {
 	if mnemonicUUID != u.mnemonicUnit.GetMnemonicUUID() {
 		return nil, ErrPassedMnemonicWalletNotFound
 	}
 
-	return u.mnemonicUnit.SignTransaction(ctx, account, change, index, transaction)
+	return u.mnemonicUnit.SignTransaction(ctx, account, change, index, transactionData)
 }
 
 func (u *singleMnemonicWalletUnit) AddMnemonicUnit(unit walletPoolMnemonicUnitService) error {

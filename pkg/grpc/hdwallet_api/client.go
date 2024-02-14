@@ -4,18 +4,16 @@ import (
 	"context"
 	"errors"
 
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 
-	commonGRPCClient "gitlab.heronodes.io/bc-platform/bc-wallet-common-lib-grpc/pkg/client"
+	commonGRPCClient "github.com/crypto-bundle/bc-wallet-common-lib-grpc/pkg/client"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
 	originGRPC "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -130,13 +128,8 @@ func (s *Client) SignTransaction(ctx context.Context,
 	walletUUID string,
 	mnemonicWalletUUID string,
 	accountIndex, internalIndex, addressIndex uint32,
-	tronCreatedTx *tronCore.Transaction,
+	tronCreatedTxData []byte,
 ) (*pbApi.SignTransactionResponse, error) {
-	rawData, err := proto.Marshal(tronCreatedTx)
-	if err != nil {
-		return nil, err
-	}
-
 	signReq := &pbApi.SignTransactionRequest{
 		WalletUUID:         walletUUID,
 		MnemonicWalletUUID: mnemonicWalletUUID,
@@ -145,7 +138,7 @@ func (s *Client) SignTransaction(ctx context.Context,
 			InternalIndex: internalIndex,
 			AddressIndex:  addressIndex,
 		},
-		CreatedTxData: rawData,
+		CreatedTxData: tronCreatedTxData,
 	}
 
 	signResp, err := s.client.SignTransaction(ctx, signReq)

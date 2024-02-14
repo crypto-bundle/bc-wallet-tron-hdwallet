@@ -30,11 +30,6 @@ type Wallet struct {
 	*Key
 }
 
-type confiManagerer interface {
-	IsModeDev() bool
-	IsModeTest() bool
-}
-
 // BTC parent
 type BTC struct {
 	blockChainParams *chaincfg.Params

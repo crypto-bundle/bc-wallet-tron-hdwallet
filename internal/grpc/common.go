@@ -3,11 +3,9 @@ package grpc
 import (
 	"context"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
-	pbApi "gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
-
+	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 	"github.com/google/uuid"
 )
 
@@ -45,7 +43,7 @@ type walletManagerService interface {
 		walletUUID uuid.UUID,
 		mnemonicUUID uuid.UUID,
 		account, change, index uint32,
-		transaction *tronCore.Transaction,
+		transactionData []byte,
 	) (*types.PublicSignTxData, error)
 }
 

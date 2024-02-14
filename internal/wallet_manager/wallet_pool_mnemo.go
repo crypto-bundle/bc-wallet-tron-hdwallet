@@ -9,19 +9,16 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/app"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/entities"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"gitlab.heronodes.io/bc-platform/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/entities"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	tronCore "gitlab.heronodes.io/bc-platform/bc-connector-common/pkg/grpc/bc_adapter_api/proto/vendored/tron/node/core"
-
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 type addressData struct {
@@ -129,14 +126,14 @@ func (u *MnemonicWalletUnit) GetPublicData() *types.PublicMnemonicWalletData {
 
 func (u *MnemonicWalletUnit) SignTransaction(ctx context.Context,
 	account, change, index uint32,
-	transaction *tronCore.Transaction,
+	transactionData []byte,
 ) (*types.PublicSignTxData, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	if u.isWalletLoaded {
 		defer u.onAirTicker.Reset(u.unloadTimerInterval)
-		return u.signTransaction(ctx, account, change, index, transaction)
+		return u.signTransaction(ctx, account, change, index, transactionData)
 	}
 
 	err := u.loadWallet(ctx)
@@ -144,13 +141,13 @@ func (u *MnemonicWalletUnit) SignTransaction(ctx context.Context,
 		return nil, err
 	}
 
-	return u.signTransaction(ctx, account, change, index, transaction)
+	return u.signTransaction(ctx, account, change, index, transactionData)
 
 }
 
 func (u *MnemonicWalletUnit) signTransaction(ctx context.Context,
 	account, change, index uint32,
-	transaction *tronCore.Transaction,
+	transactionData []byte,
 ) (*types.PublicSignTxData, error) {
 	key := fmt.Sprintf("%d'/%d/%d", account, change, index)
 	addrData, isExists := u.addressPool[key]
@@ -165,21 +162,14 @@ func (u *MnemonicWalletUnit) signTransaction(ctx context.Context,
 			return nil, walletErr
 		}
 
-		clonedX := *tronWallet.ExtendedKey.PrivateECDSA.X
-		clonedY := *tronWallet.ExtendedKey.PrivateECDSA.Y
-		clonedD := *tronWallet.ExtendedKey.PrivateECDSA.D
-		clonedPrivKey := ecdsa.PrivateKey{
-			PublicKey: ecdsa.PublicKey{
-				Curve: tronWallet.ExtendedKey.PrivateECDSA.Curve,
-				X:     &clonedX,
-				Y:     &clonedY,
-			},
-			D: &clonedD,
+		clonedPrivKey, walletErr := tronWallet.ExtendedKey.CloneECDSAPrivateKey()
+		if walletErr != nil {
+			return nil, walletErr
 		}
 
 		addrData = &addressData{
 			address:    address,
-			privateKey: &clonedPrivKey,
+			privateKey: clonedPrivKey,
 		}
 
 		u.addressPool[key] = addrData
@@ -192,33 +182,22 @@ func (u *MnemonicWalletUnit) signTransaction(ctx context.Context,
 		//}()
 	}
 
-	rawData, err := proto.Marshal(transaction.GetRawData())
-	if err != nil {
-		return nil, err
-	}
-
 	h256h := sha256.New()
-	h256h.Write(rawData)
+	h256h.Write(transactionData)
 	hash := h256h.Sum(nil)
 
-	contractList := transaction.GetRawData().GetContract()
-
-	for range contractList {
-		signature, signErr := crypto.Sign(hash, addrData.privateKey)
-		if signErr != nil {
-			u.logger.Error("unable to sign", zap.Error(signErr),
-				zap.String(app.HDWalletAddressTag, addrData.address))
-			return nil, signErr
-		}
-
-		transaction.Signature = append(transaction.Signature, signature)
+	signedData, signErr := crypto.Sign(hash, addrData.privateKey)
+	if signErr != nil {
+		u.logger.Error("unable to sign", zap.Error(signErr),
+			zap.String(app.HDWalletAddressTag, addrData.address))
+		return nil, signErr
 	}
 
 	return &types.PublicSignTxData{
 		WalletUUID:   u.walletEntity.WalletUUID,
 		MnemonicUUID: u.mnemonicWalletUUID,
 		MnemonicHash: u.walletEntity.MnemonicHash,
-		SignedTx:     transaction,
+		SignedTx:     signedData,
 		AddressData: &types.PublicDerivationAddressData{
 			AccountIndex:  account,
 			InternalIndex: change,

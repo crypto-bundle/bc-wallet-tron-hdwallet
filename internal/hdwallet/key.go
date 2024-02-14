@@ -98,15 +98,17 @@ func (k *Key) GetChildKey(purpose, coinType,
 	var err error
 	//k.ExtendedKey.SetNet(network)
 
-	extendedKeyCloned := *k.ExtendedKey
-	extendedKey := &extendedKeyCloned
+	extendedKeyCloned, err := k.ExtendedKey.CloneWithVersion(k.Network.HDPrivateKeyID[:])
+	if err != nil {
+		return nil, nil, err
+	}
 
 	//extendedKey.SetNet(network)
-	accountKey := extendedKey
+	accountKey := extendedKeyCloned
 	for i, v := range k.GetPath(purpose, coinType, account, change, addressIndex) {
-		extendedKey, err = extendedKey.Derive(v)
-		if err != nil {
-			return nil, nil, err
+		extendedKey, loopErr := extendedKeyCloned.Derive(v)
+		if loopErr != nil {
+			return nil, nil, loopErr
 		}
 
 		if i == 2 {
@@ -124,7 +126,7 @@ func (k *Key) GetChildKey(purpose, coinType,
 		return nil, nil, err
 	}
 
-	key, err := newKey(extendedKey, k.Network)
+	key, err := newKey(extendedKeyCloned, k.Network)
 
 	return acc, key, err
 }
@@ -207,4 +209,22 @@ func (k *Key) AddressP2WPKHInP2SH() (string, error) {
 	}
 
 	return addr1.EncodeAddress(), nil
+}
+
+// CloneECDSAPrivateKey generate public key to p2wpkh style address
+func (k *Key) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
+	clonedX := *k.PrivateECDSA.X
+	clonedY := *k.PrivateECDSA.Y
+	clonedD := *k.PrivateECDSA.D
+
+	clonedPrivKey := ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: btcec.S256(),
+			X:     &clonedX,
+			Y:     &clonedY,
+		},
+		D: &clonedD,
+	}
+
+	return &clonedPrivKey, nil
 }
