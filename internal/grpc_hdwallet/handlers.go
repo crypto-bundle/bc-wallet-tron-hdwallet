@@ -2,10 +2,8 @@ package grpc_hdwallet
 
 import (
 	"context"
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
-
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
 	"go.uber.org/zap"
 )
 
@@ -14,14 +12,14 @@ type grpcServerHandle struct {
 	*pbApi.UnimplementedHdWalletApiServer
 
 	logger *zap.Logger
-	cfg    *config.MangerConfig
+	cfg    configService
 	// all GRPC handlers
 	generateMnemonicHandlerSvc generateMnemonicHandlerService
 	loadMnemonicHandlerSvc     loadMnemonicHandlerService
 	unLoadMnemonicHandlerSvc   unLoadMnemonicHandlerService
 	getDerivationAddressSvc    getDerivationAddressHandlerService
 	getDerivationsAddressesSvc getDerivationsAddressesHandlerService
-	signTransactionSvc         signTransactionHandlerService
+	signDataSvc                signDataHandlerService
 }
 
 func (h *grpcServerHandle) GenerateMnemonic(ctx context.Context,
@@ -54,10 +52,10 @@ func (h *grpcServerHandle) GetDerivationAddressByRange(ctx context.Context,
 	return h.getDerivationsAddressesSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) SignTransaction(ctx context.Context,
-	req *pbApi.SignTransactionRequest,
-) (*pbApi.SignTransactionResponse, error) {
-	return h.signTransactionSvc.Handle(ctx, req)
+func (h *grpcServerHandle) SignData(ctx context.Context,
+	req *pbApi.SignDataRequest,
+) (*pbApi.SignDataResponse, error) {
+	return h.signDataSvc.Handle(ctx, req)
 }
 
 // New instance of service
@@ -81,5 +79,6 @@ func New(ctx context.Context,
 		unLoadMnemonicHandlerSvc:   MakeUnLoadMnemonicHandler(l),
 		getDerivationAddressSvc:    MakeGetDerivationAddressHandler(l),
 		getDerivationsAddressesSvc: MakeGetDerivationsAddressesHandler(l),
+		signDataSvc:                MakeSignDataHandler(l),
 	}
 }

@@ -16,7 +16,7 @@ Mnemonic wallets stored in Postgresql database as encrypted Hashicord **Vault** 
 ## Requirements
 
 ### k8s
-Helm deploy describes in [./deploy/helm/api](./deploy/helm/api)
+Helm deploy describes in [./deploy/helm/api](./deploy/helm/hdwallet)
 
 ### PostgreSQL
 * Database: bc-wallet-tron-hdwallet

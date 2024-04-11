@@ -2,14 +2,14 @@ package grpc_hdwallet
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go"
 	"net"
 
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 
 	commonGRPCServer "github.com/crypto-bundle/bc-wallet-common-lib-grpc/pkg/server"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -54,10 +54,10 @@ func (s *Server) shutdown() error {
 }
 
 func (s *Server) ListenAndServe(ctx context.Context) (err error) {
-	listenConn, err := net.Listen("tcp", s.configSvc.GetBindPort())
+	listenConn, err := net.Listen("unix", s.configSvc.GetConnectionPath())
 	if err != nil {
-		s.logger.Error("unable to listen port", zap.Error(err),
-			zap.String("port", s.configSvc.GetBindPort()))
+		s.logger.Error("unable to listen", zap.Error(err),
+			zap.String("path", s.configSvc.GetConnectionPath()))
 
 		return err
 	}
@@ -76,7 +76,7 @@ func (s *Server) ListenAndServe(ctx context.Context) (err error) {
 		err = s.grpcServer.Serve(s.listener)
 		if err != nil {
 			s.logger.Error("unable to start serving", zap.Error(err),
-				zap.String("port", s.configSvc.GetBindPort()))
+				zap.String("path", s.configSvc.GetConnectionPath()))
 		}
 	}()
 

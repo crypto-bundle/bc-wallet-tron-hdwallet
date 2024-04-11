@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      volumes:
+        - name: {{ .Chart.Name }}-shared-socket-data
+          emptyDir: {}
+
+      initContainers:
+        - name: {{ .Chart.Name }}-migrator
+          image: {{ $.Values.migrator.image.repository }}:{{ include "app.migratorContainer.tag" . }}
+          imagePullPolicy: {{ .Values.migrator.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.migrator.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.migrator.resources | nindent 12 }}
+          env:
+            {{ include "_env_common" . | nindent 12 }}
+            {{ include "_env_vault" . | nindent 12 }}
+            {{ include "_env_store" . | nindent 12 }}
+            {{ include "_env_app_migrator" . | nindent 12 }}
+          volumeMounts:
+            - name: migrations
+              mountPath: {{ include "app.migratorContainerPath" . }}
+          command: [ "/opt/appworker/migrator" ]
+          args:
+            - "-dir"
+            - {{ include "app.migratorContainerPath" . }}
+            - "up"
+
+      containers:
+        - name: {{ .Chart.Name }}-controller
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ $.Values.global.container_registry }}:{{ include "app.container.tag" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: {{ pluck .Values.global.env .Values.app.controller.grpc_port | first | default .Values.app.controller.grpc_port._default }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-shared-socket-data
+              mountPath: {{ .Values.common.unix_socket_path }}
+          env:
+  {{ include "_env_common" . | nindent 12 }}
+  {{ include "_env_vault" . | nindent 12 }}
+  {{ include "_env_store" . | nindent 12 }}
+  {{ include "_env_app_controller" . | nindent 12 }}
+
+        - name: {{ .Chart.Name }}-api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ $.Values.global.container_registry }}:{{ include "app.container.tag" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-shared-socket-data
+              mountPath: {{ .Values.common.unix_socket_path }}
+          env:
+  {{ include "_env_common" . | nindent 12 }}
+  {{ include "_env_vault" . | nindent 12 }}
+  {{ include "_env_app_api" . | nindent 12 }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

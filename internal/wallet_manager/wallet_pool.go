@@ -2,6 +2,7 @@ package wallet_manager
 
 import (
 	"context"
+	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
@@ -16,12 +17,13 @@ type Pool struct {
 
 	runTimeCtx context.Context
 
-	walletsDataSrv         walletsDataService
-	mnemonicWalletsDataSrv mnemonicWalletsDataService
-	encryptSrv             encryptService
+	encryptSrv encryptService
 
 	walletUnitsCount uint
-	walletUnits      map[uuid.UUID]WalletPoolUnitService
+
+	walletUnitTimers map[uuid.UUID]*time.Timer
+
+	walletUnits map[uuid.UUID]WalletPoolUnitService
 }
 
 func (p *Pool) Init(ctx context.Context) error {
@@ -93,6 +95,7 @@ func (p *Pool) AddAWalletUnit(ctx context.Context,
 
 func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	walletUUID uuid.UUID,
+	timeToLive time.Duration,
 	walletUnit WalletPoolUnitService,
 ) error {
 	_, isExists := p.walletUnits[walletUUID]
@@ -113,6 +116,36 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	p.walletUnits[walletUUID] = walletUnit
 	p.walletUnitsCount++
 
+	timer, isExists := p.walletUnitTimers[walletUUID]
+	if isExists {
+		timer.Reset(timeToLive)
+
+		return nil
+	}
+
+	timer = time.NewTimer(timeToLive)
+	p.walletUnitTimers[walletUUID] = timer
+
+	go func() {
+		for {
+			select {
+			case fired, _ := <-timer.C:
+				loopErr := walletUnit.Shutdown(p.runTimeCtx)
+				if loopErr != nil {
+					p.logger.Error("unable to unload wallet data by ticker", zap.Error(err),
+						zap.Time(app.TickerEventTriggerTimeTag, fired))
+					continue
+				}
+
+			case <-p.runTimeCtx.Done():
+				loopErr := walletUnit.Shutdown(p.runTimeCtx)
+				if loopErr != nil {
+					p.logger.Error("unable to shutdown by ctx cancel", zap.Error(err))
+				}
+			}
+		}
+	}()
+
 	return nil
 }
 
@@ -127,30 +160,6 @@ func (p *Pool) GetAddressByPath(ctx context.Context,
 	}
 
 	return poolUnit.GetAddressByPath(ctx, mnemonicWalletUUID, account, change, index)
-}
-
-func (p *Pool) GetWalletByUUID(ctx context.Context, walletUUID uuid.UUID) (*types.PublicWalletData, error) {
-	poolUnit, isExists := p.walletUnits[walletUUID]
-	if !isExists {
-		return nil, nil
-	}
-
-	return poolUnit.GetWalletPublicData(), nil
-}
-
-func (p *Pool) GetEnabledWallets(ctx context.Context) ([]*types.PublicWalletData, error) {
-	if p.walletUnitsCount == 0 {
-		return nil, nil
-	}
-
-	result := make([]*types.PublicWalletData, len(p.walletUnits))
-	i := 0
-	for _, walletUnit := range p.walletUnits {
-		result[i] = walletUnit.GetWalletPublicData()
-		i++
-	}
-
-	return result, nil
 }
 
 func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
@@ -168,34 +177,31 @@ func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 		rangeIterable, marshallerCallback)
 }
 
-func (p *Pool) SignTransaction(ctx context.Context,
-	walletUUID uuid.UUID,
+func (p *Pool) SignData(ctx context.Context,
 	mnemonicUUID uuid.UUID,
 	account, change, index uint32,
 	transactionData []byte,
-) (*types.PublicSignTxData, error) {
-	poolUnit, isExists := p.walletUnits[walletUUID]
+) (*string, []byte, error) {
+	poolUnit, isExists := p.walletUnits[mnemonicUUID]
 	if !isExists {
-		p.logger.Error("wallet is not exists in wallet pool", zap.String(app.WalletUUIDTag, walletUUID.String()))
-		return nil, ErrPassedWalletNotFound
+		p.logger.Error("wallet is not exists in wallet pool",
+			zap.String(app.WalletUUIDTag, mnemonicUUID.String()))
+
+		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return poolUnit.SignTransaction(ctx, mnemonicUUID, account, change, index, transactionData)
+	return poolUnit.Sign(ctx, account, change, index, transactionData)
 }
 
 func newWalletPool(logger *zap.Logger,
 	cfg configService,
-	walletsDataSrv walletsDataService,
-	mnemonicWalletsDataSrv mnemonicWalletsDataService,
 	encryptSrv encryptService,
 ) *Pool {
 	return &Pool{
-		logger:                 logger,
-		cfg:                    cfg,
-		walletsDataSrv:         walletsDataSrv,
-		mnemonicWalletsDataSrv: mnemonicWalletsDataSrv,
-		encryptSrv:             encryptSrv,
-		walletUnits:            make(map[uuid.UUID]WalletPoolUnitService, 0),
-		walletUnitsCount:       0,
+		logger:           logger,
+		cfg:              cfg,
+		encryptSrv:       encryptSrv,
+		walletUnits:      make(map[uuid.UUID]WalletPoolUnitService, 0),
+		walletUnitsCount: 0,
 	}
 }
