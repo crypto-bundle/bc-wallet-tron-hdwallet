@@ -44,7 +44,7 @@ func Prepare(ctx context.Context,
 	buildNumber,
 	buildDateTS uint64,
 	applicationName string,
-) (*MangerConfig, *commonVault.Service, error) {
+) (*HdWalletConfig, *commonVault.Service, error) {
 	baseCfgSrv, err := PrepareBaseConfig(ctx, version, releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS, applicationName)
@@ -63,7 +63,7 @@ func Prepare(ctx context.Context,
 	}
 
 	appCfgPreparerSrv := commonConfig.NewConfigManager()
-	wrappedConfig := &MangerConfig{}
+	wrappedConfig := &HdWalletConfig{}
 	err = appCfgPreparerSrv.PrepareTo(wrappedConfig).With(baseCfgSrv, vaultSecretSrv).Do(ctx)
 	if err != nil {
 		return nil, nil, err

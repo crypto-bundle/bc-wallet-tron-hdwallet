@@ -4,6 +4,8 @@ import (
 	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
 	commonHealthcheck "github.com/crypto-bundle/bc-wallet-common-lib-healthcheck/pkg/healthcheck"
 	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
+
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 )
 
 // HdWalletConfig for application
@@ -14,6 +16,7 @@ type HdWalletConfig struct {
 	*commonConfig.BaseConfig
 	*commonLogger.LoggerConfig
 	*commonHealthcheck.HealthcheckHTTPConfig
+	*pbApi.HdWalletClientConfig // yes, client config for listen on unix file socket
 	*VaultWrappedConfig
 	// -------------------
 	// Internal configs

@@ -2,8 +2,10 @@ package grpc_hdwallet
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/google/uuid"
 
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 )
 
 const (
@@ -15,7 +17,27 @@ type configService interface {
 	IsDebug() bool
 	IsLocal() bool
 
-	GetBindPort() string
+	GetConnectionPath() string
+}
+
+type walletManagerService interface {
+	GetAddressByPath(ctx context.Context,
+		walletUUID uuid.UUID,
+		mnemonicWalletUUID uuid.UUID,
+		account, change, index uint32,
+	) (*string, error)
+	GetAddressesByPathByRange(ctx context.Context,
+		walletUUID uuid.UUID,
+		mnemonicWalletUUID uuid.UUID,
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
+	) error
+	SignData(ctx context.Context,
+		walletUUID uuid.UUID,
+		mnemonicUUID uuid.UUID,
+		account, change, index uint32,
+		transactionData []byte,
+	) (*string, []byte, error)
 }
 
 type generateMnemonicHandlerService interface {
@@ -36,7 +58,7 @@ type getDerivationsAddressesHandlerService interface {
 	) (*pbApi.DerivationAddressByRangeResponse, error)
 }
 
-type signTransactionHandlerService interface {
+type signDataHandlerService interface {
 	Handle(ctx context.Context,
 		req *pbApi.SignTransactionRequest,
 	) (*pbApi.SignTransactionResponse, error)
