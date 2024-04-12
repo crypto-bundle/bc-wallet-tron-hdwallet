@@ -20,7 +20,16 @@ type configService interface {
 	GetConnectionPath() string
 }
 
-type walletManagerService interface {
+type mnemonicGeneratorService interface {
+	Generate(ctx context.Context) (string, error)
+}
+
+type encryptService interface {
+	Encrypt(msg []byte) ([]byte, error)
+	Decrypt(encMsg []byte) ([]byte, error)
+}
+
+type walletPoolService interface {
 	GetAddressByPath(ctx context.Context,
 		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,
@@ -52,6 +61,18 @@ type unLoadMnemonicHandlerService interface {
 	Handle(ctx context.Context, req *pbApi.UnLoadMnemonicRequest) (*pbApi.UnLoadMnemonicResponse, error)
 }
 
+type unLoadMultipleMnemonicsHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.UnLoadMultipleMnemonicsRequest,
+	) (*pbApi.UnLoadMultipleMnemonicsResponse, error)
+}
+
+type encryptMnemonicHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.EncryptMnemonicRequest,
+	) (*pbApi.EncryptMnemonicResponse, error)
+}
+
 type getDerivationsAddressesHandlerService interface {
 	Handle(ctx context.Context,
 		req *pbApi.DerivationAddressByRangeRequest,
@@ -65,8 +86,8 @@ type loadDerivationsAddressesHandlerService interface {
 
 type signDataHandlerService interface {
 	Handle(ctx context.Context,
-		req *pbApi.SignTransactionRequest,
-	) (*pbApi.SignTransactionResponse, error)
+		req *pbApi.SignDataRequest,
+	) (*pbApi.SignDataResponse, error)
 }
 
 type getDerivationAddressHandlerService interface {
