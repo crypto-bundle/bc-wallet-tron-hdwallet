@@ -57,6 +57,11 @@ type getDerivationsAddressesHandlerService interface {
 		req *pbApi.DerivationAddressByRangeRequest,
 	) (*pbApi.DerivationAddressByRangeResponse, error)
 }
+type loadDerivationsAddressesHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.LoadDerivationAddressRequest,
+	) (*pbApi.LoadDerivationAddressResponse, error)
+}
 
 type signDataHandlerService interface {
 	Handle(ctx context.Context,

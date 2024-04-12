@@ -25,4 +25,10 @@
 
 - name: API_GRPC_PORT
   value: {{ pluck .Values.global.env .Values.app.controller.grpc_port | first | default .Values.app.controller.grpc_port._default | quote }}
+
+- name: EVENT_CHANNEL_WORKERS_COUNT
+  value: {{ pluck .Values.global.env .Values.app.controller.events.workers_count | first | default .Values.app.controller.events.workers_count._default | quote }}
+- name: EVENT_CHANNEL_BUFFER_SIZE
+  value: {{ pluck .Values.global.env .Values.app.controller.events.buffer_size | first | default .Values.app.controller.events.buffer_size._default | quote }}
+
 {{- end }}

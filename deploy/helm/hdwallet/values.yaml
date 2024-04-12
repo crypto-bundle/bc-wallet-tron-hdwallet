@@ -206,6 +206,12 @@ app:
       _default: 8098
       production: 8098
 
+    events:
+      workers_count:
+        _default: 8
+      buffer_size:
+        _default: 8
+
   api:
     vault:
       data_path:
