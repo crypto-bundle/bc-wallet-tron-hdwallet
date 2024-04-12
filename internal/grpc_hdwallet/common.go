@@ -2,6 +2,7 @@ package grpc_hdwallet
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/google/uuid"
 
@@ -27,6 +28,15 @@ type mnemonicGeneratorService interface {
 type encryptService interface {
 	Encrypt(msg []byte) ([]byte, error)
 	Decrypt(encMsg []byte) ([]byte, error)
+}
+
+type hdWalleter interface {
+	PublicHex() string
+	PublicHash() ([]byte, error)
+
+	NewTronWallet(account, change, address uint32) (*hdwallet.Tron, error)
+
+	ClearSecrets()
 }
 
 type walletPoolService interface {

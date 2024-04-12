@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
@@ -44,6 +45,12 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 			decryptedData[i] = 0
 		}
 	}()
+
+	blockChainParams := chaincfg.MainNetParams
+	_, err = hdwallet.NewFromString(string(decryptedData), &blockChainParams)
+	if err != nil {
+		return nil, err
+	}
 
 	encryptedMnemonicData, err := h.appEncryptorSvc.Encrypt(decryptedData)
 	if err != nil {
