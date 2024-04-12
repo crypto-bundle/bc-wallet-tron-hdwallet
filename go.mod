@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-4
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-5
 	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.3
 	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.2
 	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.2

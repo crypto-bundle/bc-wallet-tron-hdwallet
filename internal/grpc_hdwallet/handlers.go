@@ -19,6 +19,7 @@ type grpcServerHandle struct {
 	unLoadMnemonicHandlerSvc   unLoadMnemonicHandlerService
 	getDerivationAddressSvc    getDerivationAddressHandlerService
 	getDerivationsAddressesSvc getDerivationsAddressesHandlerService
+	loadDerivationAddressSvc   loadDerivationsAddressesHandlerService
 	signDataSvc                signDataHandlerService
 }
 
@@ -52,6 +53,12 @@ func (h *grpcServerHandle) GetDerivationAddressByRange(ctx context.Context,
 	return h.getDerivationsAddressesSvc.Handle(ctx, req)
 }
 
+func (h *grpcServerHandle) LoadDerivationAddress(ctx context.Context,
+	req *pbApi.LoadDerivationAddressRequest,
+) (*pbApi.LoadDerivationAddressResponse, error) {
+	return h.loadDerivationAddressSvc.Handle(ctx, req)
+}
+
 func (h *grpcServerHandle) SignData(ctx context.Context,
 	req *pbApi.SignDataRequest,
 ) (*pbApi.SignDataResponse, error) {
@@ -59,9 +66,7 @@ func (h *grpcServerHandle) SignData(ctx context.Context,
 }
 
 // New instance of service
-func New(ctx context.Context,
-	loggerSrv *zap.Logger,
-) pbApi.HdWalletApiServer {
+func New(loggerSrv *zap.Logger) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
