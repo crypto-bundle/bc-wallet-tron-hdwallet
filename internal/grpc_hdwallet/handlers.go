@@ -5,6 +5,8 @@ import (
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // grpcServerHandle is wrapper struct for implementation all grpc handlers
@@ -14,13 +16,15 @@ type grpcServerHandle struct {
 	logger *zap.Logger
 	cfg    configService
 	// all GRPC handlers
-	generateMnemonicHandlerSvc generateMnemonicHandlerService
-	loadMnemonicHandlerSvc     loadMnemonicHandlerService
-	unLoadMnemonicHandlerSvc   unLoadMnemonicHandlerService
-	getDerivationAddressSvc    getDerivationAddressHandlerService
-	getDerivationsAddressesSvc getDerivationsAddressesHandlerService
-	loadDerivationAddressSvc   loadDerivationsAddressesHandlerService
-	signDataSvc                signDataHandlerService
+	generateMnemonicHandlerSvc        generateMnemonicHandlerService
+	loadMnemonicHandlerSvc            loadMnemonicHandlerService
+	unLoadMnemonicHandlerSvc          unLoadMnemonicHandlerService
+	unLoadMultipleMnemonicsHandlerSvc unLoadMultipleMnemonicsHandlerService
+	encryptMnemonicHandlerSvc         encryptMnemonicHandlerService
+	getDerivationAddressSvc           getDerivationAddressHandlerService
+	getDerivationsAddressesSvc        getDerivationsAddressesHandlerService
+	loadDerivationAddressSvc          loadDerivationsAddressesHandlerService
+	signDataSvc                       signDataHandlerService
 }
 
 func (h *grpcServerHandle) GenerateMnemonic(ctx context.Context,
@@ -39,6 +43,18 @@ func (h *grpcServerHandle) UnLoadMnemonic(ctx context.Context,
 	req *pbApi.UnLoadMnemonicRequest,
 ) (*pbApi.UnLoadMnemonicResponse, error) {
 	return h.unLoadMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) UnLoadMultipleMnemonics(ctx context.Context,
+	req *pbApi.UnLoadMultipleMnemonicsRequest,
+) (*pbApi.UnLoadMultipleMnemonicsResponse, error) {
+	return h.unLoadMultipleMnemonicsHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) EncryptMnemonic(context.Context,
+	*pbApi.EncryptMnemonicRequest,
+) (*pbApi.EncryptMnemonicResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EncryptMnemonic not implemented")
 }
 
 func (h *grpcServerHandle) GetDerivationAddress(ctx context.Context,
@@ -79,11 +95,13 @@ func New(loggerSrv *zap.Logger) pbApi.HdWalletApiServer {
 		UnimplementedHdWalletApiServer: &pbApi.UnimplementedHdWalletApiServer{},
 		logger:                         l,
 
-		generateMnemonicHandlerSvc: MakeGenerateMnemonicHandler(l),
-		loadMnemonicHandlerSvc:     MakeLoadMnemonicHandler(l),
-		unLoadMnemonicHandlerSvc:   MakeUnLoadMnemonicHandler(l),
-		getDerivationAddressSvc:    MakeGetDerivationAddressHandler(l),
-		getDerivationsAddressesSvc: MakeGetDerivationsAddressesHandler(l),
-		signDataSvc:                MakeSignDataHandler(l),
+		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l),
+		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l),
+		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l),
+		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l),
+		encryptMnemonicHandlerSvc:         MakeEncryptMnemonicHandler(l),
+		getDerivationAddressSvc:           MakeGetDerivationAddressHandler(l),
+		getDerivationsAddressesSvc:        MakeGetDerivationsAddressesHandler(l),
+		signDataSvc:                       MakeSignDataHandler(l),
 	}
 }
