@@ -11,170 +11,140 @@ import (
 	"go.uber.org/zap"
 )
 
+type unitWrapper struct {
+	Ctx        context.Context
+	CancelFunc context.CancelFunc
+	Timer      *time.Timer
+	Unit       WalletPoolUnitService
+}
+
 type Pool struct {
 	logger *zap.Logger
 	cfg    configService
 
 	runTimeCtx context.Context
 
-	encryptSrv encryptService
+	encryptSvc encryptService
 
 	walletUnitsCount uint
 
 	walletUnitTimers map[uuid.UUID]*time.Timer
 
-	walletUnits map[uuid.UUID]WalletPoolUnitService
-}
-
-func (p *Pool) Init(ctx context.Context) error {
-	for _, walletUnit := range p.walletUnits {
-		initErr := walletUnit.Init(ctx)
-		if initErr != nil {
-			return initErr
-		}
-	}
-
-	return nil
-}
-
-func (p *Pool) Run(ctx context.Context) error {
-	p.runTimeCtx = ctx
-
-	for _, walletUnit := range p.walletUnits {
-		initErr := walletUnit.Run(ctx)
-		if initErr != nil {
-			return initErr
-		}
-	}
-
-	return nil
-}
-
-func (p *Pool) Shutdown(ctx context.Context) error {
-	for _, walletUnit := range p.walletUnits {
-		initErr := walletUnit.Shutdown(ctx)
-		if initErr != nil {
-			return initErr
-		}
-	}
-
-	return nil
-}
-
-func (p *Pool) SetWalletUnits(ctx context.Context,
-	walletUnits map[uuid.UUID]WalletPoolUnitService,
-) error {
-	if len(p.walletUnits) > 0 {
-		return ErrWalletPoolIsNotEmpty
-	}
-
-	if len(walletUnits) == 0 {
-		return ErrPassedWalletPoolUnitIsEmpty
-	}
-
-	p.walletUnits = walletUnits
-	p.walletUnitsCount = uint(len(walletUnits))
-
-	return nil
-}
-
-func (p *Pool) AddAWalletUnit(ctx context.Context,
-	walletUUID uuid.UUID,
-	walletUnit WalletPoolUnitService,
-) error {
-	_, isExists := p.walletUnits[walletUUID]
-	if isExists {
-		return ErrPassedWalletAlreadyExists
-	}
-
-	p.walletUnits[walletUUID] = walletUnit
-	p.walletUnitsCount++
-
-	return nil
+	walletUnits map[uuid.UUID]*unitWrapper
 }
 
 func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	walletUUID uuid.UUID,
 	timeToLive time.Duration,
-	walletUnit WalletPoolUnitService,
+	mnemonicEncryptedData []byte,
 ) error {
-	_, isExists := p.walletUnits[walletUUID]
+	wuWrapper, isExists := p.walletUnits[walletUUID]
 	if isExists {
-		return ErrPassedWalletAlreadyExists
-	}
-
-	err := walletUnit.Init(p.runTimeCtx)
-	if err != nil {
-		return err
-	}
-
-	err = walletUnit.Run(p.runTimeCtx)
-	if err != nil {
-		return err
-	}
-
-	p.walletUnits[walletUUID] = walletUnit
-	p.walletUnitsCount++
-
-	timer, isExists := p.walletUnitTimers[walletUUID]
-	if isExists {
-		timer.Reset(timeToLive)
+		wuWrapper.Timer.Reset(timeToLive)
 
 		return nil
 	}
 
-	timer = time.NewTimer(timeToLive)
-	p.walletUnitTimers[walletUUID] = timer
+	unitCtx, cancelFunc := context.WithCancel(p.runTimeCtx)
 
-	go func() {
+	started := make(chan struct{})
+	timer := time.AfterFunc(timeToLive, func() {
+		<-started
+		return
+	})
+
+	walletUnit := newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
+
+	wrapper := &unitWrapper{
+		Ctx:        unitCtx,
+		CancelFunc: cancelFunc,
+		Timer:      timer,
+		Unit:       walletUnit,
+	}
+	p.walletUnits[walletUUID] = wrapper
+	p.walletUnitsCount++
+
+	err := walletUnit.Run(unitCtx)
+	if err != nil {
+		return err
+	}
+
+	go func(wrapped *unitWrapper) {
 		for {
 			select {
-			case fired, _ := <-timer.C:
-				loopErr := walletUnit.Shutdown(p.runTimeCtx)
+			case fired, _ := <-wrapped.Timer.C:
+				loopErr := wrapped.Unit.Shutdown(wrapped.Ctx)
 				if loopErr != nil {
-					p.logger.Error("unable to unload wallet data by ticker", zap.Error(err),
+					p.logger.Error("unable to unload wallet data by ticker", zap.Error(loopErr),
 						zap.Time(app.TickerEventTriggerTimeTag, fired))
 					continue
 				}
 
-			case <-p.runTimeCtx.Done():
-				loopErr := walletUnit.Shutdown(p.runTimeCtx)
+			case <-wrapped.Ctx.Done():
+				loopErr := wrapped.Unit.Shutdown(wrapped.Ctx)
 				if loopErr != nil {
-					p.logger.Error("unable to shutdown by ctx cancel", zap.Error(err))
+					p.logger.Error("unable to shutdown by ctx cancel", zap.Error(loopErr))
 				}
 			}
 		}
-	}()
+	}(wrapper)
+
+	started <- struct{}{}
+
+	return nil
+}
+
+func (p *Pool) UnloadWalletUnit(ctx context.Context,
+	mnemonicWalletUUID uuid.UUID,
+) error {
+	wUint, isExists := p.walletUnits[mnemonicWalletUUID]
+	if !isExists {
+		return ErrPassedWalletNotFound
+	}
+
+	wUint.CancelFunc()
+	wUint.Unit = nil
+	p.walletUnits[mnemonicWalletUUID] = nil
 
 	return nil
 }
 
 func (p *Pool) GetAddressByPath(ctx context.Context,
-	walletUUID uuid.UUID,
 	mnemonicWalletUUID uuid.UUID,
 	account, change, index uint32,
 ) (string, error) {
-	poolUnit, isExists := p.walletUnits[walletUUID]
+	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return "", ErrPassedWalletNotFound
 	}
 
-	return poolUnit.GetAddressByPath(ctx, mnemonicWalletUUID, account, change, index)
+	return wUnit.Unit.GetAddressByPath(ctx, account, change, index)
 }
 
 func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
-	walletUUID uuid.UUID,
 	mnemonicWalletUUID uuid.UUID,
 	rangeIterable types.AddrRangeIterable,
 	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
-	poolUnit, isExists := p.walletUnits[walletUUID]
+	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return ErrPassedWalletNotFound
 	}
 
-	return poolUnit.GetAddressesByPathByRange(ctx, mnemonicWalletUUID,
+	return wUnit.Unit.GetAddressesByPathByRange(ctx,
 		rangeIterable, marshallerCallback)
+}
+
+func (p *Pool) LoadAddressByPath(ctx context.Context,
+	mnemonicWalletUUID uuid.UUID,
+	account, change, index uint32,
+) (string, error) {
+	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
+	if !isExists {
+		return "", ErrPassedWalletNotFound
+	}
+
+	return wUnit.Unit.LoadAddressByPath(ctx, account, change, index)
 }
 
 func (p *Pool) SignData(ctx context.Context,
@@ -182,7 +152,7 @@ func (p *Pool) SignData(ctx context.Context,
 	account, change, index uint32,
 	transactionData []byte,
 ) (*string, []byte, error) {
-	poolUnit, isExists := p.walletUnits[mnemonicUUID]
+	wUnit, isExists := p.walletUnits[mnemonicUUID]
 	if !isExists {
 		p.logger.Error("wallet is not exists in wallet pool",
 			zap.String(app.WalletUUIDTag, mnemonicUUID.String()))
@@ -190,7 +160,7 @@ func (p *Pool) SignData(ctx context.Context,
 		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return poolUnit.Sign(ctx, account, change, index, transactionData)
+	return wUnit.Unit.SignData(ctx, account, change, index, transactionData)
 }
 
 func newWalletPool(logger *zap.Logger,
@@ -200,8 +170,8 @@ func newWalletPool(logger *zap.Logger,
 	return &Pool{
 		logger:           logger,
 		cfg:              cfg,
-		encryptSrv:       encryptSrv,
-		walletUnits:      make(map[uuid.UUID]WalletPoolUnitService, 0),
+		encryptSvc:       encryptSrv,
+		walletUnits:      make(map[uuid.UUID]*unitWrapper),
 		walletUnitsCount: 0,
 	}
 }

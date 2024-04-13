@@ -17,6 +17,9 @@ const (
 
 type generateMnemonicHandler struct {
 	l *zap.Logger
+
+	generatorSvc    mnemonicGeneratorService
+	appEncryptorSvc encryptService
 }
 
 // nolint:funlen // fixme

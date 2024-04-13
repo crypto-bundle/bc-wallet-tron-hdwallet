@@ -22,6 +22,18 @@ type HdWalletConfig struct {
 	// Internal configs
 	// -------------------
 	*MnemonicConfig
+	// VaultCommonTransitKey - common vault transit key for whole processing cluster
+	VaultCommonTransitKey string `envconfig:"VAULT_COMMON_TRANSIT_KEY" default:"-"`
+	// VaultApplicationEncryptionKey - vault encryption key for hd-wallet-controller and hd-wallet-api application
+	VaultApplicationEncryptionKey string `envconfig:"VAULT_APP_ENCRYPTION_KEY" default:"-"`
+}
+
+func (c *HdWalletConfig) GetVaultCommonTransit() string {
+	return c.VaultCommonTransitKey
+}
+
+func (c *HdWalletConfig) GetVaultAppEncryptionKey() string {
+	return c.VaultApplicationEncryptionKey
 }
 
 // Prepare variables to static configuration
