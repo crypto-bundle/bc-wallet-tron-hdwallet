@@ -17,6 +17,8 @@ const (
 
 type getDerivationAddressHandler struct {
 	l *zap.Logger
+
+	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme

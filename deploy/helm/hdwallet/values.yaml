@@ -31,6 +31,27 @@ common:
 
   affinity: {}
 
+  startupProbe:
+    httpGet:
+      path: /startup
+      port: 8101
+    initialDelaySeconds: 8
+    periodSeconds: 3
+
+  readinessProbe:
+    httpGet:
+      path: /rediness
+      port: 8102
+    initialDelaySeconds: 8
+    periodSeconds: 3
+
+  livenessProbe:
+    httpGet:
+      path: /liveness
+      port: 8103
+    initialDelaySeconds: 8
+    periodSeconds: 3
+
   serviceAccount:
     # Specifies whether a service account should be created
     create: true
@@ -84,6 +105,34 @@ common:
       _default: debug
       test: debug
       production: error
+
+  healthcheck:
+    startup:
+      enabled:
+        _default: true
+      http_server:
+        read_timeout:
+          _default: 4s
+        write_timeout:
+          _default: 4s
+
+    readiness:
+      enabled:
+        _default: true
+      http_server:
+        read_timeout:
+          _default: 4s
+        write_timeout:
+          _default: 4s
+
+    liveness:
+      enabled:
+        _default: true
+      http_server:
+        read_timeout:
+          _default: 4s
+        write_timeout:
+          _default: 4s
 
   stage:
     name:

@@ -28,10 +28,10 @@ type addressData struct {
 	privateKey *ecdsa.PrivateKey
 }
 
-type MnemonicWalletUnit struct {
+type mnemonicWalletUnit struct {
 	logger *zap.Logger
 
-	mu sync.Mutex
+	mu *sync.Mutex
 
 	cfgSrv       configService
 	hdWalletSrv  hdWalleter
@@ -47,11 +47,11 @@ type MnemonicWalletUnit struct {
 	addressPool map[string]*addressData
 }
 
-func (u *MnemonicWalletUnit) Init(ctx context.Context) error {
+func (u *mnemonicWalletUnit) Init(ctx context.Context) error {
 	return nil
 }
 
-func (u *MnemonicWalletUnit) Run(ctx context.Context) error {
+func (u *mnemonicWalletUnit) Run(ctx context.Context) error {
 	err := u.loadWallet(ctx)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (u *MnemonicWalletUnit) Run(ctx context.Context) error {
 	return nil
 }
 
-func (u *MnemonicWalletUnit) Shutdown(ctx context.Context) error {
+func (u *mnemonicWalletUnit) Shutdown(ctx context.Context) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -71,17 +71,26 @@ func (u *MnemonicWalletUnit) Shutdown(ctx context.Context) error {
 		return err
 	}
 
+	for i := range u.mnemonicWalletUUID {
+		u.mnemonicWalletUUID[i] = 0
+	}
+
+	u.logger.Info("wallet successfully unload")
+
+	u.cfgSrv = nil
+	u.logger = nil
+
 	return nil
 }
 
-func (u *MnemonicWalletUnit) UnloadWallet() error {
+func (u *mnemonicWalletUnit) UnloadWallet() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	return u.unloadWallet()
 }
 
-func (u *MnemonicWalletUnit) unloadWallet() error {
+func (u *mnemonicWalletUnit) unloadWallet() error {
 	u.hdWalletSrv.ClearSecrets()
 	u.hdWalletSrv = nil
 
@@ -104,29 +113,21 @@ func (u *MnemonicWalletUnit) unloadWallet() error {
 	}
 	u.mnemonicEncryptedData = nil
 
-	for i := range u.mnemonicWalletUUID {
-		u.mnemonicWalletUUID[i] = 0
-	}
-
-	u.logger.Info("wallet successfully unload")
-	u.logger = nil
-	u.mnemonicHash = ""
-
 	return nil
 }
 
-func (u *MnemonicWalletUnit) GetMnemonicUUID() uuid.UUID {
+func (u *mnemonicWalletUnit) GetMnemonicUUID() uuid.UUID {
 	return u.mnemonicWalletUUID
 }
 
-func (u *MnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {
+func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {
 	return &pbCommon.MnemonicWalletIdentity{
 		WalletUUID: u.mnemonicWalletUUID.String(),
 		WalletHash: u.mnemonicHash,
 	}
 }
 
-func (u *MnemonicWalletUnit) SignData(ctx context.Context,
+func (u *mnemonicWalletUnit) SignData(ctx context.Context,
 	account, change, index uint32,
 	transactionData []byte,
 ) (*string, []byte, error) {
@@ -136,7 +137,7 @@ func (u *MnemonicWalletUnit) SignData(ctx context.Context,
 	return u.signData(ctx, account, change, index, transactionData)
 }
 
-func (u *MnemonicWalletUnit) signData(ctx context.Context,
+func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	account, change, index uint32,
 	transactionData []byte,
 ) (address *string, signedData []byte, err error) {
@@ -160,7 +161,7 @@ func (u *MnemonicWalletUnit) signData(ctx context.Context,
 	return &addrData.address, signedData, nil
 }
 
-func (u *MnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
+func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
 	account, change, index uint32,
 ) (string, error) {
 	u.mu.Lock()
@@ -174,7 +175,7 @@ func (u *MnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
 	return addrData.address, nil
 }
 
-func (u *MnemonicWalletUnit) loadAddressByPath(ctx context.Context,
+func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 	account, change, index uint32,
 ) (*addressData, error) {
 	key := fmt.Sprintf("%d'/%d/%d", account, change, index)
@@ -213,7 +214,7 @@ func (u *MnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 	return addrData, nil
 }
 
-func (u *MnemonicWalletUnit) GetAddressByPath(ctx context.Context,
+func (u *mnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 	account, change, index uint32,
 ) (string, error) {
 	u.mu.Lock()
@@ -227,7 +228,7 @@ func (u *MnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 	return u.getAddressByPath(ctx, account, change, index)
 }
 
-func (u *MnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
+func (u *mnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
 	rangeIterable types.AddrRangeIterable,
 	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
@@ -237,7 +238,7 @@ func (u *MnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
 	return u.getAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
 }
 
-func (u *MnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
+func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 	rangeIterable types.AddrRangeIterable,
 	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 ) error {
@@ -308,7 +309,7 @@ func (u *MnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 	return nil
 }
 
-func (u *MnemonicWalletUnit) getAddressByPath(_ context.Context,
+func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	account, change, index uint32,
 ) (string, error) {
 	tronWallet, err := u.hdWalletSrv.NewTronWallet(account, change, index)
@@ -324,23 +325,14 @@ func (u *MnemonicWalletUnit) getAddressByPath(_ context.Context,
 	return blockchainAddress, nil
 }
 
-func (u *MnemonicWalletUnit) LoadWallet(ctx context.Context) error {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
-	return u.loadWallet(ctx)
-}
-
-func (u *MnemonicWalletUnit) loadWallet(ctx context.Context) error {
+func (u *mnemonicWalletUnit) loadWallet(ctx context.Context) error {
 	mnemonicBytes, err := u.encryptorSvc.Decrypt(u.mnemonicEncryptedData)
 	if err != nil {
 		return err
 	}
 
 	mnemonicSum256 := sha256.Sum256(mnemonicBytes)
-	if hex.EncodeToString(mnemonicSum256[:]) != u.mnemonicHash {
-		return ErrWrongMnemonicHash
-	}
+	u.mnemonicHash = hex.EncodeToString(mnemonicSum256[:])
 
 	blockChainParams := chaincfg.MainNetParams
 	hdWallet, creatErr := hdwallet.NewFromString(string(mnemonicBytes), &blockChainParams)
@@ -349,6 +341,11 @@ func (u *MnemonicWalletUnit) loadWallet(ctx context.Context) error {
 	}
 	u.hdWalletSrv = hdWallet
 
+	for i := range u.mnemonicEncryptedData {
+		u.mnemonicEncryptedData[i] = 0
+	}
+	u.mnemonicEncryptedData = nil
+
 	u.logger.Info("wallet successfully load")
 
 	return nil
@@ -356,19 +353,19 @@ func (u *MnemonicWalletUnit) loadWallet(ctx context.Context) error {
 
 func newMnemonicWalletPoolUnit(logger *zap.Logger,
 	walletUUID uuid.UUID,
-	walletHash string,
 	encryptorSvc encryptService,
-) *MnemonicWalletUnit {
-	return &MnemonicWalletUnit{
+	mnemonicEncryptedData []byte,
+) *mnemonicWalletUnit {
+	return &mnemonicWalletUnit{
 		logger: logger.With(zap.String(app.MnemonicWalletUUIDTag, walletUUID.String())),
-		mu:     sync.Mutex{},
+		mu:     &sync.Mutex{},
 
 		hdWalletSrv: nil, // that field will be field @ load wallet stage
 
 		encryptorSvc: encryptorSvc,
 
-		mnemonicWalletUUID: walletUUID,
-		mnemonicHash:       walletHash,
+		mnemonicWalletUUID:    walletUUID,
+		mnemonicEncryptedData: mnemonicEncryptedData,
 
 		addressPool: make(map[string]*addressData),
 	}

@@ -47,10 +47,14 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 	}()
 
 	blockChainParams := chaincfg.MainNetParams
-	_, err = hdwallet.NewFromString(string(decryptedData), &blockChainParams)
+	wallet, err := hdwallet.NewFromString(string(decryptedData), &blockChainParams)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		wallet.ClearSecrets()
+		wallet = nil
+	}()
 
 	encryptedMnemonicData, err := h.appEncryptorSvc.Encrypt(decryptedData)
 	if err != nil {

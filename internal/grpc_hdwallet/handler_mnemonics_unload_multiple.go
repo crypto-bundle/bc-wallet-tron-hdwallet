@@ -14,6 +14,8 @@ const (
 
 type unLoadMultipleMnemonicsHandler struct {
 	l *zap.Logger
+
+	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme

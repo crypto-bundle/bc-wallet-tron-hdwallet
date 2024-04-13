@@ -6,8 +6,6 @@ import (
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-
-	"github.com/google/uuid"
 )
 
 type configService interface {
@@ -23,11 +21,9 @@ type WalletPoolUnitService interface {
 		account, change, index uint32,
 	) (string, error)
 	GetAddressByPath(ctx context.Context,
-		mnemonicUUID uuid.UUID,
 		account, change, index uint32,
 	) (string, error)
 	GetAddressesByPathByRange(ctx context.Context,
-		mnemonicWalletUUID uuid.UUID,
 		rangeIterable types.AddrRangeIterable,
 		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
@@ -35,37 +31,6 @@ type WalletPoolUnitService interface {
 		account, change, index uint32,
 		transactionData []byte,
 	) (*string, []byte, error)
-}
-
-type walletPoolService interface {
-	Init(ctx context.Context) error
-	Run(ctx context.Context) error
-	Shutdown(ctx context.Context) error
-
-	SetWalletUnits(ctx context.Context,
-		walletUnits map[uuid.UUID]WalletPoolUnitService,
-	) error
-	AddAndStartWalletUnit(ctx context.Context,
-		walletUUID uuid.UUID,
-		walletUnit WalletPoolUnitService,
-	) error
-	GetAddressByPath(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicWalletUUID uuid.UUID,
-		account, change, index uint32,
-	) (string, error)
-	GetAddressesByPathByRange(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicWalletUUID uuid.UUID,
-		rangeIterable types.AddrRangeIterable,
-		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-	) error
-	SignTransaction(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicUUID uuid.UUID,
-		account, change, index uint32,
-		transactionData []byte,
-	) (*types.PublicSignTxData, error)
 }
 
 type mnemonicWalletConfig interface {

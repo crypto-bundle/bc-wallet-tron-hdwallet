@@ -5,6 +5,7 @@ import (
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/google/uuid"
+	"time"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 )
@@ -40,6 +41,18 @@ type hdWalleter interface {
 }
 
 type walletPoolService interface {
+	AddAndStartWalletUnit(_ context.Context,
+		walletUUID uuid.UUID,
+		timeToLive time.Duration,
+		mnemonicEncryptedData []byte,
+	) error
+	LoadAddressByPath(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+		account, change, index uint32,
+	) (string, error)
+	UnloadWalletUnit(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+	) error
 	GetAddressByPath(ctx context.Context,
 		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,

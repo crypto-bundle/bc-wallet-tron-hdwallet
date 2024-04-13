@@ -14,6 +14,8 @@ const (
 
 type signDataHandler struct {
 	l *zap.Logger
+
+	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme

@@ -17,6 +17,8 @@ const (
 
 type loadMnemonicHandler struct {
 	l *zap.Logger
+
+	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme
