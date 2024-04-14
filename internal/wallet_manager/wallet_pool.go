@@ -27,10 +27,7 @@ type Pool struct {
 	encryptSvc encryptService
 
 	walletUnitsCount uint
-
-	walletUnitTimers map[uuid.UUID]*time.Timer
-
-	walletUnits map[uuid.UUID]*unitWrapper
+	walletUnits      map[uuid.UUID]*unitWrapper
 }
 
 func (p *Pool) AddAndStartWalletUnit(_ context.Context,
@@ -138,10 +135,10 @@ func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 func (p *Pool) LoadAddressByPath(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
 	account, change, index uint32,
-) (string, error) {
+) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return "", ErrPassedWalletNotFound
+		return nil, nil
 	}
 
 	return wUnit.Unit.LoadAddressByPath(ctx, account, change, index)
@@ -150,7 +147,7 @@ func (p *Pool) LoadAddressByPath(ctx context.Context,
 func (p *Pool) SignData(ctx context.Context,
 	mnemonicUUID uuid.UUID,
 	account, change, index uint32,
-	transactionData []byte,
+	dataForSign []byte,
 ) (*string, []byte, error) {
 	wUnit, isExists := p.walletUnits[mnemonicUUID]
 	if !isExists {
@@ -160,7 +157,7 @@ func (p *Pool) SignData(ctx context.Context,
 		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return wUnit.Unit.SignData(ctx, account, change, index, transactionData)
+	return wUnit.Unit.SignData(ctx, account, change, index, dataForSign)
 }
 
 func newWalletPool(logger *zap.Logger,

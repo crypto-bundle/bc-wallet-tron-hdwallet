@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"
@@ -82,7 +82,12 @@ func (h *grpcServerHandle) SignData(ctx context.Context,
 }
 
 // New instance of service
-func New(loggerSrv *zap.Logger) pbApi.HdWalletApiServer {
+func New(loggerSrv *zap.Logger,
+	mnemoGenSvc mnemonicGeneratorService,
+	transitEncryptorSvc encryptService,
+	appEncryptorSvc encryptService,
+	walletPoolSvc walletPoolService,
+) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
@@ -95,13 +100,13 @@ func New(loggerSrv *zap.Logger) pbApi.HdWalletApiServer {
 		UnimplementedHdWalletApiServer: &pbApi.UnimplementedHdWalletApiServer{},
 		logger:                         l,
 
-		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l),
-		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l),
-		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l),
-		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l),
-		encryptMnemonicHandlerSvc:         MakeEncryptMnemonicHandler(l),
-		getDerivationAddressSvc:           MakeGetDerivationAddressHandler(l),
-		getDerivationsAddressesSvc:        MakeGetDerivationsAddressesHandler(l),
-		signDataSvc:                       MakeSignDataHandler(l),
+		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l, mnemoGenSvc, appEncryptorSvc),
+		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l, walletPoolSvc),
+		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l, walletPoolSvc),
+		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l, walletPoolSvc),
+		encryptMnemonicHandlerSvc:         MakeEncryptMnemonicHandler(l, transitEncryptorSvc, appEncryptorSvc),
+		getDerivationAddressSvc:           MakeGetDerivationAddressHandler(l, walletPoolSvc),
+		getDerivationsAddressesSvc:        MakeGetDerivationsAddressesHandler(l, walletPoolSvc),
+		signDataSvc:                       MakeSignDataHandler(l, walletPoolSvc),
 	}
 }

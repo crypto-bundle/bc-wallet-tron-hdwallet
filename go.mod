@@ -25,6 +25,8 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 )
 
+require github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+
 require (
 	github.com/armon/go-metrics v0.3.9 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect

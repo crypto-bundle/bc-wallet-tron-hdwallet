@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"
@@ -32,8 +32,12 @@ func (h *unLoadMultipleMnemonicsHandler) Handle(ctx context.Context,
 	return nil, nil
 }
 
-func MakeUnLoadMultipleMnemonicsHandler(loggerEntry *zap.Logger) *unLoadMultipleMnemonicsHandler {
+func MakeUnLoadMultipleMnemonicsHandler(loggerEntry *zap.Logger,
+	walletPoolSvc walletPoolService,
+) *unLoadMultipleMnemonicsHandler {
 	return &unLoadMultipleMnemonicsHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameUnLoadMultipleMnemonics)),
+
+		walletPoolSvc: walletPoolSvc,
 	}
 }
