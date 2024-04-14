@@ -11,7 +11,7 @@ const (
 	WalletPurposeTag      = "purpose"
 	WalletIsHotTag        = "is_hot"
 
-	GRPCBindPortTag = "grpc_bind_port"
+	GRPCBindPathTag = "grpc_bind_unix_socket_path"
 
 	TickerEventTriggerTimeTag = "ticker_time"
 

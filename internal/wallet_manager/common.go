@@ -2,14 +2,11 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-	"time"
-
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 )
 
 type configService interface {
-	GetDefaultWalletUnloadInterval() time.Duration
 }
 
 type WalletPoolUnitService interface {
@@ -22,7 +19,7 @@ type WalletPoolUnitService interface {
 	) (*string, error)
 	GetAddressByPath(ctx context.Context,
 		account, change, index uint32,
-	) (string, error)
+	) (*string, error)
 	GetAddressesByPathByRange(ctx context.Context,
 		rangeIterable types.AddrRangeIterable,
 		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),

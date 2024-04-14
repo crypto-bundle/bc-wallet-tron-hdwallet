@@ -17,6 +17,7 @@ type HdWalletConfig struct {
 	*commonLogger.LoggerConfig
 	*commonHealthcheck.HealthcheckHTTPConfig
 	*pbApi.HdWalletClientConfig // yes, client config for listen on unix file socket
+	*ProcessionEnvironmentConfig
 	*VaultWrappedConfig
 	// -------------------
 	// Internal configs
