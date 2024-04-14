@@ -2,10 +2,10 @@ package wallet_manager
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 )
 
 type configService interface {
@@ -33,19 +33,6 @@ type WalletPoolUnitService interface {
 	) (*string, []byte, error)
 }
 
-type mnemonicWalletConfig interface {
-	GetMnemonicWalletPurpose() string
-	GetMnemonicWalletHash() string
-	IsHotWallet() bool
-}
-
-type walleter interface {
-	GetAddress() (string, error)
-	GetPubKey() string
-	GetPrvKey() (string, error)
-	GetPath() string
-}
-
 type hdWalleter interface {
 	PublicHex() string
 	PublicHash() ([]byte, error)
@@ -53,10 +40,6 @@ type hdWalleter interface {
 	NewTronWallet(account, change, address uint32) (*hdwallet.Tron, error)
 
 	ClearSecrets()
-}
-
-type mnemonicGenerator interface {
-	Generate(ctx context.Context) (string, error)
 }
 
 type encryptService interface {
