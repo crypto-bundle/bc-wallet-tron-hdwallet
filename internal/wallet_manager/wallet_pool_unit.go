@@ -220,13 +220,13 @@ func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 
 func (u *mnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 	account, change, index uint32,
-) (string, error) {
+) (*string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	err := u.loadWallet(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return u.getAddressByPath(ctx, account, change, index)
@@ -272,7 +272,7 @@ func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 			}
 
 			marshallerCallback(rangeUnit.AccountIndex, rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom,
-				position, address)
+				position, *address)
 
 			wg.Done()
 
@@ -295,7 +295,7 @@ func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 					return
 				}
 
-				marshallerCallback(accountIdx, internalIdx, addressIdx, position, address)
+				marshallerCallback(accountIdx, internalIdx, addressIdx, position, *address)
 
 				return
 			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)
@@ -315,18 +315,18 @@ func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 
 func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	account, change, index uint32,
-) (string, error) {
+) (*string, error) {
 	tronWallet, err := u.hdWalletSrv.NewTronWallet(account, change, index)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	blockchainAddress, err := tronWallet.GetAddress()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return blockchainAddress, nil
+	return &blockchainAddress, nil
 }
 
 func (u *mnemonicWalletUnit) loadWallet(ctx context.Context) error {

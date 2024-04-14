@@ -101,6 +101,8 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 
 	wUint.CancelFunc()
 	wUint.Unit = nil
+	wUint.Timer = nil
+	wUint.Ctx = nil
 	p.walletUnits[mnemonicWalletUUID] = nil
 
 	return nil
@@ -109,10 +111,10 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 func (p *Pool) GetAddressByPath(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
 	account, change, index uint32,
-) (string, error) {
+) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return "", ErrPassedWalletNotFound
+		return nil, ErrPassedWalletNotFound
 	}
 
 	return wUnit.Unit.GetAddressByPath(ctx, account, change, index)
@@ -160,7 +162,7 @@ func (p *Pool) SignData(ctx context.Context,
 	return wUnit.Unit.SignData(ctx, account, change, index, dataForSign)
 }
 
-func newWalletPool(logger *zap.Logger,
+func NewWalletPool(logger *zap.Logger,
 	cfg configService,
 	encryptSrv encryptService,
 ) *Pool {

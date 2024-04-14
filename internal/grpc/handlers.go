@@ -81,8 +81,8 @@ func (h *grpcServerHandle) SignData(ctx context.Context,
 	return h.signDataSvc.Handle(ctx, req)
 }
 
-// New instance of service
-func New(loggerSrv *zap.Logger,
+// NewHandlers - create instance of grpc-handler service
+func NewHandlers(loggerSrv *zap.Logger,
 	mnemoGenSvc mnemonicGeneratorService,
 	transitEncryptorSvc encryptService,
 	appEncryptorSvc encryptService,
@@ -92,7 +92,7 @@ func New(loggerSrv *zap.Logger,
 	l := loggerSrv.Named("grpc.server.handler").With(
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
-	//addrRespPool := &sync.Pool{New: func() any {
+	//addrRespPool := &sync.Pool{NewHandlers: func() any {
 	//	return new(pbApi.DerivationAddressIdentity)
 	//}}
 
