@@ -7,6 +7,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
@@ -30,13 +32,25 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 	req *pbApi.EncryptMnemonicRequest,
 ) (*pbApi.EncryptMnemonicResponse, error) {
 	var err error
-	_, span, finish := tracer.Trace(ctx)
+	tCtx, span, finish := tracer.Trace(ctx)
 
 	defer func() { finish(err) }()
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	decryptedData, err := h.transitEncryptorSvc.Decrypt(req.MnemonicData)
+	vf := &EncryptMnemonicForm{}
+	valid, err := vf.LoadAndValidate(tCtx, req)
+	if err != nil {
+		h.l.Error("unable load and validate request values", zap.Error(err))
+
+		if !valid {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
+		return nil, status.Error(codes.Internal, "something went wrong")
+	}
+
+	decryptedData, err := h.transitEncryptorSvc.Decrypt(vf.TransitEncryptedMnemonicData)
 	if err != nil {
 		return nil, err
 	}
