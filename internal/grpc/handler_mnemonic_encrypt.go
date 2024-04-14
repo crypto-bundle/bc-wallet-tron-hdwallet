@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"
@@ -71,6 +71,8 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 }
 
 func MakeEncryptMnemonicHandler(loggerEntry *zap.Logger,
+	transitEncryptorSvc encryptService,
+	appEncryptorSvc encryptService,
 ) *encryptMnemonicHandler {
 	return &encryptMnemonicHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameEncryptMnemonic)),

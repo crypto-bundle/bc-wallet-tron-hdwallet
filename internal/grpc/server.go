@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"

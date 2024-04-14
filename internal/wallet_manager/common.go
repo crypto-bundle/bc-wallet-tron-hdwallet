@@ -19,7 +19,7 @@ type WalletPoolUnitService interface {
 
 	LoadAddressByPath(ctx context.Context,
 		account, change, index uint32,
-	) (string, error)
+	) (*string, error)
 	GetAddressByPath(ctx context.Context,
 		account, change, index uint32,
 	) (string, error)
@@ -29,7 +29,7 @@ type WalletPoolUnitService interface {
 	) error
 	SignData(ctx context.Context,
 		account, change, index uint32,
-		transactionData []byte,
+		dataForSign []byte,
 	) (*string, []byte, error)
 }
 

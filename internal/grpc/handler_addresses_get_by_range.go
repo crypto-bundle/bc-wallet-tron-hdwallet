@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"
@@ -17,6 +17,8 @@ const (
 
 type getDerivationsAddressesHandler struct {
 	l *zap.Logger
+
+	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme
@@ -34,8 +36,11 @@ func (h *getDerivationsAddressesHandler) Handle(ctx context.Context,
 }
 
 func MakeGetDerivationsAddressesHandler(loggerEntry *zap.Logger,
+	walletPoolSvc walletPoolService,
 ) *getDerivationsAddressesHandler {
 	return &getDerivationsAddressesHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameGetDerivationsAddresses)),
+
+		walletPoolSvc: walletPoolSvc,
 	}
 }

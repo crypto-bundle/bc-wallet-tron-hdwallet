@@ -1,4 +1,4 @@
-package grpc_hdwallet
+package grpc
 
 import (
 	"context"
@@ -42,30 +42,27 @@ type hdWalleter interface {
 
 type walletPoolService interface {
 	AddAndStartWalletUnit(_ context.Context,
-		walletUUID uuid.UUID,
+		mnemonicWalletUUID uuid.UUID,
 		timeToLive time.Duration,
 		mnemonicEncryptedData []byte,
 	) error
 	LoadAddressByPath(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
 		account, change, index uint32,
-	) (string, error)
+	) (*string, error)
 	UnloadWalletUnit(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
 	) error
 	GetAddressByPath(ctx context.Context,
-		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,
 		account, change, index uint32,
 	) (*string, error)
 	GetAddressesByPathByRange(ctx context.Context,
-		walletUUID uuid.UUID,
 		mnemonicWalletUUID uuid.UUID,
 		rangeIterable types.AddrRangeIterable,
 		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 	SignData(ctx context.Context,
-		walletUUID uuid.UUID,
 		mnemonicUUID uuid.UUID,
 		account, change, index uint32,
 		transactionData []byte,

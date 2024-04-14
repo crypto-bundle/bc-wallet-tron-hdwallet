@@ -129,17 +129,17 @@ func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentit
 
 func (u *mnemonicWalletUnit) SignData(ctx context.Context,
 	account, change, index uint32,
-	transactionData []byte,
+	dataForSign []byte,
 ) (*string, []byte, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	return u.signData(ctx, account, change, index, transactionData)
+	return u.signData(ctx, account, change, index, dataForSign)
 }
 
 func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	account, change, index uint32,
-	transactionData []byte,
+	dataForSign []byte,
 ) (address *string, signedData []byte, err error) {
 	addrData, err := u.loadAddressByPath(ctx, account, change, index)
 	if err != nil {
@@ -147,7 +147,7 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	}
 
 	h256h := sha256.New()
-	h256h.Write(transactionData)
+	h256h.Write(dataForSign)
 	hash := h256h.Sum(nil)
 
 	signedData, signErr := crypto.Sign(hash, addrData.privateKey)
@@ -163,16 +163,20 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 
 func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
 	account, change, index uint32,
-) (string, error) {
+) (*string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	addrData, err := u.loadAddressByPath(ctx, account, change, index)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return addrData.address, nil
+	if addrData == nil {
+		return nil, nil
+	}
+
+	return &addrData.address, nil
 }
 
 func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
