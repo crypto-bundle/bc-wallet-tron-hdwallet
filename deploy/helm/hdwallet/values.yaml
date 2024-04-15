@@ -144,7 +144,7 @@ common:
     use_https:
       _default: true
     host:
-      _default: vault
+      _default: "vault.default.svc.cluster.local"
     port:
       _default: 8200
     auth_method:
@@ -164,8 +164,7 @@ common:
 
   db:
     host:
-      _default: "psql"
-      production: "psql-ext"
+      _default: "postgresql.default.svc.cluster.local"
     port:
       _default: "5432"
       production: "5432"
@@ -178,6 +177,12 @@ common:
     ssl_mode:
       _default: "disable"
       production: "disable"
+    connection_retry_count:
+      _default: 12
+      production: 8
+    connection_retry_timeout:
+      _default: 12000
+      production: 5000
 
   redis:
     host:

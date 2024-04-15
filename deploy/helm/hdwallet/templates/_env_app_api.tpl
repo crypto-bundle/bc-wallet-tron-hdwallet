@@ -9,12 +9,20 @@
       key: vault_api_user_token
       optional: false
 
-- name: VAULT_TRANSIT_KEY
+- name: VAULT_COMMON_TRANSIT_KEY
+  valueFrom:
+    secretKeyRef:
+      name: bc-wallet-common
+      key: vault_transit_secret_key
+      optional: false
+
+- name: VAULT_APP_ENCRYPTION_KEY
   valueFrom:
     secretKeyRef:
       name: bc-wallet-tron-hdwallet
-      key: vault_transit_secret_key_api
+      key: vault_transit_secret_key_controller
       optional: false
+
 
 - name: HDWALLET_WORDS_COUNT
   value: {{ pluck .Values.global.env .Values.app.mnemonic.words_count | first | default .Values.app.mnemonic.words_count._default | quote }}
