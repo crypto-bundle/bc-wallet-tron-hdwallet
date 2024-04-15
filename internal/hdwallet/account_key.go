@@ -1,8 +1,8 @@
 package hdwallet
 
 import (
+	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil/hdkeychain"
 )
 
 // AccountKey results info account keys
