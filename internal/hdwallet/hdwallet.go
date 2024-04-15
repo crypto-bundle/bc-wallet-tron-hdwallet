@@ -12,7 +12,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
 // HDWallet defines the components of a hierarchical deterministic hdwallet

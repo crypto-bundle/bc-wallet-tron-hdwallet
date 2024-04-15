@@ -45,7 +45,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
-	"github.com/btcsuite/btcd/btcec"
+	btcec "github.com/btcsuite/btcd/btcec/v2"
 
 	// nolint:staticcheck // its library function
 	"golang.org/x/crypto/ripemd160"

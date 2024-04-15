@@ -2,7 +2,7 @@ package wallet_manager
 
 import (
 	"crypto/ecdsa"
-	"github.com/btcsuite/btcd/btcec"
+	btcec "github.com/btcsuite/btcd/btcec/v2"
 )
 
 func zeroKey(key *ecdsa.PrivateKey) {
