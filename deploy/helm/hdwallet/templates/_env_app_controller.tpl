@@ -1,5 +1,5 @@
 {{- define "_env_app_controller" }}
-- name: VAULT_DATA_PATH
+- name: VAULT_APP_DATA_PATH
   value: {{ pluck .Values.global.env .Values.app.vault.data_path | first | default .Values.app.vault.data_path._default | join "," | quote }}
 
 - name: VAULT_AUTH_TOKEN
