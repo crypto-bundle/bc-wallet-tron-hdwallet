@@ -1,14 +1,18 @@
 {{- define "_env_store" }}
-- name: DB_HOST
+- name: POSTGRESQL_SERVICE_HOST
   value: {{ pluck .Values.global.env .Values.common.db.host | first | default .Values.common.db.host._default | quote }}
-- name: DB_PORT
+- name: POSTGRESQL_SERVICE_PORT
   value: {{ pluck .Values.global.env .Values.common.db.port | first | default .Values.common.db.port._default | quote }}
-- name: DB_SSL_MODE
+- name: POSTGRESQL_SSL_MODE
   value: {{ pluck .Values.global.env .Values.common.db.ssl_mode | first | default .Values.common.db.ssl_mode._default | quote }}
-- name: DB_MAX_OPEN_CONNECTIONS
+- name: POSTGRESQL_MAX_OPEN_CONNECTIONS
   value: {{ pluck .Values.global.env .Values.common.db.open_connections | first | default .Values.common.db.open_connections._default | quote }}
-- name: DB_MAX_IDLE_CONNECTIONS
+- name: POSTGRESQL_MAX_IDLE_CONNECTIONS
   value: {{ pluck .Values.global.env .Values.common.db.idle_connections | first | default .Values.common.db.idle_connections._default | quote }}
+- name: POSTGRESQL_CONNECTION_RETRY_COUNT
+  value: {{ pluck .Values.global.env .Values.common.db.connection_retry_count | first | default .Values.common.db.connection_retry_count._default | quote }}
+- name: POSTGRESQL_CONNECTION_RETRY_TIMEOUT
+  value: {{ pluck .Values.global.env .Values.common.db.connection_retry_timeout | first | default .Values.common.db.connection_retry_timeout._default | quote }}
 
 - name: REDIS_HOST
   value: {{ pluck .Values.global.env .Values.common.redis.host | first | default .Values.common.redis.host._default | quote }}
