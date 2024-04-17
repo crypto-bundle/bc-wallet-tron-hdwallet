@@ -48,7 +48,7 @@ spec:
       initContainers:
         - name: {{ .Chart.Name }}-migrator
           image: {{ $.Values.migrator.image.repository }}:{{ include "app.migratorContainer.tag" . }}
-          imagePullPolicy: {{ .Values.migrator.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.app.migrator.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.migrator.securityContext | nindent 12 }}
           resources:
@@ -72,7 +72,7 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ $.Values.global.container_registry }}:{{ include "app.container.tag" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.app.contoller.pullPolicy }}
           ports:
             - name: grpc
               containerPort: {{ pluck .Values.global.env .Values.app.controller.grpc_port | first | default .Values.app.controller.grpc_port._default }}
@@ -113,7 +113,7 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ $.Values.global.container_registry }}:{{ include "app.container.tag" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.app.api.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

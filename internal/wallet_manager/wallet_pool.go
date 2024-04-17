@@ -162,11 +162,13 @@ func (p *Pool) SignData(ctx context.Context,
 	return wUnit.Unit.SignData(ctx, account, change, index, dataForSign)
 }
 
-func NewWalletPool(logger *zap.Logger,
+func NewWalletPool(ctx context.Context,
+	logger *zap.Logger,
 	cfg configService,
 	encryptSrv encryptService,
 ) *Pool {
 	return &Pool{
+		runTimeCtx:       ctx,
 		logger:           logger,
 		cfg:              cfg,
 		encryptSvc:       encryptSrv,

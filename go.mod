@@ -4,13 +4,13 @@ go 1.22
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-8
-	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.3
-	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.3
-	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.3
-	github.com/crypto-bundle/bc-wallet-common-lib-logger v0.0.3
-	github.com/crypto-bundle/bc-wallet-common-lib-tracer v0.0.3
-	github.com/crypto-bundle/bc-wallet-common-lib-vault v0.0.12
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-9
+	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.5
+	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.4
+	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.4
+	github.com/crypto-bundle/bc-wallet-common-lib-logger v0.0.4
+	github.com/crypto-bundle/bc-wallet-common-lib-tracer v0.0.4
+	github.com/crypto-bundle/bc-wallet-common-lib-vault v0.0.13
 	github.com/ethereum/go-ethereum v1.13.14
 	github.com/google/uuid v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect

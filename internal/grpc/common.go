@@ -26,6 +26,10 @@ type mnemonicGeneratorService interface {
 	Generate(ctx context.Context) (string, error)
 }
 
+type mnemonicValidatorService interface {
+	IsMnemonicValid(mnemonic string) bool
+}
+
 type encryptService interface {
 	Encrypt(msg []byte) ([]byte, error)
 	Decrypt(encMsg []byte) ([]byte, error)
@@ -71,6 +75,10 @@ type walletPoolService interface {
 
 type generateMnemonicHandlerService interface {
 	Handle(ctx context.Context, req *pbApi.GenerateMnemonicRequest) (*pbApi.GenerateMnemonicResponse, error)
+}
+
+type validateMnemonicHandlerService interface {
+	Handle(ctx context.Context, req *pbApi.ValidateMnemonicRequest) (*pbApi.ValidateMnemonicResponse, error)
 }
 
 type loadMnemonicHandlerService interface {

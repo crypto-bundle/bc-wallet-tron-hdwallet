@@ -17,6 +17,7 @@ type grpcServerHandle struct {
 	cfg    configService
 	// all GRPC handlers
 	generateMnemonicHandlerSvc        generateMnemonicHandlerService
+	validateMnemonicHandlerSvc        validateMnemonicHandlerService
 	loadMnemonicHandlerSvc            loadMnemonicHandlerService
 	unLoadMnemonicHandlerSvc          unLoadMnemonicHandlerService
 	unLoadMultipleMnemonicsHandlerSvc unLoadMultipleMnemonicsHandlerService
@@ -31,6 +32,12 @@ func (h *grpcServerHandle) GenerateMnemonic(ctx context.Context,
 	req *pbApi.GenerateMnemonicRequest,
 ) (*pbApi.GenerateMnemonicResponse, error) {
 	return h.generateMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) ValidateMnemonic(ctx context.Context,
+	req *pbApi.ValidateMnemonicRequest,
+) (*pbApi.ValidateMnemonicResponse, error) {
+	return h.validateMnemonicHandlerSvc.Handle(ctx, req)
 }
 
 func (h *grpcServerHandle) LoadMnemonic(ctx context.Context,
@@ -86,6 +93,7 @@ func NewHandlers(loggerSrv *zap.Logger,
 	mnemoGenSvc mnemonicGeneratorService,
 	transitEncryptorSvc encryptService,
 	appEncryptorSvc encryptService,
+	mnemoValidatorSvc mnemonicValidatorService,
 	walletPoolSvc walletPoolService,
 ) pbApi.HdWalletApiServer {
 
@@ -101,6 +109,7 @@ func NewHandlers(loggerSrv *zap.Logger,
 		logger:                         l,
 
 		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l, mnemoGenSvc, appEncryptorSvc),
+		validateMnemonicHandlerSvc:        MakeValidateMnemonicHandler(l, appEncryptorSvc, mnemoValidatorSvc),
 		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l, walletPoolSvc),
 		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l, walletPoolSvc),
 		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l, walletPoolSvc),
