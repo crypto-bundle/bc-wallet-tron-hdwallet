@@ -37,15 +37,14 @@ func PrepareVault(ctx context.Context, baseCfgSrv baseConfigService) (*commonVau
 }
 
 func Prepare(ctx context.Context,
-	version,
 	releaseTag,
 	commitID,
-	shortCommitID string,
+	shortCommitID,
 	buildNumber,
-	buildDateTS uint64,
+	buildDateTS,
 	applicationName string,
 ) (*HdWalletConfig, *commonVault.Service, error) {
-	baseCfgSrv, err := PrepareBaseConfig(ctx, version, releaseTag,
+	baseCfgSrv, err := PrepareBaseConfig(ctx, releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS, applicationName)
 	if err != nil {
@@ -75,19 +74,21 @@ func Prepare(ctx context.Context,
 }
 
 func PrepareBaseConfig(ctx context.Context,
-	version,
 	releaseTag,
 	commitID,
-	shortCommitID string,
+	shortCommitID,
 	buildNumber,
-	buildDateTS uint64,
+	buildDateTS,
 	applicationName string,
 ) (*commonConfig.BaseConfig, error) {
-	flagManagerSrv := commonConfig.NewLdFlagsManager(version, releaseTag,
+	flagManagerSrv, err := commonConfig.NewLdFlagsManager(releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS)
+	if err != nil {
+		return nil, err
+	}
 
-	err := commonConfig.LoadLocalEnvIfDev()
+	err = commonConfig.LoadLocalEnvIfDev()
 	if err != nil {
 		return nil, err
 	}

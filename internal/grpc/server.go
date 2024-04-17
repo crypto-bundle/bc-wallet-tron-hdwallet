@@ -42,10 +42,6 @@ func (s *Server) shutdown() error {
 	s.logger.Info("start close instances")
 
 	s.grpcServer.GracefulStop()
-	//err := s.listener.Close()
-	//if err != nil {
-	//	return err
-	//}
 
 	s.logger.Info("grpc server shutdown completed")
 
