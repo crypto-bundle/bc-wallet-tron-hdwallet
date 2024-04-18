@@ -56,7 +56,7 @@ type walletPoolService interface {
 	) (*string, error)
 	UnloadWalletUnit(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
-	) error
+	) (*uuid.UUID, error)
 	GetAddressByPath(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
 		account, change, index uint32,
