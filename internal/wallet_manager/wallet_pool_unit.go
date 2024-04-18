@@ -116,8 +116,8 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 	return nil
 }
 
-func (u *mnemonicWalletUnit) GetMnemonicUUID() uuid.UUID {
-	return u.mnemonicWalletUUID
+func (u *mnemonicWalletUnit) GetMnemonicUUID() *uuid.UUID {
+	return &u.mnemonicWalletUUID
 }
 
 func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {

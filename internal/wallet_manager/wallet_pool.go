@@ -93,10 +93,10 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 
 func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-) error {
+) (*uuid.UUID, error) {
 	wUint, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return ErrPassedWalletNotFound
+		return nil, nil
 	}
 
 	wUint.CancelFunc()
@@ -105,7 +105,7 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	wUint.Ctx = nil
 	p.walletUnits[mnemonicWalletUUID] = nil
 
-	return nil
+	return wUint.Unit.GetMnemonicUUID(), nil
 }
 
 func (p *Pool) GetAddressByPath(ctx context.Context,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	"github.com/google/uuid"
 )
 
 type configService interface {
@@ -14,6 +15,7 @@ type WalletPoolUnitService interface {
 	Run(ctx context.Context) error
 	Shutdown(ctx context.Context) error
 
+	GetMnemonicUUID() *uuid.UUID
 	LoadAddressByPath(ctx context.Context,
 		account, change, index uint32,
 	) (*string, error)

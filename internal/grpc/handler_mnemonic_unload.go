@@ -45,9 +45,21 @@ func (h *unLoadMnemonicHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	err = h.walletPoolSvc.UnloadWalletUnit(tCtx, vf.WalletUUIDRaw)
+	walletUUID, err := h.walletPoolSvc.UnloadWalletUnit(tCtx, vf.WalletUUIDRaw)
 	if err != nil {
 		h.l.Error("unable to unload mnemonic wallet", zap.Error(err),
+			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
+
+		return nil, status.Error(codes.Internal, "something went wrong")
+	}
+
+	if walletUUID == nil {
+		return nil, status.Error(codes.NotFound, "wallet not found")
+	}
+
+	if walletUUID.String() != req.MnemonicIdentity.WalletUUID {
+		h.l.Error("requested wallet uuid not equal with wallet pool unit uuid",
+			zap.Error(ErrWalletUUIDMismatched),
 			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
 
 		return nil, status.Error(codes.Internal, "something went wrong")
