@@ -38,7 +38,7 @@ type mnemonicWalletUnit struct {
 	encryptorSvc encryptService
 
 	mnemonicEncryptedData []byte
-	mnemonicWalletUUID    uuid.UUID
+	mnemonicWalletUUID    *uuid.UUID
 	mnemonicHash          string
 
 	// addressPool is pool of derivation addresses with private keys and address
@@ -74,6 +74,8 @@ func (u *mnemonicWalletUnit) Shutdown(ctx context.Context) error {
 	for i := range u.mnemonicWalletUUID {
 		u.mnemonicWalletUUID[i] = 0
 	}
+
+	u.mnemonicWalletUUID = nil
 
 	u.logger.Info("wallet successfully unload")
 
@@ -117,7 +119,7 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 }
 
 func (u *mnemonicWalletUnit) GetMnemonicUUID() *uuid.UUID {
-	return &u.mnemonicWalletUUID
+	return &(*u.mnemonicWalletUUID)
 }
 
 func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {
@@ -368,7 +370,7 @@ func newMnemonicWalletPoolUnit(logger *zap.Logger,
 
 		encryptorSvc: encryptorSvc,
 
-		mnemonicWalletUUID:    walletUUID,
+		mnemonicWalletUUID:    &walletUUID,
 		mnemonicEncryptedData: mnemonicEncryptedData,
 
 		addressPool: make(map[string]*addressData),

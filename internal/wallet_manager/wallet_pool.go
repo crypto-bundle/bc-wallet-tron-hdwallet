@@ -18,6 +18,20 @@ type unitWrapper struct {
 	Unit       WalletPoolUnitService
 }
 
+func (w *unitWrapper) Shutdown() error {
+	err := w.Unit.Shutdown(w.Ctx)
+	if err != nil {
+		return err
+	}
+
+	w.Unit = nil
+	w.Timer.Stop()
+	w.Timer = nil
+	w.Ctx = nil
+
+	return nil
+}
+
 type Pool struct {
 	logger *zap.Logger
 	cfg    configService
@@ -44,18 +58,12 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 
 	unitCtx, cancelFunc := context.WithCancel(p.runTimeCtx)
 
-	started := make(chan struct{})
-	timer := time.AfterFunc(timeToLive, func() {
-		<-started
-		return
-	})
-
 	walletUnit := newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
 
 	wrapper := &unitWrapper{
 		Ctx:        unitCtx,
 		CancelFunc: cancelFunc,
-		Timer:      timer,
+		Timer:      nil, // will be filled in go-routine
 		Unit:       walletUnit,
 	}
 	p.walletUnits[walletUUID] = wrapper
@@ -65,28 +73,36 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	if err != nil {
 		return err
 	}
+	started := make(chan struct{})
 
 	go func(wrapped *unitWrapper) {
+		wrapped.Timer = time.NewTimer(timeToLive)
+		started <- struct{}{}
+
 		for {
 			select {
 			case fired, _ := <-wrapped.Timer.C:
-				loopErr := wrapped.Unit.Shutdown(wrapped.Ctx)
+				loopErr := wrapped.Shutdown()
 				if loopErr != nil {
 					p.logger.Error("unable to unload wallet data by ticker", zap.Error(loopErr),
 						zap.Time(app.TickerEventTriggerTimeTag, fired))
-					continue
 				}
 
+				return
+
 			case <-wrapped.Ctx.Done():
-				loopErr := wrapped.Unit.Shutdown(wrapped.Ctx)
+				loopErr := wrapped.Shutdown()
 				if loopErr != nil {
 					p.logger.Error("unable to shutdown by ctx cancel", zap.Error(loopErr))
 				}
+
+				return
 			}
 		}
 	}(wrapper)
 
-	started <- struct{}{}
+	<-started
+	close(started)
 
 	return nil
 }
@@ -98,14 +114,14 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	if !isExists {
 		return nil, nil
 	}
+	walletUUID := wUint.Unit.GetMnemonicUUID()
 
 	wUint.CancelFunc()
-	wUint.Unit = nil
-	wUint.Timer = nil
-	wUint.Ctx = nil
-	p.walletUnits[mnemonicWalletUUID] = nil
 
-	return wUint.Unit.GetMnemonicUUID(), nil
+	p.walletUnits[mnemonicWalletUUID] = nil
+	delete(p.walletUnits, mnemonicWalletUUID)
+
+	return walletUUID, nil
 }
 
 func (p *Pool) GetAddressByPath(ctx context.Context,
