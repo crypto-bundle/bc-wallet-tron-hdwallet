@@ -124,6 +124,24 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	return walletUUID, nil
 }
 
+func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
+	mnemonicWalletUUIDs []uuid.UUID,
+) error {
+	for _, v := range mnemonicWalletUUIDs {
+		wUint, isExists := p.walletUnits[v]
+		if !isExists {
+			continue
+		}
+
+		wUint.CancelFunc()
+
+		p.walletUnits[v] = nil
+		delete(p.walletUnits, v)
+	}
+
+	return nil
+}
+
 func (p *Pool) GetAddressByPath(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
 	account, change, index uint32,
