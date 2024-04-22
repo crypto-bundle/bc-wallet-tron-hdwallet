@@ -15,7 +15,9 @@ type unitWrapper struct {
 	Ctx        context.Context
 	CancelFunc context.CancelFunc
 	Timer      *time.Timer
+	TTL        time.Duration
 	Unit       WalletPoolUnitService
+	OnShutDown func(walletUUID uuid.UUID)
 }
 
 func (w *unitWrapper) Shutdown() error {
@@ -40,8 +42,7 @@ type Pool struct {
 
 	encryptSvc encryptService
 
-	walletUnitsCount uint
-	walletUnits      map[uuid.UUID]*unitWrapper
+	walletUnits map[uuid.UUID]*unitWrapper
 }
 
 func (p *Pool) AddAndStartWalletUnit(_ context.Context,
@@ -64,10 +65,11 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		Ctx:        unitCtx,
 		CancelFunc: cancelFunc,
 		Timer:      nil, // will be filled in go-routine
+		TTL:        timeToLive,
 		Unit:       walletUnit,
+		OnShutDown: p.unloadWalletUnit,
 	}
 	p.walletUnits[walletUUID] = wrapper
-	p.walletUnitsCount++
 
 	err := walletUnit.Run(unitCtx)
 	if err != nil {
@@ -76,7 +78,8 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 	started := make(chan struct{})
 
 	go func(wrapped *unitWrapper) {
-		wrapped.Timer = time.NewTimer(timeToLive)
+		walletUUIDInt := wrapped.Unit.GetMnemonicUUID()
+		wrapped.Timer = time.NewTimer(wrapped.TTL)
 		started <- struct{}{}
 
 		for {
@@ -87,6 +90,8 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 					p.logger.Error("unable to unload wallet data by ticker", zap.Error(loopErr),
 						zap.Time(app.TickerEventTriggerTimeTag, fired))
 				}
+
+				wrapped.OnShutDown(*walletUUIDInt)
 
 				return
 
@@ -118,10 +123,16 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 
 	wUint.CancelFunc()
 
+	p.unloadWalletUnit(mnemonicWalletUUID)
+
+	return walletUUID, nil
+}
+
+func (p *Pool) unloadWalletUnit(mnemonicWalletUUID uuid.UUID) {
 	p.walletUnits[mnemonicWalletUUID] = nil
 	delete(p.walletUnits, mnemonicWalletUUID)
 
-	return walletUUID, nil
+	return
 }
 
 func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
@@ -202,11 +213,10 @@ func NewWalletPool(ctx context.Context,
 	encryptSrv encryptService,
 ) *Pool {
 	return &Pool{
-		runTimeCtx:       ctx,
-		logger:           logger,
-		cfg:              cfg,
-		encryptSvc:       encryptSrv,
-		walletUnits:      make(map[uuid.UUID]*unitWrapper),
-		walletUnitsCount: 0,
+		runTimeCtx:  ctx,
+		logger:      logger,
+		cfg:         cfg,
+		encryptSvc:  encryptSrv,
+		walletUnits: make(map[uuid.UUID]*unitWrapper),
 	}
 }

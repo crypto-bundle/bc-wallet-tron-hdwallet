@@ -25,8 +25,8 @@ type loadDerivationAddressHandler struct {
 
 // nolint:funlen // fixme
 func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
-	req *pbApi.DerivationAddressRequest,
-) (*pbApi.DerivationAddressResponse, error) {
+	req *pbApi.LoadDerivationAddressRequest,
+) (*pbApi.LoadDerivationAddressResponse, error) {
 	var err error
 	tCtx, span, finish := tracer.Trace(ctx)
 
@@ -34,8 +34,8 @@ func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &GetAddressForm{}
-	valid, err := vf.LoadAndValidate(tCtx, req)
+	vf := &AddressForm{}
+	valid, err := vf.LoadAndValidateLoadAddrReq(tCtx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))
 
@@ -61,17 +61,19 @@ func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.ResourceExhausted, "wallet not loaded")
 	}
 
-	req.AddressIdentity.Address = *addr
+	req.AddressIdentifier.Address = *addr
 
-	return &pbApi.DerivationAddressResponse{
+	return &pbApi.LoadDerivationAddressResponse{
 		MnemonicWalletIdentifier: req.MnemonicWalletIdentifier,
-		AddressIdentity:          req.AddressIdentity,
+		TxOwnerIdentity:          req.AddressIdentifier,
 	}, nil
 }
 
 func MakeLoadDerivationAddressHandlerHandler(loggerEntry *zap.Logger,
+	walletPoolSvc walletPoolService,
 ) *loadDerivationAddressHandler {
 	return &loadDerivationAddressHandler{
-		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameGetDerivationAddress)),
+		l:             loggerEntry.With(zap.String(MethodNameTag, MethodNameGetDerivationAddress)),
+		walletPoolSvc: walletPoolSvc,
 	}
 }

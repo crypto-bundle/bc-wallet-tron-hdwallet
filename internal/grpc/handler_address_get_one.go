@@ -34,8 +34,8 @@ func (h *getDerivationAddressHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &GetAddressForm{}
-	valid, err := vf.LoadAndValidate(tCtx, req)
+	vf := &AddressForm{}
+	valid, err := vf.LoadAndValidateGetAddrReq(tCtx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))
 
