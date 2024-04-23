@@ -58,7 +58,7 @@ func (w *unitWrapper) Run() error {
 
 		wrapped.onShutDownFunc(*walletUUIDInt)
 
-		w.logger.Info("wallet successfully unload",
+		w.logger.Info("wallet successfully unloaded",
 			zap.String(app.MnemonicWalletUUIDTag, walletUUIDInt.String()))
 
 		return
@@ -187,7 +187,7 @@ func (p *Pool) GetAddressByPath(ctx context.Context,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return nil, ErrPassedWalletNotFound
+		return nil, nil
 	}
 
 	return wUnit.Unit.GetAddressByPath(ctx, account, change, index)
@@ -200,7 +200,7 @@ func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 ) error {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return ErrPassedWalletNotFound
+		return nil
 	}
 
 	return wUnit.Unit.GetAddressesByPathByRange(ctx,

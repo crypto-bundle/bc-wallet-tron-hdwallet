@@ -34,7 +34,7 @@ type mnemonicWalletUnit struct {
 	mu *sync.Mutex
 
 	cfgSrv       configService
-	hdWalletSrv  hdWalleter
+	hdWalletSvc  hdWalleter
 	encryptorSvc encryptService
 
 	mnemonicEncryptedData []byte
@@ -91,8 +91,8 @@ func (u *mnemonicWalletUnit) UnloadWallet() error {
 }
 
 func (u *mnemonicWalletUnit) unloadWallet() error {
-	u.hdWalletSrv.ClearSecrets()
-	u.hdWalletSrv = nil
+	u.hdWalletSvc.ClearSecrets()
+	u.hdWalletSvc = nil
 
 	for key, data := range u.addressPool {
 		if data == nil {
@@ -187,7 +187,7 @@ func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 	key := fmt.Sprintf("%d'/%d/%d", account, change, index)
 	addrData, isExists := u.addressPool[key]
 	if !isExists {
-		tronWallet, walletErr := u.hdWalletSrv.NewTronWallet(account, change, index)
+		tronWallet, walletErr := u.hdWalletSvc.NewTronWallet(account, change, index)
 		if walletErr != nil {
 			return nil, walletErr
 		}
@@ -225,11 +225,6 @@ func (u *mnemonicWalletUnit) GetAddressByPath(ctx context.Context,
 ) (*string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-
-	err := u.loadWallet(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	return u.getAddressByPath(ctx, account, change, index)
 }
@@ -318,7 +313,7 @@ func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	account, change, index uint32,
 ) (*string, error) {
-	tronWallet, err := u.hdWalletSrv.NewTronWallet(account, change, index)
+	tronWallet, err := u.hdWalletSvc.NewTronWallet(account, change, index)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +340,7 @@ func (u *mnemonicWalletUnit) loadWallet(ctx context.Context) error {
 	if creatErr != nil {
 		return creatErr
 	}
-	u.hdWalletSrv = hdWallet
+	u.hdWalletSvc = hdWallet
 
 	for i := range u.mnemonicEncryptedData {
 		u.mnemonicEncryptedData[i] = 0
@@ -364,7 +359,7 @@ func newMnemonicWalletPoolUnit(logger *zap.Logger,
 		logger: logger.With(zap.String(app.MnemonicWalletUUIDTag, walletUUID.String())),
 		mu:     &sync.Mutex{},
 
-		hdWalletSrv: nil, // that field will be field @ load wallet stage
+		hdWalletSvc: nil, // that field will be field @ load wallet stage
 
 		encryptorSvc: encryptorSvc,
 

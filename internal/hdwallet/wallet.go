@@ -62,7 +62,11 @@ func NewFromString(mnemo string, network *chaincfg.Params) (*Wallet, error) {
 		return nil, err
 	}
 
-	mnemonic, _ := bip39.NewMnemonic(entropy)
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, err
+	}
+
 	return Restore(mnemonic, network)
 }
 
