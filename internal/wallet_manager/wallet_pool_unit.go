@@ -77,8 +77,6 @@ func (u *mnemonicWalletUnit) Shutdown(ctx context.Context) error {
 
 	u.mnemonicWalletUUID = nil
 
-	u.logger.Info("wallet successfully unload")
-
 	u.cfgSrv = nil
 	u.logger = nil
 
@@ -353,8 +351,6 @@ func (u *mnemonicWalletUnit) loadWallet(ctx context.Context) error {
 		u.mnemonicEncryptedData[i] = 0
 	}
 	u.mnemonicEncryptedData = nil
-
-	u.logger.Info("wallet successfully load")
 
 	return nil
 }
