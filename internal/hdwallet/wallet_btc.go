@@ -43,12 +43,12 @@ func (b *BTC) GetP2WPKHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2WPKH()
 }
 
-// GetP2WPKHAddress get address string
+// GetP2SHAddress get address string
 func (b *BTC) GetP2SHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2WPKHInP2SH()
 }
 
-// GetP2WPKHAddress get address string
+// GetP2PKHAddress get address string
 func (b *BTC) GetP2PKHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2PKH()
 }
@@ -62,7 +62,7 @@ func (b *BTC) GetPrvKey() (string, error) {
 	return prvKey.String(), nil
 }
 
-// GetPrvKey get address private key
+// GetWIF get address private key
 func (b *BTC) GetWIF() (*btcutil.WIF, error) {
 	prvKey, err := btcutil.NewWIF(b.ExtendedKey.Private, b.ExtendedKey.Network, true)
 	if err != nil {
@@ -92,27 +92,27 @@ func (b *BTC) AccountPubKey() string {
 	return b.AccountKey.Public
 }
 
-// AccountPubKey return string key
+// AccountPubKeyNoMagic return string key
 func (b *BTC) AccountPubKeyNoMagic() string {
 	return b.AccountKey.Public[4:]
 }
 
-// AccountPubKey return string key
+// PKH return string key
 func (b *BTC) PKH() (string, error) {
 	return b.ExtendedKey.AddressP2WPKH()
 }
 
-// AccountPubKey return string key
+// HEX return string key
 func (b *BTC) HEX() string {
 	return b.ExtendedKey.PublicHex()
 }
 
-// AccountPubKey return string key
+// HASH return string key
 func (b *BTC) HASH() ([]byte, error) {
 	return b.ExtendedKey.PublicHash()
 }
 
-// GetPrvKey get address private key
+// GetAccountWIF get address private key
 func (b *BTC) GetAccountWIF() (*btcutil.WIF, error) {
 	ecKey, err := b.AccountKey.ExtendedKey.ECPrivKey()
 	if err != nil {

@@ -14,11 +14,11 @@ type SignDataForm struct {
 	WalletUUID    string    `valid:"type(string),uuid,required"`
 	WalletUUIDRaw uuid.UUID `valid:"-"`
 
-	AccountIndex  uint32 `valid:"type(uint)"`
-	InternalIndex uint32 `valid:"type(uint)"`
-	AddressIndex  uint32 `valid:"type(uint)"`
+	AccountIndex  uint32 `valid:"type(uint32)"`
+	InternalIndex uint32 `valid:"type(uint32)"`
+	AddressIndex  uint32 `valid:"type(uint32)"`
 
-	DataForSign []byte `valid:"type([]byte]),required"`
+	DataForSign []byte `valid:"required"`
 }
 
 func (f *SignDataForm) LoadAndValidate(ctx context.Context,
