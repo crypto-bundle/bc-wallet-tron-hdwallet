@@ -2,6 +2,7 @@ package wallet_manager
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
@@ -12,16 +13,70 @@ import (
 )
 
 type unitWrapper struct {
-	Ctx        context.Context
-	CancelFunc context.CancelFunc
-	Timer      *time.Timer
-	TTL        time.Duration
-	Unit       WalletPoolUnitService
-	OnShutDown func(walletUUID uuid.UUID)
+	logger         *zap.Logger
+	ctx            context.Context
+	cancelFunc     context.CancelFunc
+	Timer          *time.Timer
+	ttl            time.Duration
+	Unit           WalletPoolUnitService
+	onShutDownFunc func(walletUUID uuid.UUID)
 }
 
-func (w *unitWrapper) Shutdown() error {
-	err := w.Unit.Shutdown(w.Ctx)
+func (w *unitWrapper) Run() error {
+	err := w.Unit.Run(w.ctx)
+	if err != nil {
+		return err
+	}
+
+	startedWg := &sync.WaitGroup{}
+	startedWg.Add(1)
+
+	go func(wrapped *unitWrapper, workDoneWaiter *sync.WaitGroup) {
+		walletUUIDInt := wrapped.Unit.GetMnemonicUUID()
+		wrapped.Timer = time.NewTimer(wrapped.ttl)
+
+		workDoneWaiter.Done()
+
+		select {
+		case fired, _ := <-wrapped.Timer.C:
+			loopErr := wrapped.shutdown()
+			if loopErr != nil {
+				wrapped.logger.Error("unable to unload wallet data by ticker", zap.Error(loopErr),
+					zap.Time(app.TickerEventTriggerTimeTag, fired))
+			}
+
+			break
+
+		case <-wrapped.ctx.Done():
+			loopErr := wrapped.shutdown()
+			if loopErr != nil {
+				wrapped.logger.Error("unable to shutdown by ctx cancel", zap.Error(loopErr))
+			}
+
+			break
+		}
+
+		wrapped.onShutDownFunc(*walletUUIDInt)
+
+		w.logger.Info("wallet successfully unload",
+			zap.String(app.MnemonicWalletUUIDTag, walletUUIDInt.String()))
+
+		return
+	}(w, startedWg)
+
+	startedWg.Wait()
+
+	w.logger.Info("wallet successfully loaded")
+
+	return nil
+}
+
+func (w *unitWrapper) Shutdown() {
+	w.cancelFunc()
+}
+
+func (w *unitWrapper) shutdown() error {
+	err := w.Unit.Shutdown(w.ctx)
 	if err != nil {
 		return err
 	}
@@ -29,9 +84,29 @@ func (w *unitWrapper) Shutdown() error {
 	w.Unit = nil
 	w.Timer.Stop()
 	w.Timer = nil
-	w.Ctx = nil
+	w.ctx = nil
 
 	return nil
+}
+
+func newUnitWrapper(ctx context.Context, logger *zap.Logger,
+	ttl time.Duration,
+	unit WalletPoolUnitService,
+	onShutdownClb func(walletUUID uuid.UUID),
+) *unitWrapper {
+	unitCtx, cancelFunc := context.WithCancel(ctx)
+
+	wrapper := &unitWrapper{
+		ctx:            unitCtx,
+		logger:         logger,
+		cancelFunc:     cancelFunc,
+		Timer:          nil, // will be filled in go-routine
+		ttl:            ttl,
+		Unit:           unit,
+		onShutDownFunc: onShutdownClb,
+	}
+
+	return wrapper
 }
 
 type Pool struct {
@@ -57,57 +132,15 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		return nil
 	}
 
-	unitCtx, cancelFunc := context.WithCancel(p.runTimeCtx)
-
 	walletUnit := newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
+	wrapper := newUnitWrapper(p.runTimeCtx, p.logger, timeToLive, walletUnit, p.unloadWalletUnit)
 
-	wrapper := &unitWrapper{
-		Ctx:        unitCtx,
-		CancelFunc: cancelFunc,
-		Timer:      nil, // will be filled in go-routine
-		TTL:        timeToLive,
-		Unit:       walletUnit,
-		OnShutDown: p.unloadWalletUnit,
-	}
 	p.walletUnits[walletUUID] = wrapper
 
-	err := walletUnit.Run(unitCtx)
+	err := wrapper.Run()
 	if err != nil {
 		return err
 	}
-	started := make(chan struct{})
-
-	go func(wrapped *unitWrapper) {
-		walletUUIDInt := wrapped.Unit.GetMnemonicUUID()
-		wrapped.Timer = time.NewTimer(wrapped.TTL)
-		started <- struct{}{}
-
-		for {
-			select {
-			case fired, _ := <-wrapped.Timer.C:
-				loopErr := wrapped.Shutdown()
-				if loopErr != nil {
-					p.logger.Error("unable to unload wallet data by ticker", zap.Error(loopErr),
-						zap.Time(app.TickerEventTriggerTimeTag, fired))
-				}
-
-				wrapped.OnShutDown(*walletUUIDInt)
-
-				return
-
-			case <-wrapped.Ctx.Done():
-				loopErr := wrapped.Shutdown()
-				if loopErr != nil {
-					p.logger.Error("unable to shutdown by ctx cancel", zap.Error(loopErr))
-				}
-
-				return
-			}
-		}
-	}(wrapper)
-
-	<-started
-	close(started)
 
 	return nil
 }
@@ -121,9 +154,7 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	}
 	walletUUID := wUint.Unit.GetMnemonicUUID()
 
-	wUint.CancelFunc()
-
-	p.unloadWalletUnit(mnemonicWalletUUID)
+	wUint.Shutdown()
 
 	return walletUUID, nil
 }
@@ -144,10 +175,7 @@ func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
 			continue
 		}
 
-		wUint.CancelFunc()
-
-		p.walletUnits[v] = nil
-		delete(p.walletUnits, v)
+		wUint.Shutdown()
 	}
 
 	return nil
