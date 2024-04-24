@@ -1,34 +1,10 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package hdwallet
 
 import (
 	"fmt"
 
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 )
 
 // NewBtcWallet create new wallet
@@ -67,12 +43,12 @@ func (b *BTC) GetP2WPKHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2WPKH()
 }
 
-// GetP2WPKHAddress get address string
+// GetP2SHAddress get address string
 func (b *BTC) GetP2SHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2WPKHInP2SH()
 }
 
-// GetP2WPKHAddress get address string
+// GetP2PKHAddress get address string
 func (b *BTC) GetP2PKHAddress() (string, error) {
 	return b.ExtendedKey.AddressP2PKH()
 }
@@ -86,7 +62,7 @@ func (b *BTC) GetPrvKey() (string, error) {
 	return prvKey.String(), nil
 }
 
-// GetPrvKey get address private key
+// GetWIF get address private key
 func (b *BTC) GetWIF() (*btcutil.WIF, error) {
 	prvKey, err := btcutil.NewWIF(b.ExtendedKey.Private, b.ExtendedKey.Network, true)
 	if err != nil {
@@ -116,27 +92,27 @@ func (b *BTC) AccountPubKey() string {
 	return b.AccountKey.Public
 }
 
-// AccountPubKey return string key
+// AccountPubKeyNoMagic return string key
 func (b *BTC) AccountPubKeyNoMagic() string {
 	return b.AccountKey.Public[4:]
 }
 
-// AccountPubKey return string key
+// PKH return string key
 func (b *BTC) PKH() (string, error) {
 	return b.ExtendedKey.AddressP2WPKH()
 }
 
-// AccountPubKey return string key
+// HEX return string key
 func (b *BTC) HEX() string {
 	return b.ExtendedKey.PublicHex()
 }
 
-// AccountPubKey return string key
+// HASH return string key
 func (b *BTC) HASH() ([]byte, error) {
 	return b.ExtendedKey.PublicHash()
 }
 
-// GetPrvKey get address private key
+// GetAccountWIF get address private key
 func (b *BTC) GetAccountWIF() (*btcutil.WIF, error) {
 	ecKey, err := b.AccountKey.ExtendedKey.ECPrivKey()
 	if err != nil {

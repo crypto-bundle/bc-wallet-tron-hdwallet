@@ -1,87 +1,128 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package grpc
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
-	tronCore "github.com/fbsobreira/gotron-sdk/pkg/proto/core"
 	"github.com/google/uuid"
+	"time"
+
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 )
 
-type walletManagerService interface {
-	CreateNewWallet(ctx context.Context,
-		strategy types.WalletMakerStrategy,
-		title string,
-		purpose string,
-	) (*types.PublicWalletData, error)
-	GetAddressByPath(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicWalletUUID uuid.UUID,
-		account, change, index uint32,
-	) (*types.PublicDerivationAddressData, error)
+const (
+	MethodNameTag = "method_name"
+)
 
-	GetAddressesByPathByRange(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicWalletUUID uuid.UUID,
-		accountIndex uint32,
-		internalIndex uint32,
-		addressIndexFrom uint32,
-		addressIndexTo uint32,
-		marshallerCallback func(addressIdx, position uint32, address string),
-	) error
+type configService interface {
+	IsDev() bool
+	IsDebug() bool
+	IsLocal() bool
 
-	GetWalletByUUID(ctx context.Context, walletUUID uuid.UUID) (*types.PublicWalletData, error)
-	GetEnabledWallets(ctx context.Context) ([]*types.PublicWalletData, error)
-
-	SignTransaction(ctx context.Context,
-		walletUUID uuid.UUID,
-		mnemonicUUID uuid.UUID,
-		account, change, index uint32,
-		transaction *tronCore.Transaction,
-	) (*types.PublicSignTxData, error)
+	GetConnectionPath() string
 }
 
-type marshallerService interface {
-	MarshallCreateWalletData(*types.PublicWalletData) (*pbApi.AddNewWalletResponse, error)
-	MarshallGetAddressData(
-		walletPublicData *types.PublicWalletData,
-		mnemonicWalletPublicData *types.PublicMnemonicWalletData,
-		addressPublicData *types.PublicDerivationAddressData,
-	) (*pbApi.DerivationAddressResponse, error)
-	MarshallGetAddressByRange(
-		walletPublicData *types.PublicWalletData,
-		mnemonicWalletPublicData *types.PublicMnemonicWalletData,
-		addressesData []*pbApi.DerivationAddressIdentity,
+type mnemonicGeneratorService interface {
+	Generate(ctx context.Context) (string, error)
+}
+
+type mnemonicValidatorService interface {
+	IsMnemonicValid(mnemonic string) bool
+}
+
+type encryptService interface {
+	Encrypt(msg []byte) ([]byte, error)
+	Decrypt(encMsg []byte) ([]byte, error)
+}
+
+type hdWalleter interface {
+	PublicHex() string
+	PublicHash() ([]byte, error)
+
+	NewTronWallet(account, change, address uint32) (*hdwallet.Tron, error)
+
+	ClearSecrets()
+}
+
+type walletPoolService interface {
+	AddAndStartWalletUnit(_ context.Context,
+		mnemonicWalletUUID uuid.UUID,
+		timeToLive time.Duration,
+		mnemonicEncryptedData []byte,
+	) error
+	LoadAddressByPath(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+		account, change, index uint32,
+	) (*string, error)
+	UnloadWalletUnit(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+	) (*uuid.UUID, error)
+	UnloadMultipleWalletUnit(ctx context.Context,
+		mnemonicWalletUUIDs []uuid.UUID,
+	) error
+	GetAddressByPath(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+		account, change, index uint32,
+	) (*string, error)
+	GetAddressesByPathByRange(ctx context.Context,
+		mnemonicWalletUUID uuid.UUID,
+		rangeIterable types.AddrRangeIterable,
+		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
+	) error
+	SignData(ctx context.Context,
+		mnemonicUUID uuid.UUID,
+		account, change, index uint32,
+		transactionData []byte,
+	) (*string, []byte, error)
+}
+
+type generateMnemonicHandlerService interface {
+	Handle(ctx context.Context, req *pbApi.GenerateMnemonicRequest) (*pbApi.GenerateMnemonicResponse, error)
+}
+
+type validateMnemonicHandlerService interface {
+	Handle(ctx context.Context, req *pbApi.ValidateMnemonicRequest) (*pbApi.ValidateMnemonicResponse, error)
+}
+
+type loadMnemonicHandlerService interface {
+	Handle(ctx context.Context, req *pbApi.LoadMnemonicRequest) (*pbApi.LoadMnemonicResponse, error)
+}
+
+type unLoadMnemonicHandlerService interface {
+	Handle(ctx context.Context, req *pbApi.UnLoadMnemonicRequest) (*pbApi.UnLoadMnemonicResponse, error)
+}
+
+type unLoadMultipleMnemonicsHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.UnLoadMultipleMnemonicsRequest,
+	) (*pbApi.UnLoadMultipleMnemonicsResponse, error)
+}
+
+type encryptMnemonicHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.EncryptMnemonicRequest,
+	) (*pbApi.EncryptMnemonicResponse, error)
+}
+
+type getDerivationsAddressesHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.DerivationAddressByRangeRequest,
 	) (*pbApi.DerivationAddressByRangeResponse, error)
-	MarshallGetEnabledWallets([]*types.PublicWalletData) (*pbApi.GetEnabledWalletsResponse, error)
-	MarshallSignTransaction(
-		publicSignTxData *types.PublicSignTxData,
-	) (*pbApi.SignTransactionResponse, error)
-	MarshallWalletInfo(
-		walletData *types.PublicWalletData,
-	) *pbApi.WalletData
+}
+type loadDerivationsAddressesHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.LoadDerivationAddressRequest,
+	) (*pbApi.LoadDerivationAddressResponse, error)
+}
+
+type signDataHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.SignDataRequest,
+	) (*pbApi.SignDataResponse, error)
+}
+
+type getDerivationAddressHandlerService interface {
+	Handle(ctx context.Context,
+		req *pbApi.DerivationAddressRequest,
+	) (*pbApi.DerivationAddressResponse, error)
 }

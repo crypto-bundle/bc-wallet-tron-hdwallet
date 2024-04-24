@@ -1,37 +1,12 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package grpc
 
 import (
 	"context"
-
+	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
-	pbApi "github.com/crypto-bundle/bc-wallet-tron-hdwallet/pkg/grpc/hdwallet_api/proto"
-
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // grpcServerHandle is wrapper struct for implementation all grpc handlers
@@ -39,80 +14,109 @@ type grpcServerHandle struct {
 	*pbApi.UnimplementedHdWalletApiServer
 
 	logger *zap.Logger
-	cfg    *config.Config
-
-	walletSrv     walletManagerService
-	marshallerSrv marshallerService
+	cfg    configService
 	// all GRPC handlers
-	addNewWalletHandler                *AddNewWalletHandler
-	getDerivationAddressHandler        *GetDerivationAddressHandler
-	getDerivationAddressByRangeHandler *GetDerivationAddressByRangeHandler
-	getEnabledWalletsHandler           *GetEnabledWalletsHandler
-	getWalletInfoHandler               *GetWalletInfoHandler
-	signTransactionHandle              *SignTransactionHandler
+	generateMnemonicHandlerSvc        generateMnemonicHandlerService
+	validateMnemonicHandlerSvc        validateMnemonicHandlerService
+	loadMnemonicHandlerSvc            loadMnemonicHandlerService
+	unLoadMnemonicHandlerSvc          unLoadMnemonicHandlerService
+	unLoadMultipleMnemonicsHandlerSvc unLoadMultipleMnemonicsHandlerService
+	encryptMnemonicHandlerSvc         encryptMnemonicHandlerService
+	getDerivationAddressSvc           getDerivationAddressHandlerService
+	getDerivationsAddressesSvc        getDerivationsAddressesHandlerService
+	loadDerivationAddressSvc          loadDerivationsAddressesHandlerService
+	signDataSvc                       signDataHandlerService
 }
 
-func (h *grpcServerHandle) AddNewWallet(ctx context.Context,
-	req *pbApi.AddNewWalletRequest,
-) (*pbApi.AddNewWalletResponse, error) {
-	return h.addNewWalletHandler.Handle(ctx, req)
+func (h *grpcServerHandle) GenerateMnemonic(ctx context.Context,
+	req *pbApi.GenerateMnemonicRequest,
+) (*pbApi.GenerateMnemonicResponse, error) {
+	return h.generateMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) ValidateMnemonic(ctx context.Context,
+	req *pbApi.ValidateMnemonicRequest,
+) (*pbApi.ValidateMnemonicResponse, error) {
+	return h.validateMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) LoadMnemonic(ctx context.Context,
+	req *pbApi.LoadMnemonicRequest,
+) (*pbApi.LoadMnemonicResponse, error) {
+	return h.loadMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) UnLoadMnemonic(ctx context.Context,
+	req *pbApi.UnLoadMnemonicRequest,
+) (*pbApi.UnLoadMnemonicResponse, error) {
+	return h.unLoadMnemonicHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) UnLoadMultipleMnemonics(ctx context.Context,
+	req *pbApi.UnLoadMultipleMnemonicsRequest,
+) (*pbApi.UnLoadMultipleMnemonicsResponse, error) {
+	return h.unLoadMultipleMnemonicsHandlerSvc.Handle(ctx, req)
+}
+
+func (h *grpcServerHandle) EncryptMnemonic(context.Context,
+	*pbApi.EncryptMnemonicRequest,
+) (*pbApi.EncryptMnemonicResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EncryptMnemonic not implemented")
 }
 
 func (h *grpcServerHandle) GetDerivationAddress(ctx context.Context,
 	req *pbApi.DerivationAddressRequest,
 ) (*pbApi.DerivationAddressResponse, error) {
-	return h.getDerivationAddressHandler.Handle(ctx, req)
+	return h.getDerivationAddressSvc.Handle(ctx, req)
 }
 
 func (h *grpcServerHandle) GetDerivationAddressByRange(ctx context.Context,
 	req *pbApi.DerivationAddressByRangeRequest,
 ) (*pbApi.DerivationAddressByRangeResponse, error) {
-	return h.getDerivationAddressByRangeHandler.Handle(ctx, req)
+	return h.getDerivationsAddressesSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) GetEnabledWallets(ctx context.Context,
-	req *pbApi.GetEnabledWalletsRequest,
-) (*pbApi.GetEnabledWalletsResponse, error) {
-	return h.getEnabledWalletsHandler.Handle(ctx, req)
+func (h *grpcServerHandle) LoadDerivationAddress(ctx context.Context,
+	req *pbApi.LoadDerivationAddressRequest,
+) (*pbApi.LoadDerivationAddressResponse, error) {
+	return h.loadDerivationAddressSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) SignTransaction(ctx context.Context,
-	req *pbApi.SignTransactionRequest,
-) (*pbApi.SignTransactionResponse, error) {
-	return h.signTransactionHandle.Handle(ctx, req)
+func (h *grpcServerHandle) SignData(ctx context.Context,
+	req *pbApi.SignDataRequest,
+) (*pbApi.SignDataResponse, error) {
+	return h.signDataSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) GetWalletInfo(ctx context.Context,
-	req *pbApi.GetWalletInfoRequest,
-) (*pbApi.GetWalletInfoResponse, error) {
-	return h.getWalletInfoHandler.Handle(ctx, req)
-}
-
-// New instance of service
-func New(ctx context.Context,
-	loggerSrv *zap.Logger,
-
-	walletSrv walletManagerService,
-) (pbApi.HdWalletApiServer, error) {
+// NewHandlers - create instance of grpc-handler service
+func NewHandlers(loggerSrv *zap.Logger,
+	mnemoGenSvc mnemonicGeneratorService,
+	transitEncryptorSvc encryptService,
+	appEncryptorSvc encryptService,
+	mnemoValidatorSvc mnemonicValidatorService,
+	walletPoolSvc walletPoolService,
+) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
-		zap.String(app.ApplicationNameTag, app.ApplicationName),
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
-	marshallerSrv := newGRPCMarshaller(loggerSrv)
+	//addrRespPool := &sync.Pool{NewHandlers: func() any {
+	//	return new(pbApi.DerivationAddressIdentity)
+	//}}
 
 	return &grpcServerHandle{
 		UnimplementedHdWalletApiServer: &pbApi.UnimplementedHdWalletApiServer{},
 		logger:                         l,
 
-		walletSrv:     walletSrv,
-		marshallerSrv: marshallerSrv,
-
-		addNewWalletHandler:                MakeAddNewWalletHandler(l, walletSrv, marshallerSrv),
-		getDerivationAddressHandler:        MakeGetDerivationAddressHandler(l, walletSrv, marshallerSrv),
-		getEnabledWalletsHandler:           MakeGetEnabledWalletsHandler(l, walletSrv, marshallerSrv),
-		getDerivationAddressByRangeHandler: MakeGetDerivationAddressByRangeHandler(l, walletSrv, marshallerSrv),
-		signTransactionHandle:              MakeSignTransactionsHandler(l, walletSrv, marshallerSrv),
-		getWalletInfoHandler:               MakeGetWalletInfoHandler(l, walletSrv, marshallerSrv),
-	}, nil
+		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l, mnemoGenSvc, appEncryptorSvc),
+		validateMnemonicHandlerSvc:        MakeValidateMnemonicHandler(l, appEncryptorSvc, mnemoValidatorSvc),
+		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l, walletPoolSvc),
+		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l, walletPoolSvc),
+		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l, walletPoolSvc),
+		encryptMnemonicHandlerSvc:         MakeEncryptMnemonicHandler(l, transitEncryptorSvc, appEncryptorSvc),
+		loadDerivationAddressSvc:          MakeLoadDerivationAddressHandlerHandler(l, walletPoolSvc),
+		getDerivationAddressSvc:           MakeGetDerivationAddressHandler(l, walletPoolSvc),
+		getDerivationsAddressesSvc:        MakeGetDerivationsAddressesHandler(l, walletPoolSvc),
+		signDataSvc:                       MakeSignDataHandler(l, walletPoolSvc),
+	}
 }

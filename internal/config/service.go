@@ -1,42 +1,14 @@
-/*
- * MIT License
- *
- * Copyright (c) 2021-2023 Aleksei Kotelnikov
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package config
 
 import (
 	"context"
-	"log"
-
-	commonEnvConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/envconfig"
+	commonConfig "github.com/crypto-bundle/bc-wallet-common-lib-config/pkg/config"
 	commonVault "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault"
 	commonVaultTokenClient "github.com/crypto-bundle/bc-wallet-common-lib-vault/pkg/vault/client/token"
-
-	"github.com/joho/godotenv"
 )
 
 func PrepareVault(ctx context.Context, baseCfgSrv baseConfigService) (*commonVault.Service, error) {
-	cfgPreparerSrv := commonEnvConfig.NewConfigManager()
+	cfgPreparerSrv := commonConfig.NewConfigManager()
 	vaultCfg := &VaultWrappedConfig{
 		BaseConfig: &commonVault.BaseConfig{},
 		AuthConfig: &commonVaultTokenClient.AuthConfig{},
@@ -65,15 +37,14 @@ func PrepareVault(ctx context.Context, baseCfgSrv baseConfigService) (*commonVau
 }
 
 func Prepare(ctx context.Context,
-	version,
 	releaseTag,
 	commitID,
-	shortCommitID string,
+	shortCommitID,
 	buildNumber,
-	buildDateTS uint64,
+	buildDateTS,
 	applicationName string,
-) (*Config, *commonVault.Service, error) {
-	baseCfgSrv, err := PrepareBaseConfig(ctx, version, releaseTag,
+) (*HdWalletConfig, *commonVault.Service, error) {
+	baseCfgSrv, err := PrepareBaseConfig(ctx, releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS, applicationName)
 	if err != nil {
@@ -90,8 +61,8 @@ func Prepare(ctx context.Context,
 		return nil, nil, err
 	}
 
-	appCfgPreparerSrv := commonEnvConfig.NewConfigManager()
-	wrappedConfig := &Config{}
+	appCfgPreparerSrv := commonConfig.NewConfigManager()
+	wrappedConfig := &HdWalletConfig{}
 	err = appCfgPreparerSrv.PrepareTo(wrappedConfig).With(baseCfgSrv, vaultSecretSrv).Do(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -103,30 +74,30 @@ func Prepare(ctx context.Context,
 }
 
 func PrepareBaseConfig(ctx context.Context,
-	version,
 	releaseTag,
 	commitID,
-	shortCommitID string,
+	shortCommitID,
 	buildNumber,
-	buildDateTS uint64,
+	buildDateTS,
 	applicationName string,
-) (*commonEnvConfig.BaseConfig, error) {
-	flagManagerSrv := commonEnvConfig.NewLdFlagsManager(version, releaseTag,
+) (*commonConfig.BaseConfig, error) {
+	flagManagerSrv, err := commonConfig.NewLdFlagsManager(releaseTag,
 		commitID, shortCommitID,
 		buildNumber, buildDateTS)
-
-	baseCfgPreparerSrv := commonEnvConfig.NewConfigManager()
-	baseCfg := commonEnvConfig.NewBaseConfig(applicationName)
-	err := baseCfgPreparerSrv.PrepareTo(baseCfg).With(flagManagerSrv).Do(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if baseCfg.IsDev() {
-		loadErr := godotenv.Load(".env")
-		if loadErr != nil {
-			log.Fatal(loadErr)
-		}
+	err = commonConfig.LoadLocalEnvIfDev()
+	if err != nil {
+		return nil, err
+	}
+
+	baseCfgPreparerSrv := commonConfig.NewConfigManager()
+	baseCfg := commonConfig.NewBaseConfig(applicationName)
+	err = baseCfgPreparerSrv.PrepareTo(baseCfg).With(flagManagerSrv).Do(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return baseCfg, nil
