@@ -4,14 +4,14 @@ go 1.22
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-9
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24
 	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.5
 	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-logger v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-tracer v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-vault v0.0.13
-	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethereum/go-ethereum v1.14.0
 	github.com/google/uuid v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/shengdoushi/base58 v1.0.0
@@ -24,7 +24,7 @@ require (
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/btcsuite/btcd/btcutil v1.1.5
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.50.0
 )
@@ -80,10 +80,10 @@ require (
 	go.opentelemetry.io/otel/trace v1.25.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )
