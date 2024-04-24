@@ -47,7 +47,7 @@
 * Fixed crash in wallet pool init stage
 * Fixed bugs in flow in new wallet creation
 
-## [v0.0.6 - v0.0.22] 05.04.2023 - 28.04.2023
+## [v0.0.6 - v0.0.23] 05.04.2023 - 28.04.2023
 ### Added
 * Added gRPC client wrapper
 * Small security improvements:
@@ -59,11 +59,12 @@
   * Added helm-chart option for docker container repository
   * Fixed helm-chart template for VAULT_DATA_PATH variable
 * Optimization in get addresses by range flow
+* Clone private key in sign transaction flow
 ### Fixed
 * Fixed bug in sign transaction flow
 * Fixed migrations - wrong rollback SQL-code, missing drop index and drop table
 
-## [v0.0.23] 14.02.2024
+## [v0.0.24] 14.02.2024
 ### Info
 Start of big application refactoring
 ### Added
@@ -81,3 +82,34 @@ Start of big application refactoring
   * new gRPC method - StartWalletSession
   * new gRPC method - GetWalletSession
 * Removed go-tron-sdk dependency
+
+## [v0.0.25] 24.04.2024
+### Added
+* Implemented new gRPC methods:
+  * GenerateMnemonic
+  * LoadMnemonic
+  * UnLoadMnemonic
+  * EncryptMnemonic
+  * ValidateMnemonic
+  * UnLoadMultipleMnemonics
+  * LoadDerivationAddress
+  * SignData
+### Changed
+* Removed all types of store - postgres, redis, nats. Hdwallet-api app now storage less application  
+* Removed multiple mnemonics per wallet flow - now one wallet - one mnemonic
+* Changed mnemonic management flow: 
+  * Now all wallet only in memory
+  * Logic of load/unload wallet in gRPC method requests
+  * Added vault encrypt/decrypt flow for passing mnemonic data between hdwallet-controller and hdwallet-api
+* Bump go version 1.19 -> 1.22
+* Integrated new version of hdwallet-controller dependency - v0.0.24
+* Bump common-lib version:
+  * bc-wallet-common-lib-config v0.0.5
+  * bc-wallet-common-lib-grpc v0.0.4
+  * bc-wallet-common-lib-healthcheck v0.0.4
+  * bc-wallet-common-lib-logger v0.0.4
+  * bc-wallet-common-lib-nats-queue v0.1.12
+  * bc-wallet-common-lib-postgres v0.0.8
+  * bc-wallet-common-lib-redis v0.0.7
+  * bc-wallet-common-lib-tracer v0.0.4
+  * bc-wallet-common-lib-vault v0.0.13
