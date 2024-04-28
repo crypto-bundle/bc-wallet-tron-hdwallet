@@ -2,6 +2,7 @@ package wallet_manager
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/plugins/tron"
 	"sync"
 	"time"
 
@@ -132,7 +133,7 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		return nil
 	}
 
-	walletUnit := newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
+	walletUnit := main.newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
 	wrapper := newUnitWrapper(p.runTimeCtx, p.logger, timeToLive, walletUnit, p.unloadWalletUnit)
 
 	p.walletUnits[walletUUID] = wrapper

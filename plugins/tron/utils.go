@@ -1,4 +1,4 @@
-package wallet_manager
+package main
 
 import (
 	"crypto/ecdsa"

@@ -1,4 +1,4 @@
-package hdwallet
+package main
 
 import (
 	"crypto/ecdsa"
@@ -95,7 +95,7 @@ func (k *Key) GetChildKey(purpose, coinType,
 	account,
 	change,
 	addressIndex uint32,
-) (*AccountKey, *Key, error) {
+) (*accountKey, *Key, error) {
 	var err error
 
 	extendedKeyCloned, err := k.ExtendedKey.CloneWithVersion(k.ExtendedKey.Version())
@@ -103,7 +103,7 @@ func (k *Key) GetChildKey(purpose, coinType,
 		return nil, nil, err
 	}
 
-	accountKey := extendedKeyCloned
+	accKey := extendedKeyCloned
 	var extendedKey = extendedKeyCloned
 	for i, v := range k.GetPath(purpose, coinType, account, change, addressIndex) {
 		extendedKey, err = extendedKey.Derive(v)
@@ -112,12 +112,12 @@ func (k *Key) GetChildKey(purpose, coinType,
 		}
 
 		if i == 2 {
-			accountKey = extendedKey
+			accKey = extendedKey
 		}
 	}
 
-	acc := &AccountKey{
-		ExtendedKey: accountKey,
+	acc := &accountKey{
+		ExtendedKey: accKey,
 		Network:     k.Network,
 	}
 
@@ -211,7 +211,7 @@ func (k *Key) AddressP2WPKHInP2SH() (string, error) {
 	return addr1.EncodeAddress(), nil
 }
 
-// CloneECDSAPrivateKey generate public key to p2wpkh style address
+// CloneECDSAPrivateKey full clone ECDSA private key
 func (k *Key) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
 	clonedPrivKey := ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
@@ -223,4 +223,24 @@ func (k *Key) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
 	}
 
 	return &clonedPrivKey, nil
+}
+
+func (k *Key) ClearSecrets() {
+	k.ExtendedKey.Zero()
+	k.Private.Zero()
+
+	k.PublicECDSA.X.SetBytes([]byte{0x0})
+	k.PublicECDSA.Y.SetBytes([]byte{0x0})
+
+	k.PrivateECDSA.X.SetBytes([]byte{0x0})
+	k.PrivateECDSA.Y.SetBytes([]byte{0x0})
+	k.PrivateECDSA.D.SetBytes([]byte{0x0})
+
+	k.Network = nil
+	k.PrivateECDSA.Curve = nil
+	k.PrivateECDSA = nil
+	k.PublicECDSA = nil
+	k.Private = nil
+	k.Public = nil
+	k.ExtendedKey = nil
 }

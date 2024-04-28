@@ -4,16 +4,17 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
+
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (

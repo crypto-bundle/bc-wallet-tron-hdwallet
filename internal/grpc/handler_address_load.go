@@ -2,8 +2,6 @@ package grpc
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 
@@ -11,6 +9,8 @@ import (
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -73,7 +73,7 @@ func MakeLoadDerivationAddressHandlerHandler(loggerEntry *zap.Logger,
 	walletPoolSvc walletPoolService,
 ) *loadDerivationAddressHandler {
 	return &loadDerivationAddressHandler{
-		l:             loggerEntry.With(zap.String(MethodNameTag, MethodNameGetDerivationAddress)),
+		l:             loggerEntry.With(zap.String(MethodNameTag, MethodNameLoadDerivationAddress)),
 		walletPoolSvc: walletPoolSvc,
 	}
 }
