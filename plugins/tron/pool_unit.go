@@ -5,19 +5,12 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
-	"google.golang.org/protobuf/proto"
+	"sync"
 
 	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-	"github.com/google/uuid"
-
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/ethereum/go-ethereum/crypto"
-	"sync"
-)
-
-const (
-	derivationPathTemplate = "%d'/%d/%d"
+	"google.golang.org/protobuf/proto"
 )
 
 type addressData struct {
@@ -28,9 +21,9 @@ type addressData struct {
 type mnemonicWalletUnit struct {
 	mu *sync.Mutex
 
-	hdWalletSvc *Wallet
+	hdWalletSvc *wallet
 
-	mnemonicWalletUUID *uuid.UUID
+	mnemonicWalletUUID string
 	mnemonicHash       string
 
 	// addressPool is pool of derivation addresses with private keys and address
@@ -45,14 +38,10 @@ func (u *mnemonicWalletUnit) Shutdown(ctx context.Context) error {
 
 	err := u.unloadWallet()
 	if err != nil {
-		return fmt.Errorf("unable to unload wallet: %w")
+		return fmt.Errorf("unable to unload wallet: %w", err)
 	}
 
-	for i := range u.mnemonicWalletUUID {
-		u.mnemonicWalletUUID[i] = 0
-	}
-
-	u.mnemonicWalletUUID = nil
+	u.mnemonicWalletUUID = "0"
 
 	return nil
 }
@@ -68,7 +57,7 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 	u.hdWalletSvc.ClearSecrets()
 	u.hdWalletSvc = nil
 
-	for key, data := range u.addressPool {
+	for accountPath, data := range u.addressPool {
 		if data == nil {
 			continue
 		}
@@ -77,7 +66,7 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 			zeroKey(data.privateKey)
 		}
 
-		delete(u.addressPool, key)
+		delete(u.addressPool, accountPath)
 	}
 
 	u.addressPool = nil
@@ -85,15 +74,13 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 	return nil
 }
 
-func (u *mnemonicWalletUnit) GetMnemonicUUID() *uuid.UUID {
-	cloned := uuid.UUID(u.mnemonicWalletUUID[:])
-
-	return &cloned
+func (u *mnemonicWalletUnit) GetMnemonicUUID() string {
+	return u.mnemonicWalletUUID[:]
 }
 
 func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {
 	return &pbCommon.MnemonicWalletIdentity{
-		WalletUUID: u.mnemonicWalletUUID.String(),
+		WalletUUID: u.mnemonicWalletUUID,
 		WalletHash: u.mnemonicHash,
 	}
 }
@@ -164,8 +151,8 @@ func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
 func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 	account, change, index uint32,
 ) (*addressData, error) {
-	key := fmt.Sprintf("%d'/%d/%d", account, change, index)
-	addrData, isExists := u.addressPool[key]
+	mapKey := fmt.Sprintf("%d'/%d/%d", account, change, index)
+	addrData, isExists := u.addressPool[mapKey]
 	if !isExists {
 		tronAccount, walletErr := u.hdWalletSvc.NewAccount(account, change, index)
 		if walletErr != nil {
@@ -177,17 +164,15 @@ func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
 			return nil, walletErr
 		}
 
-		clonedPrivKey, walletErr := tronAccount.ExtendedKey.CloneECDSAPrivateKey()
+		clonedPrivKey, walletErr := tronAccount.CloneECDSAPrivateKey()
 		if walletErr != nil {
 			return nil, walletErr
 		}
 
-		addrData = &addressData{
+		u.addressPool[mapKey] = &addressData{
 			address:    addr,
 			privateKey: clonedPrivKey,
 		}
-
-		u.addressPool[key] = addrData
 
 		tronAccount.ClearSecrets()
 		tronAccount = nil
@@ -297,11 +282,10 @@ func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	return &blockchainAddress, nil
 }
 
-func NewPoolUnit(walletUUID uuid.UUID,
+func NewPoolUnit(walletUUID string,
 	mnemonicDecryptedData []byte,
-) (*mnemonicWalletUnit, error) {
-	blockChainParams := chaincfg.MainNetParams
-	hdWalletSvc, createErr := NewFromString(string(mnemonicDecryptedData), &blockChainParams)
+) (interface{}, error) {
+	hdWalletSvc, createErr := newWalletFromMnemonic(string(mnemonicDecryptedData))
 	if createErr != nil {
 		return nil, createErr
 	}
@@ -311,7 +295,7 @@ func NewPoolUnit(walletUUID uuid.UUID,
 
 		hdWalletSvc: hdWalletSvc,
 
-		mnemonicWalletUUID: &walletUUID,
+		mnemonicWalletUUID: walletUUID,
 
 		addressPool: make(map[string]*addressData),
 	}, nil

@@ -8,7 +8,12 @@ import (
 )
 
 type configService interface {
+	GetHdWalletPluginPath() string
 }
+
+type walletMakerFunc func(walletUUID string,
+	mnemonicDecryptedData []byte,
+) (interface{}, error)
 
 type WalletPoolUnitService interface {
 	Init(ctx context.Context) error

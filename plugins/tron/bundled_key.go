@@ -13,16 +13,16 @@ import (
 )
 
 var (
-	// DefaultNetwork for generate masterKey
+	// defaultNetwork for generate masterKey
 	// nolint:gochecknoglobals // its library function
-	DefaultNetwork = &chaincfg.MainNetParams
-	// ZeroQuote base zero
+	defaultNetwork = &chaincfg.MainNetParams
+	// zeroQuote base zero
 	// nolint:gochecknoglobals // its library function
-	ZeroQuote uint32 = 0x80000000
+	zeroQuote uint32 = 0x80000000
 )
 
-// Key struct
-type Key struct {
+// keyBundle struct
+type keyBundle struct {
 	// ExtendedKey hdwallet
 	ExtendedKey *hdkeychain.ExtendedKey
 
@@ -34,31 +34,44 @@ type Key struct {
 	// Public for btc child's
 	Public *btcec.PublicKey
 
-	// PrivateECDSA for eth child's and tokens's
+	// PrivateECDSA
 	PrivateECDSA *ecdsa.PrivateKey
-	// PrivateECDSA for eth child's and tokens's
+	// PrivateECDSA
 	PublicECDSA *ecdsa.PublicKey
 }
 
-// NewKey generate new extended key
-func NewKey(seed []byte) (*Key, error) {
-	extendedKey, err := hdkeychain.NewMaster(seed, DefaultNetwork)
+// newBundledKeyBySeed generate new extended key
+func newBundledKeyBySeed(seed []byte) (*keyBundle, error) {
+	extendedKey, err := hdkeychain.NewMaster(seed, defaultNetwork)
 	if err != nil {
 		return nil, err
 	}
-	return newKey(extendedKey, DefaultNetwork)
-}
 
-func newKey(extendedKey *hdkeychain.ExtendedKey, network *chaincfg.Params) (*Key, error) {
-	key := &Key{ExtendedKey: extendedKey, Network: network}
-	if err := key.init(); err != nil {
+	bundle := &keyBundle{
+		ExtendedKey: extendedKey,
+		Network:     defaultNetwork,
+	}
+	if err = bundle.init(); err != nil {
 		return nil, err
 	}
 
-	return key, nil
+	return bundle, nil
 }
 
-func (k *Key) init() error {
+// newBundledKeyByExtendedKey generate new bundled key
+func newBundledKeyByExtendedKey(extendedKey *hdkeychain.ExtendedKey) (*keyBundle, error) {
+	bundle := &keyBundle{
+		ExtendedKey: extendedKey,
+		Network:     defaultNetwork,
+	}
+	if err := bundle.init(); err != nil {
+		return nil, err
+	}
+
+	return bundle, nil
+}
+
+func (k *keyBundle) init() error {
 	var err error
 
 	k.Private, err = k.ExtendedKey.ECPrivKey()
@@ -73,14 +86,16 @@ func (k *Key) init() error {
 
 	k.PrivateECDSA = k.Private.ToECDSA()
 	k.PublicECDSA = &k.PrivateECDSA.PublicKey
+
 	return nil
 }
 
 // GetPath return path in bip44 style
-func (k *Key) GetPath(purpose, coinType, account, change, addressIndex uint32) []uint32 {
-	purpose = ZeroQuote + purpose
-	coinType = ZeroQuote + coinType
-	account = ZeroQuote + account
+func (k *keyBundle) GetPath(purpose, coinType, account, change, addressIndex uint32) []uint32 {
+	purpose = zeroQuote + purpose
+	coinType = zeroQuote + coinType
+	account = zeroQuote + account
+
 	return []uint32{
 		purpose,
 		coinType,
@@ -91,11 +106,11 @@ func (k *Key) GetPath(purpose, coinType, account, change, addressIndex uint32) [
 }
 
 // GetChildKey path for address
-func (k *Key) GetChildKey(purpose, coinType,
+func (k *keyBundle) GetChildKey(purpose, coinType,
 	account,
 	change,
 	addressIndex uint32,
-) (*accountKey, *Key, error) {
+) (*accountKey, *keyBundle, error) {
 	var err error
 
 	extendedKeyCloned, err := k.ExtendedKey.CloneWithVersion(k.ExtendedKey.Version())
@@ -126,18 +141,21 @@ func (k *Key) GetChildKey(purpose, coinType,
 		return nil, nil, err
 	}
 
-	key, err := newKey(extendedKey, k.Network)
+	newExtendedKey, err := newBundledKeyByExtendedKey(extendedKey)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return acc, key, err
+	return acc, newExtendedKey, err
 }
 
 // PublicHex generate public key to string by hex
-func (k *Key) PublicHex() string {
+func (k *keyBundle) PublicHex() string {
 	return hex.EncodeToString(k.Public.SerializeCompressed())
 }
 
 // PublicHash generate public key by hash160
-func (k *Key) PublicHash() ([]byte, error) {
+func (k *keyBundle) PublicHash() ([]byte, error) {
 	address, err := k.ExtendedKey.Address(k.Network)
 	if err != nil {
 		return nil, err
@@ -147,7 +165,7 @@ func (k *Key) PublicHash() ([]byte, error) {
 }
 
 // AddressP2PKH generate public key to p2wpkh style address
-func (k *Key) AddressP2PKH() (string, error) {
+func (k *keyBundle) AddressP2PKH() (string, error) {
 	pubHash, err := k.PublicHash()
 	if err != nil {
 		return "", err
@@ -172,7 +190,7 @@ func (k *Key) AddressP2PKH() (string, error) {
 }
 
 // AddressP2WPKH generate public key to p2wpkh style address
-func (k *Key) AddressP2WPKH() (string, error) {
+func (k *keyBundle) AddressP2WPKH() (string, error) {
 	pubHash, err := k.PublicHash()
 	if err != nil {
 		return "", err
@@ -187,7 +205,7 @@ func (k *Key) AddressP2WPKH() (string, error) {
 }
 
 // AddressP2WPKHInP2SH generate public key to p2wpkh nested within p2sh style address
-func (k *Key) AddressP2WPKHInP2SH() (string, error) {
+func (k *keyBundle) AddressP2WPKHInP2SH() (string, error) {
 	pubHash, err := k.PublicHash()
 	if err != nil {
 		return "", err
@@ -212,7 +230,7 @@ func (k *Key) AddressP2WPKHInP2SH() (string, error) {
 }
 
 // CloneECDSAPrivateKey full clone ECDSA private key
-func (k *Key) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
+func (k *keyBundle) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
 	clonedPrivKey := ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: btcec.S256(),
@@ -225,7 +243,7 @@ func (k *Key) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
 	return &clonedPrivKey, nil
 }
 
-func (k *Key) ClearSecrets() {
+func (k *keyBundle) ClearSecrets() {
 	k.ExtendedKey.Zero()
 	k.Private.Zero()
 

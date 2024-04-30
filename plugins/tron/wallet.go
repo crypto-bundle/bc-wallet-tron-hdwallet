@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	bip39 "github.com/tyler-smith/go-bip39"
 )
@@ -19,89 +19,52 @@ const (
 	TronBytePrefix = byte(0x41)
 )
 
-var (
-	ErrUnsupportedBlockchain = errors.New("unsupported blockchain")
-)
-
-// Wallet contains the individual mnemonic and seed
-type Wallet struct {
+// wallet contains the individual mnemonic and seed
+type wallet struct {
 	mnemonic string
 	seed     []byte
 
-	*Key
+	*keyBundle
 }
 
-// BTC parent
-type BTC struct {
-	blockChainParams *chaincfg.Params
-	purpose          int
-	coinType         int
-	account          uint32
-	change           uint32
-	addressNumber    uint32
-}
-
-// Create a mnemonic for memorization or user-friendly seeds
-func Create(network *chaincfg.Params) (*Wallet, error) {
-	entropy, _ := bip39.NewEntropy(256)
-	return New(entropy, network)
-}
-
-// New hdwallet via entropy
-func New(entropy []byte, network *chaincfg.Params) (*Wallet, error) {
-	mnemonic, _ := bip39.NewMnemonic(entropy)
-	return Restore(mnemonic, network)
-}
-
-// NewFromString hdwallet via mnemo string
-func NewFromString(mnemo string, network *chaincfg.Params) (*Wallet, error) {
-	entropy, err := bip39.EntropyFromMnemonic(mnemo)
-	if err != nil {
-		return nil, err
-	}
-
-	mnemonic, err := bip39.NewMnemonic(entropy)
-	if err != nil {
-		return nil, err
-	}
-
-	return Restore(mnemonic, network)
-}
-
-// Restore mnemonic a Bip32 HD hdwallet for the mnemonic
-func Restore(mnemonic string, network *chaincfg.Params) (*Wallet, error) {
+// restore mnemonic a Bip32 HD-wallet for the mnemonic
+func restore(mnemonic string, network *chaincfg.Params) (*wallet, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := NewKey(seed)
+	bundle, err := newBundledKeyBySeed(seed)
 	if err != nil {
 		return nil, err
 	}
 
-	key.ExtendedKey.SetNet(network)
+	bundle.ExtendedKey.SetNet(network)
 
-	return &Wallet{mnemonic, seed, key}, nil
+	return &wallet{
+		mnemonic:  mnemonic,
+		seed:      seed,
+		keyBundle: bundle,
+	}, nil
 }
 
 // Seed return seed
-func (w *Wallet) Seed() []byte {
+func (w *wallet) Seed() []byte {
 	return w.seed
 }
 
 // GetSeed return string of seed from byte
-func (w *Wallet) GetSeed() string {
+func (w *wallet) GetSeed() string {
 	return hex.EncodeToString(w.Seed())
 }
 
 // GetMnemonic return mnemonic string
-func (w *Wallet) GetMnemonic() string {
+func (w *wallet) GetMnemonic() string {
 	return w.mnemonic
 }
 
 // ClearSecrets is function clear sensitive secrets data
-func (w *Wallet) ClearSecrets() {
+func (w *wallet) ClearSecrets() {
 	w.mnemonic = "0"
 
 	pattern := []byte{0x1, 0x2, 0x3, 0x4}
@@ -112,5 +75,31 @@ func (w *Wallet) ClearSecrets() {
 		copy(w.seed[j:], w.seed[:j])
 	}
 
-	w.Key.ClearSecrets()
+	w.keyBundle.ClearSecrets()
+}
+
+// NewWalletFromMnemonic new HD-wallet via entropy
+func newWalletFromMnemonic(mnemonic string) (*wallet, error) {
+	return newFromString(mnemonic, &chaincfg.MainNetParams)
+}
+
+// NewWalletFromEntropy HD-wallet via entropy
+func newWalletFromEntropy(entropy []byte) (*wallet, error) {
+	mnemonic, _ := bip39.NewMnemonic(entropy)
+	return restore(mnemonic, &chaincfg.MainNetParams)
+}
+
+// newFromString hdwallet via mnemo string
+func newFromString(mnemo string, network *chaincfg.Params) (*wallet, error) {
+	entropy, err := bip39.EntropyFromMnemonic(mnemo)
+	if err != nil {
+		return nil, err
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, err
+	}
+
+	return restore(mnemonic, network)
 }

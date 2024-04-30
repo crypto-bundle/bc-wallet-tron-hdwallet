@@ -7,10 +7,10 @@
 // Examples
 //
 //          // Generate a random 256 bit seed
-//          seed, err := hdwallet.GenSeed(256)
+//          seed, err := hdwallet.genSeed(256)
 //
 //          // Create a master private key
-//          masterprv := hdwallet.MasterKey(seed)
+//          masterprv := hdwallet.masterKey(seed)
 //
 //          // Convert a private key to public key
 //          masterpub := masterprv.Pub()
@@ -24,8 +24,8 @@
 //
 //          // Convenience string -> string Child and Address functions
 //          walletstring := childpub.String()
-//          childstring, err := hdwallet.StringChild(walletstring,0)
-//          childaddress, err := hdwallet.StringAddress(childstring)
+//          childstring, err := hdwallet.stringChild(walletstring,0)
+//          childaddress, err := hdwallet.stringAddress(childstring)
 //
 // Extended Keys
 //
@@ -40,13 +40,13 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"math/big"
 
 	btcec "github.com/btcsuite/btcd/btcec/v2"
-
 	// nolint:staticcheck // its library function
 	"golang.org/x/crypto/ripemd160"
 )
@@ -186,4 +186,10 @@ func calcCheckSum(data []byte) []byte {
 	h1 := h256h1.Sum(nil)
 
 	return h1[:4]
+}
+
+func zeroKey(key *ecdsa.PrivateKey) {
+	key.D.SetBytes([]byte{0x0})
+	key.X.SetBytes([]byte{0x0})
+	key.Y.SetBytes([]byte{0x0})
 }

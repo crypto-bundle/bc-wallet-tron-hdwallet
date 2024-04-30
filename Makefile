@@ -21,6 +21,10 @@ hdwallet_proto:
 
 default: hdwallet
 
+plugin:
+	CGO_ENABLED=1 go build -race -v -installsuffix cgo -o ./build/api -ldflags "-linkmode external -extldflags -w" ./cmd/hdwallet_api
+	CGO_ENABLED=1 go build -race -v -installsuffix cgo -o ./build/tron.so -ldflags "-linkmode external -extldflags -w"  -buildmode=plugin ./plugins/tron
+
 deploy:
 	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))
 
@@ -29,7 +33,22 @@ deploy:
 	$(eval context=$(or $(context),k0s-dev-cluster))
 	$(eval platform=$(or $(platform),linux/amd64))
 
-	docker build --no-cache --platform $(platform) --tag $(container_registry):$(build_tag) .
+	$(eval short_commit_id=$(shell git rev-parse --short HEAD))
+	$(eval commit_id=$(shell git rev-parse HEAD))
+	$(eval build_number=0)
+	$(eval build_date=$(shell date +%s))
+	$(eval release_tag=$(shell git describe --tags $(commit_id))-$(short_commit_id)-$(build_number))
+
+	docker build \
+		--ssh default=$(SSH_AUTH_SOCK) \
+		--platform $(platform) \
+		--build-arg RELEASE_TAG=$(release_tag) \
+		--build-arg COMMIT_ID=$(commit_id) \
+		--build-arg SHORT_COMMIT_ID=$(short_commit_id) \
+		--build-arg BUILD_NUMBER=$(build_number) \
+		--build-arg BUILD_DATE_TS=$(build_date) \
+		--tag $(container_registry):$(build_tag) .
+
 	docker push $(container_registry):$(build_tag)
 
 	helm --kube-context $(context) upgrade \
@@ -37,8 +56,8 @@ deploy:
 		--set "global.container_registry=$(container_registry)" \
 		--set "global.build_tag=$(build_tag)" \
 		--set "global.env=$(env)" \
-		--values=./deploy/helm/api/values.yaml \
-		--values=./deploy/helm/api/values_$(env).yaml \
+		--values=./deploy/helm/hdwallet/values.yaml \
+		--values=./deploy/helm/hdwallet/values_$(env).yaml \
 		./deploy/helm/api
 
 .PHONY: hdwallet_proto deploy

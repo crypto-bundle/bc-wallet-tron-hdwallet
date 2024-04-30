@@ -9,13 +9,17 @@ var (
 )
 
 type MnemonicConfig struct {
-	MnemonicWordCount uint8 `envconfig:"HDWALLET_WORDS_COUNT" default:"24"`
+	MnemonicWordCount uint8  `envconfig:"HDWALLET_WORDS_COUNT" default:"24"`
+	PluginPath        string `envconfig:"HDWALLET_PLUGIN_PATH" default:"/usr/local/bin/hdwallet_plugin.so"`
 
 	baseAppCfgSrv baseConfigService
 }
 
 func (c *MnemonicConfig) GetDefaultMnemonicWordsCount() uint8 {
 	return c.MnemonicWordCount
+}
+func (c *MnemonicConfig) GetHdWalletPluginPath() string {
+	return c.PluginPath
 }
 
 //nolint:funlen // its ok

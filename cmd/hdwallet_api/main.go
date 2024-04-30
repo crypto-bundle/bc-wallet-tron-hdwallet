@@ -70,7 +70,11 @@ func main() {
 	encryptorSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
 	seedPhraseGenerator := mnemonic.NewMnemonicGenerator(loggerEntry, appCfg.GetDefaultMnemonicWordsCount())
 	mnemonicValidatorSvc := mnemonic.NewMnemonicValidator()
-	walletsPoolSvc := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg, encryptorSvc)
+	walletsPoolSvc, err := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg, encryptorSvc)
+	if err != nil {
+		loggerEntry.Fatal("unable to create grpc server instance", zap.Error(err),
+			zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
+	}
 
 	apiHandlers := grpc.NewHandlers(loggerEntry, seedPhraseGenerator,
 		transitSvc, encryptorSvc, mnemonicValidatorSvc, walletsPoolSvc)
@@ -93,13 +97,12 @@ func main() {
 	//checker.AddStartupProbeUnit(pgConn)
 	//checker.AddStartupProbeUnit(natsConnSvc)
 
-	go func() {
-		err = GRPCSrv.ListenAndServe(ctx)
-		if err != nil {
-			loggerEntry.Error("unable to start grpc", zap.Error(err),
-				zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
-		}
-	}()
+	err = GRPCSrv.ListenAndServe(ctx)
+	if err != nil {
+		loggerEntry.Fatal("unable to start grpc", zap.Error(err),
+			zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
+
+	}
 
 	loggerEntry.Info("application started successfully",
 		zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))

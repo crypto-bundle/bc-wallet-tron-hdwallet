@@ -15,8 +15,8 @@ import (
 	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
-// HDWallet defines the components of a hierarchical deterministic hdwallet
-type HDWallet struct {
+// hdWallet defines the components of a hierarchical deterministic hdwallet
+type hdWallet struct {
 	prvMagic    [4]byte
 	pubMagic    [4]byte
 	Vbytes      []byte // 4 bytes
@@ -30,7 +30,7 @@ type HDWallet struct {
 // Child returns the ith child of hdwallet w. Values of i >= 2^31
 // signify private key derivation. Attempting private key derivation
 // with a public key will throw an error.
-func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
+func (w *hdWallet) Child(i uint32) (*hdWallet, error) {
 	var fingerprint, I, newkey []byte
 	switch {
 	case bytes.Equal(w.Vbytes, w.prvMagic[:4]):
@@ -51,7 +51,7 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		I = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(I[:32])
 		if iL.Cmp(curve.N) >= 0 || iL.Sign() == 0 {
-			return &HDWallet{}, errors.New("invalid child")
+			return &hdWallet{}, errors.New("invalid child")
 		}
 		newkey = addPrivKeys(I[:32], w.Key)
 		raw, err := hash160(privToPub(w.Key))
@@ -64,7 +64,7 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 	case bytes.Equal(w.Vbytes, w.pubMagic[:4]):
 		mac := hmac.New(sha512.New, w.Chaincode)
 		if i >= uint32(0x80000000) {
-			return &HDWallet{}, errors.New("can't do private derivation on public key")
+			return &hdWallet{}, errors.New("can't do private derivation on public key")
 		}
 		_, writeErr := mac.Write(append(w.Key, uint32ToByte(i)...))
 		if writeErr != nil {
@@ -74,7 +74,7 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		I = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(I[:32])
 		if iL.Cmp(curve.N) >= 0 || iL.Sign() == 0 {
-			return &HDWallet{}, errors.New("invalid child")
+			return &hdWallet{}, errors.New("invalid child")
 		}
 
 		newkey = addPubKeys(privToPub(I[:32]), w.Key)
@@ -85,11 +85,11 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 
 		fingerprint = raw[:4]
 	}
-	return &HDWallet{w.prvMagic, w.pubMagic, w.Vbytes, w.Depth + 1, fingerprint, uint32ToByte(i), I[32:], newkey}, nil
+	return &hdWallet{w.prvMagic, w.pubMagic, w.Vbytes, w.Depth + 1, fingerprint, uint32ToByte(i), I[32:], newkey}, nil
 }
 
 // Serialize returns the serialized form of the hdwallet.
-func (w *HDWallet) Serialize() ([]byte, error) {
+func (w *hdWallet) Serialize() ([]byte, error) {
 	depth := uint16ToByte(w.Depth % 256)
 
 	bindata := make([]byte, 78)
@@ -110,7 +110,7 @@ func (w *HDWallet) Serialize() ([]byte, error) {
 }
 
 // String returns the base58-encoded string form of the hdwallet.
-func (w *HDWallet) String() (string, error) {
+func (w *hdWallet) String() (string, error) {
 	serialized, err := w.Serialize()
 	if err != nil {
 		return "", err
@@ -119,20 +119,20 @@ func (w *HDWallet) String() (string, error) {
 	return base58.Encode(serialized), nil
 }
 
-// StringWallet returns a hdwallet given a base58-encoded extended key
-func StringWallet(data string, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
+// hdWalletFromString returns a hdwallet given a base58-encoded extended key
+func hdWalletFromString(data string, prvMagic, pubMagic [4]byte) (*hdWallet, error) {
 	dbin := base58.Decode(data)
-	if err := ByteCheck(dbin, prvMagic, pubMagic); err != nil {
-		return &HDWallet{}, err
+	if err := byteCheck(dbin, prvMagic, pubMagic); err != nil {
+		return &hdWallet{}, err
 	}
 
 	sha256calc, err := dblSha256(dbin[:(len(dbin) - 4)])
 	if err != nil {
-		return &HDWallet{}, err
+		return &hdWallet{}, err
 	}
 
 	if !bytes.Equal(sha256calc[:4], dbin[(len(dbin)-4):]) {
-		return &HDWallet{}, errors.New("invalid checksum")
+		return &hdWallet{}, errors.New("invalid checksum")
 	}
 
 	vbytes := dbin[0:4]
@@ -142,7 +142,7 @@ func StringWallet(data string, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
 	chaincode := dbin[13:45]
 	key := dbin[45:78]
 
-	return &HDWallet{
+	return &hdWallet{
 		prvMagic:    prvMagic,
 		pubMagic:    pubMagic,
 		Vbytes:      vbytes,
@@ -156,17 +156,17 @@ func StringWallet(data string, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
 
 // Pub returns a new hdwallet which is the public key version of w.
 // If w is a public key, Pub returns a copy of w
-func (w *HDWallet) Pub() *HDWallet {
+func (w *hdWallet) Pub() *hdWallet {
 	if bytes.Equal(w.Vbytes, w.pubMagic[:4]) {
-		return &HDWallet{w.prvMagic, w.pubMagic, w.Vbytes, w.Depth, w.Fingerprint, w.I, w.Chaincode, w.Key}
+		return &hdWallet{w.prvMagic, w.pubMagic, w.Vbytes, w.Depth, w.Fingerprint, w.I, w.Chaincode, w.Key}
 	}
 
-	return &HDWallet{w.prvMagic, w.pubMagic, w.pubMagic[:4], w.Depth, w.Fingerprint, w.I, w.Chaincode, privToPub(w.Key)}
+	return &hdWallet{w.prvMagic, w.pubMagic, w.pubMagic[:4], w.Depth, w.Fingerprint, w.I, w.Chaincode, privToPub(w.Key)}
 }
 
-// StringChild returns the ith base58-encoded extended key of a base58-encoded extended key.
-func StringChild(data string, i uint32, prvMagic, pubMagic [4]byte) (string, error) {
-	w, err := StringWallet(data, prvMagic, pubMagic)
+// stringChild returns the ith base58-encoded extended key of a base58-encoded extended key.
+func stringChild(data string, i uint32, prvMagic, pubMagic [4]byte) (string, error) {
+	w, err := hdWalletFromString(data, prvMagic, pubMagic)
 	if err != nil {
 		return "", err
 	}
@@ -184,9 +184,9 @@ func StringChild(data string, i uint32, prvMagic, pubMagic [4]byte) (string, err
 	return str, nil
 }
 
-// StringAddress returns the Bitcoin address of a base58-encoded extended key.
-func StringAddress(data string, prvMagic, pubMagic [4]byte) (string, error) {
-	w, err := StringWallet(data, prvMagic, pubMagic)
+// stringAddress returns the Bitcoin address of a base58-encoded extended key.
+func stringAddress(data string, prvMagic, pubMagic [4]byte) (string, error) {
+	w, err := hdWalletFromString(data, prvMagic, pubMagic)
 	if err != nil {
 		return "", err
 	}
@@ -199,8 +199,8 @@ func StringAddress(data string, prvMagic, pubMagic [4]byte) (string, error) {
 	return addr, nil
 }
 
-// Address returns bitcoin address represented by hdwallet w.
-func (w *HDWallet) Address() (string, error) {
+// Address returns bitcoin address represented by hd-wallet w.
+func (w *hdWallet) Address() (string, error) {
 	x, y := expand(w.Key)
 	paddedKey, err := hex.DecodeString("04")
 	if err != nil {
@@ -227,9 +227,9 @@ func (w *HDWallet) Address() (string, error) {
 	return base58.Encode(append(addr1, chkSum[:4]...)), nil
 }
 
-// GenSeed returns a random seed with a length measured in bytes.
+// genSeed returns a random seed with a length measured in bytes.
 // The length must be at least 128.
-func GenSeed(length int) ([]byte, error) {
+func genSeed(length int) ([]byte, error) {
 	b := make([]byte, length)
 	if length < 128 {
 		return b, errors.New("length must be at least 128 bits")
@@ -238,8 +238,8 @@ func GenSeed(length int) ([]byte, error) {
 	return b, err
 }
 
-// MasterKey returns a new hdwallet given a random seed.
-func MasterKey(seed []byte, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
+// masterKey returns a new hdwallet given a random seed.
+func masterKey(seed []byte, prvMagic, pubMagic [4]byte) (*hdWallet, error) {
 	key := []byte("Bitcoin seed")
 	mac := hmac.New(sha512.New, key)
 	_, err := mac.Write(seed)
@@ -255,7 +255,7 @@ func MasterKey(seed []byte, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
 	fingerprint := make([]byte, 4)
 	zero := make([]byte, 1)
 
-	return &HDWallet{
+	return &hdWallet{
 		prvMagic:    prvMagic,
 		pubMagic:    pubMagic,
 		Vbytes:      prvMagic[:4],
@@ -267,7 +267,7 @@ func MasterKey(seed []byte, prvMagic, pubMagic [4]byte) (*HDWallet, error) {
 	}, nil
 }
 
-func ByteCheck(dBin []byte, prvMagic, pubMagic [4]byte) error {
+func byteCheck(dBin []byte, prvMagic, pubMagic [4]byte) error {
 	// check proper length
 	if len(dBin) != 82 {
 		return errors.New("invalid string")

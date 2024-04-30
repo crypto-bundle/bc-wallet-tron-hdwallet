@@ -16,7 +16,7 @@ type accountKey struct {
 // Init account keys
 func (a *accountKey) Init() error {
 	a.Private = a.ExtendedKey.String()
-	w, _ := StringWallet(a.Private, a.Network.HDPrivateKeyID, a.Network.HDPublicKeyID)
+	w, _ := hdWalletFromString(a.Private, a.Network.HDPrivateKeyID, a.Network.HDPublicKeyID)
 	pub, err := w.Pub().String()
 	if err != nil {
 		return err

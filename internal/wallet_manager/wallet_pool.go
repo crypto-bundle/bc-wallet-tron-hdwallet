@@ -2,7 +2,7 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/plugins/tron"
+	"plugin"
 	"sync"
 	"time"
 
@@ -116,7 +116,8 @@ type Pool struct {
 
 	runTimeCtx context.Context
 
-	encryptSvc encryptService
+	encryptSvc      encryptService
+	walletMakerFunc walletMakerFunc
 
 	walletUnits map[uuid.UUID]*unitWrapper
 }
@@ -133,12 +134,26 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		return nil
 	}
 
-	walletUnit := main.newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
+	decryptedData, err := p.encryptSvc.Decrypt(mnemonicEncryptedData)
+	if err != nil {
+		return err
+	}
+
+	walletUnitInt, err := p.walletMakerFunc(walletUUID.String(), decryptedData)
+	if err != nil {
+		return err
+	}
+
+	walletUnit, isCasted := walletUnitInt.(WalletPoolUnitService)
+	if !isCasted {
+		return ErrUnableCastPluginEntryToPoolUnitWorker
+	}
+
 	wrapper := newUnitWrapper(p.runTimeCtx, p.logger, timeToLive, walletUnit, p.unloadWalletUnit)
 
 	p.walletUnits[walletUUID] = wrapper
 
-	err := wrapper.Run()
+	err = wrapper.Run()
 	if err != nil {
 		return err
 	}
@@ -240,12 +255,31 @@ func NewWalletPool(ctx context.Context,
 	logger *zap.Logger,
 	cfg configService,
 	encryptSrv encryptService,
-) *Pool {
-	return &Pool{
-		runTimeCtx:  ctx,
-		logger:      logger,
-		cfg:         cfg,
-		encryptSvc:  encryptSrv,
-		walletUnits: make(map[uuid.UUID]*unitWrapper),
+) (*Pool, error) {
+	p, err := plugin.Open(cfg.GetHdWalletPluginPath())
+	if err != nil {
+		return nil, err
 	}
+
+	unitMakerFuncSymbol, err := p.Lookup("NewPoolUnit")
+	if err != nil {
+		return nil, err
+	}
+
+	unitMakerFunc, ok := unitMakerFuncSymbol.(func(walletUUID string,
+		mnemonicDecryptedData []byte,
+	) (interface{}, error))
+	if !ok {
+		logger.Info("maker", zap.Any("symbol", unitMakerFuncSymbol))
+		return nil, ErrUnableCastPluginEntryToPoolUnitMaker
+	}
+
+	return &Pool{
+		runTimeCtx:      ctx,
+		logger:          logger,
+		cfg:             cfg,
+		encryptSvc:      encryptSrv,
+		walletMakerFunc: unitMakerFunc,
+		walletUnits:     make(map[uuid.UUID]*unitWrapper),
+	}, nil
 }

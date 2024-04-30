@@ -113,3 +113,16 @@ Start of big application refactoring
   * bc-wallet-common-lib-redis v0.0.7
   * bc-wallet-common-lib-tracer v0.0.4
   * bc-wallet-common-lib-vault v0.0.13
+
+## [v0.0.25] 01.05.2024
+### Added
+* Added plugin path ENV variable
+* Added ldflags support in build application flow
+### Changed
+* Refactored hd-wallet service-component
+  * All struct and variables is un-exportable
+  * Moved to tron plugin directory
+* Refactored wallet pool unit service-component
+  * Changed code for support plugin flow
+  * NewPoolUnit - only one exported function
+  * Moved to tron plugin directory

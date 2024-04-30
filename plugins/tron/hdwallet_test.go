@@ -6,12 +6,12 @@ import (
 )
 
 func TestTronPubKey(t *testing.T) {
-	// test Tron
+	// test tron
 	prvMagic := [4]byte{0x04, 0x88, 0xad, 0xe4}
 	pubMagic := [4]byte{0x04, 0x88, 0xb2, 0x1e}
 
 	prvKey := "xprv9y95ZDyUd1t39HcvxQV9j5UqjhYRFsRXdoUrUVyDKCZo5fjvRDept9qLbHPg9B9jCn1vp9PJm575LCbkUyqv4ybRLRgzUV32DYbXVfMaS31"
-	w, err := StringWallet(prvKey, prvMagic, pubMagic)
+	w, err := hdWalletFromString(prvKey, prvMagic, pubMagic)
 	if err != nil {
 		t.Errorf("%s should have been nil", err.Error())
 	}
