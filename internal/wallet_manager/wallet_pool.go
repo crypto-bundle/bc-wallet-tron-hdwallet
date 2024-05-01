@@ -23,16 +23,17 @@ type unitWrapper struct {
 }
 
 func (w *unitWrapper) Run() error {
-	err := w.Unit.Run(w.ctx)
-	if err != nil {
-		return err
-	}
-
 	startedWg := &sync.WaitGroup{}
 	startedWg.Add(1)
 
 	go func(wrapped *unitWrapper, workDoneWaiter *sync.WaitGroup) {
-		walletUUIDInt := wrapped.Unit.GetMnemonicUUID()
+		rawUUID, funcErr := uuid.Parse(wrapped.Unit.GetWalletUUID())
+		if funcErr != nil {
+			wrapped.logger.Error("unable parse wallet uuid string", zap.Error(funcErr),
+				zap.String(app.WalletUUIDTag, wrapped.Unit.GetWalletUUID()))
+			return
+		}
+
 		wrapped.Timer = time.NewTimer(wrapped.ttl)
 
 		workDoneWaiter.Done()
@@ -56,10 +57,10 @@ func (w *unitWrapper) Run() error {
 			break
 		}
 
-		wrapped.onShutDownFunc(*walletUUIDInt)
+		wrapped.onShutDownFunc(rawUUID)
 
 		w.logger.Info("wallet successfully unloaded",
-			zap.String(app.MnemonicWalletUUIDTag, walletUUIDInt.String()))
+			zap.String(app.WalletUUIDTag, wrapped.Unit.GetWalletUUID()))
 
 		return
 	}(w, startedWg)
@@ -76,7 +77,7 @@ func (w *unitWrapper) Shutdown() {
 }
 
 func (w *unitWrapper) shutdown() error {
-	err := w.Unit.Shutdown(w.ctx)
+	err := w.Unit.UnloadWallet()
 	if err != nil {
 		return err
 	}
@@ -167,11 +168,16 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	if !isExists {
 		return nil, nil
 	}
-	walletUUID := wUint.Unit.GetMnemonicUUID()
+	walletUUID := wUint.Unit.GetWalletUUID()
 
 	wUint.Shutdown()
 
-	return walletUUID, nil
+	rawUUID, err := uuid.Parse(walletUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rawUUID, nil
 }
 
 func (p *Pool) unloadWalletUnit(mnemonicWalletUUID uuid.UUID) {
@@ -198,14 +204,14 @@ func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
 
 func (p *Pool) GetAddressByPath(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	account, change, index uint32,
+	accountIdentity []byte,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.GetAddressByPath(ctx, account, change, index)
+	return wUnit.Unit.GetAccountAddressByPath(ctx, accountIdentity)
 }
 
 func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
@@ -224,19 +230,19 @@ func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
 
 func (p *Pool) LoadAddressByPath(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	account, change, index uint32,
+	accountIdentity []byte,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.LoadAddressByPath(ctx, account, change, index)
+	return wUnit.Unit.LoadAccount(ctx, accountIdentity)
 }
 
 func (p *Pool) SignData(ctx context.Context,
 	mnemonicUUID uuid.UUID,
-	account, change, index uint32,
+	accountIdentity []byte,
 	dataForSign []byte,
 ) (*string, []byte, error) {
 	wUnit, isExists := p.walletUnits[mnemonicUUID]
@@ -247,7 +253,7 @@ func (p *Pool) SignData(ctx context.Context,
 		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return wUnit.Unit.SignData(ctx, account, change, index, dataForSign)
+	return wUnit.Unit.SignData(ctx, accountIdentity, dataForSign)
 }
 
 func NewWalletPool(ctx context.Context,

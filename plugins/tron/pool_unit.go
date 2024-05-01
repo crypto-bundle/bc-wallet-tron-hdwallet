@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"math/big"
 	"sync"
 
@@ -92,16 +93,22 @@ func (u *mnemonicWalletUnit) GetWalletUUID() string {
 }
 
 func (u *mnemonicWalletUnit) SignData(ctx context.Context,
-	accountIdentities [3]uint32,
+	accountIdentity []byte,
 	dataForSign []byte,
 ) (*string, []byte, error) {
+	accIdentity := &AccountIdentity{}
+	err := proto.Unmarshal(accountIdentity, accIdentity)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	return u.signData(ctx,
-		accountIdentities[0],
-		accountIdentities[1],
-		accountIdentities[2],
+		accIdentity.AccountIndex,
+		accIdentity.InternalIndex,
+		accIdentity.AddressIndex,
 		dataForSign)
 }
 
@@ -126,16 +133,21 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	return addr, signedData, nil
 }
 
-func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
-	accountIdentities [3]uint32,
+func (u *mnemonicWalletUnit) LoadAccount(ctx context.Context,
+	accountIdentity []byte,
 ) (*string, error) {
+	accIdentity := &AccountIdentity{}
+	err := proto.Unmarshal(accountIdentity, accIdentity)
+	if err != nil {
+		return nil, err
+	}
+
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	addrData, _, err := u.loadAddressDataByPath(ctx,
-		accountIdentities[0],
-		accountIdentities[1],
-		accountIdentities[2])
+	addrData, _, err := u.loadAddressDataByPath(ctx, accIdentity.AccountIndex,
+		accIdentity.InternalIndex,
+		accIdentity.AddressIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -176,16 +188,21 @@ func (u *mnemonicWalletUnit) loadAddressDataByPath(ctx context.Context,
 	return &addrData.address, addrData.ClonePrivateKey(), nil
 }
 
-func (u *mnemonicWalletUnit) GetAddressByPath(ctx context.Context,
-	accountIdentities [3]uint32,
+func (u *mnemonicWalletUnit) GetAccountAddressByPath(ctx context.Context,
+	accountIdentityRaw []byte,
 ) (*string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	return u.getAddressByPath(ctx,
-		accountIdentities[0],
-		accountIdentities[1],
-		accountIdentities[2])
+	accIdentity := &AccountIdentity{}
+	err := proto.Unmarshal(accountIdentityRaw, accIdentity)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.getAddressByPath(ctx, accIdentity.AccountIndex,
+		accIdentity.InternalIndex,
+		accIdentity.AddressIndex)
 }
 
 func (u *mnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,

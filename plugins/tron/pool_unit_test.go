@@ -8,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/tyler-smith/go-bip39"
 )
 
 func TestNewPoolUnit(t *testing.T) {
-	entropy, err := bip39.NewEntropy(24)
+	entropy, err := bip39.NewEntropy(256)
 	if err != nil {
 		t.Fatalf("%s: %e", "unable to create entropy:", err)
 	}
@@ -23,7 +24,7 @@ func TestNewPoolUnit(t *testing.T) {
 		t.Fatalf("%s: %e", "unable to create mnemonic pharase from entory:", err)
 	}
 
-	_, err = NewPoolUnit(uuid.NewString(), []byte(mnemonic))
+	_, err = NewPoolUnit(uuid.NewString(), mnemonic)
 	if err != nil {
 		t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", err)
 	}
@@ -33,7 +34,7 @@ func TestMnemonicWalletUnit_GetWalletUUID(t *testing.T) {
 	type testCase struct {
 		WalletUUID  string
 		Mnemonic    string
-		AddressPath [3]uint32
+		AddressPath *AccountIdentity
 
 		ExpectedAddress string
 	}
@@ -44,11 +45,11 @@ func TestMnemonicWalletUnit_GetWalletUUID(t *testing.T) {
 	tCase := &testCase{
 		WalletUUID:      uuid.NewString(),
 		Mnemonic:        "seven kitten wire trap family giraffe globe access dinosaur upper forum aerobic dash segment cruise concert giant upon sniff armed rain royal firm state",
-		AddressPath:     [3]uint32{5, 5, 55},
+		AddressPath:     &AccountIdentity{AccountIndex: 5, InternalIndex: 5, AddressIndex: 55},
 		ExpectedAddress: "TRZUb6GVH922CHYty9NaFpVZWuf8GZJ3va",
 	}
 
-	poolUnitIntrf, loopErr := NewPoolUnit(tCase.WalletUUID, []byte(tCase.Mnemonic))
+	poolUnitIntrf, loopErr := NewPoolUnit(tCase.WalletUUID, tCase.Mnemonic)
 	if loopErr != nil {
 		t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", loopErr)
 	}
@@ -58,7 +59,8 @@ func TestMnemonicWalletUnit_GetWalletUUID(t *testing.T) {
 		t.Fatalf("%s", "unable to cast interface to pool unit worker")
 	}
 
-	addr, loopErr := poolUnit.GetAddressByPath(context.Background(), tCase.AddressPath)
+	accountIdentity, _ := proto.Marshal(tCase.AddressPath)
+	addr, loopErr := poolUnit.GetAccountAddressByPath(context.Background(), accountIdentity)
 	if loopErr != nil {
 		t.Fatalf("%s: %e", "unable to get address from pool unit", loopErr)
 	}
@@ -80,7 +82,7 @@ func TestMnemonicWalletUnit_GetWalletUUID(t *testing.T) {
 func TestMnemonicWalletUnit_GetAddressByPath(t *testing.T) {
 	type testCase struct {
 		Mnemonic    string
-		AddressPath [3]uint32
+		AddressPath *AccountIdentity
 
 		ExpectedAddress string
 	}
@@ -91,23 +93,23 @@ func TestMnemonicWalletUnit_GetAddressByPath(t *testing.T) {
 	testCases := []*testCase{
 		{
 			Mnemonic:        "unfair silver dune air rib enforce protect limit jazz dinner thumb drift spring warrior bonus snack argue flavor wild faculty derive open dynamic carpet",
-			AddressPath:     [3]uint32{3, 13, 114},
+			AddressPath:     &AccountIdentity{AccountIndex: 3, InternalIndex: 13, AddressIndex: 114},
 			ExpectedAddress: "TFyMUdJsREv3Q1ooMhV5r2UDGFSL4xgFeC",
 		},
 		{
 			Mnemonic:        "obscure town quick bundle north message want sketch brass tone vast spoil home gentle field ozone mushroom current math cat canvas plunge stay truly",
-			AddressPath:     [3]uint32{1020, 10300, 104000},
+			AddressPath:     &AccountIdentity{AccountIndex: 1020, InternalIndex: 10300, AddressIndex: 104000},
 			ExpectedAddress: "TBKmbAG6JefDEg741YpsMPTB7MegySqs45",
 		},
 		{
 			Mnemonic:        "beach large spray gentle buyer hover flock dream hybrid match whip ten mountain pitch enemy lobster afford barrel patrol desk trigger output excuse truck",
-			AddressPath:     [3]uint32{2, 104, 1005},
+			AddressPath:     &AccountIdentity{AccountIndex: 2, InternalIndex: 104, AddressIndex: 1005},
 			ExpectedAddress: "TWW7CQdsogbqfc5FrSb6MKu22QS4Reg3mH",
 		},
 	}
 
 	for _, tCase := range testCases {
-		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), []byte(tCase.Mnemonic))
+		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), tCase.Mnemonic)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", loopErr)
 		}
@@ -117,7 +119,8 @@ func TestMnemonicWalletUnit_GetAddressByPath(t *testing.T) {
 			t.Fatalf("%s", "unable to cast interface to pool unit worker")
 		}
 
-		addr, loopErr := poolUnit.GetAddressByPath(context.Background(), tCase.AddressPath)
+		accountIdentity, _ := proto.Marshal(tCase.AddressPath)
+		addr, loopErr := poolUnit.GetAccountAddressByPath(context.Background(), accountIdentity)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to get address from pool unit:", loopErr)
 		}
@@ -135,7 +138,7 @@ func TestMnemonicWalletUnit_GetAddressByPath(t *testing.T) {
 func TestMnemonicWalletUnit_LoadAddressByPath(t *testing.T) {
 	type testCase struct {
 		Mnemonic    string
-		AddressPath [3]uint32
+		AddressPath *AccountIdentity
 
 		ExpectedAddress string
 	}
@@ -146,23 +149,23 @@ func TestMnemonicWalletUnit_LoadAddressByPath(t *testing.T) {
 	testCases := []*testCase{
 		{
 			Mnemonic:        "umbrella uphold security hill monkey skin either immense kid afraid sense desk extend twenty doctor odor buzz reject derive frame hub much once suffer",
-			AddressPath:     [3]uint32{5, 12, 3},
+			AddressPath:     &AccountIdentity{AccountIndex: 5, InternalIndex: 12, AddressIndex: 3},
 			ExpectedAddress: "TS98RrhGNPeXNXqFYhYfeFd2AAUK7z5aED",
 		},
 		{
 			Mnemonic:        "slogan follow oil world head protect patrol wagon toddler fly kangaroo kite dash essay shoulder worth one grace shift good disease biology magic pottery",
-			AddressPath:     [3]uint32{1000, 10000, 100000},
+			AddressPath:     &AccountIdentity{AccountIndex: 1000, InternalIndex: 10000, AddressIndex: 100000},
 			ExpectedAddress: "TZ8Tenb9okzq4x626vuux3p3SMXahu3LyG",
 		},
 		{
 			Mnemonic:        "image video differ dumb later child gather smart supply mountain salon ring boy mystery hope secret present bar then joke latin guitar view devote",
-			AddressPath:     [3]uint32{1, 102, 1003},
+			AddressPath:     &AccountIdentity{AccountIndex: 1, InternalIndex: 102, AddressIndex: 1003},
 			ExpectedAddress: "TLFMBiQvLjhp9AK9N2wvgc77dsuKBuLsiV",
 		},
 	}
 
 	for _, tCase := range testCases {
-		poolUnitIntrf, err := NewPoolUnit(uuid.NewString(), []byte(tCase.Mnemonic))
+		poolUnitIntrf, err := NewPoolUnit(uuid.NewString(), tCase.Mnemonic)
 		if err != nil {
 			t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", err)
 		}
@@ -172,7 +175,8 @@ func TestMnemonicWalletUnit_LoadAddressByPath(t *testing.T) {
 			t.Fatalf("%s", "unable to cast interface to pool unit worker")
 		}
 
-		addr, err := poolUnit.LoadAddressByPath(context.Background(), tCase.AddressPath)
+		accountIdentity, _ := proto.Marshal(tCase.AddressPath)
+		addr, err := poolUnit.LoadAccount(context.Background(), accountIdentity)
 		if err != nil {
 			t.Fatalf("%s: %e", "unable to get address from pool unit:", err)
 		}
@@ -185,7 +189,8 @@ func TestMnemonicWalletUnit_LoadAddressByPath(t *testing.T) {
 			t.Fatalf("%s", "address in pool not loaded")
 		}
 
-		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath[0], tCase.AddressPath[1], tCase.AddressPath[2])
+		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath.AccountIndex,
+			tCase.AddressPath.InternalIndex, tCase.AddressPath.AddressIndex)
 		addrData, ok := poolUnit.addressPool[key]
 		if !ok || addrData == nil {
 			t.Fatalf("%s", "missing data by key in address pool")
@@ -208,7 +213,7 @@ func TestMnemonicWalletUnit_LoadAddressByPath(t *testing.T) {
 func TestMnemonicWalletUnit_SignData(t *testing.T) {
 	type testCase struct {
 		Mnemonic         string
-		AddressPath      [3]uint32
+		AddressPath      *AccountIdentity
 		AddressPublicKey string
 		DataForSign      []byte
 
@@ -222,21 +227,21 @@ func TestMnemonicWalletUnit_SignData(t *testing.T) {
 	testCases := []*testCase{
 		{
 			Mnemonic:    "unknown valid carbon hat echo funny artist letter desk absorb unit fatigue foil skirt stay case path rescue hawk remember aware arch regular cry",
-			AddressPath: [3]uint32{7, 8, 9},
+			AddressPath: &AccountIdentity{AccountIndex: 7, InternalIndex: 8, AddressIndex: 9},
 			DataForSign: []byte{0x0, 0x2, 0x3, 0x4},
 
 			ExpectedAddress: "TS5nGhVnjSVudb58XLUCqYTgYtjY7abJJH",
 		},
 		{
 			Mnemonic:    "laundry file mystery rate absorb wrist despair cook near afraid account mirror name chair lake regular vicious oblige release vicious identify glimpse flight help",
-			AddressPath: [3]uint32{909, 8008, 70007},
+			AddressPath: &AccountIdentity{AccountIndex: 909, InternalIndex: 8008, AddressIndex: 70007},
 			DataForSign: []byte{0x5, 0x6, 0x7, 0x8},
 
 			ExpectedAddress: "THjwZivHc9kyosKYTF7MJLTqeCq2xdMgL6",
 		},
 		{
 			Mnemonic:         "busy spawn solar december element round wild buddy furnace help clog tired object camera resist maze fuel need stock rule spot diagram aisle expect",
-			AddressPath:      [3]uint32{9, 8, 7},
+			AddressPath:      &AccountIdentity{AccountIndex: 9, InternalIndex: 8, AddressIndex: 7},
 			AddressPublicKey: "030ba1318a2d4258cecce5725c393e3a6ab7d60cde9e6f39106cd99cf63aa36032",
 			DataForSign:      []byte{0x9, 0x10, 0x11, 0x12},
 
@@ -245,7 +250,7 @@ func TestMnemonicWalletUnit_SignData(t *testing.T) {
 	}
 
 	for _, tCase := range testCases {
-		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), []byte(tCase.Mnemonic))
+		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), tCase.Mnemonic)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", loopErr)
 		}
@@ -255,7 +260,8 @@ func TestMnemonicWalletUnit_SignData(t *testing.T) {
 			t.Fatalf("%s", "unable to cast interface to pool unit worker")
 		}
 
-		addr, signedData, loopErr := poolUnit.SignData(context.Background(), tCase.AddressPath, tCase.DataForSign)
+		accountIdentity, _ := proto.Marshal(tCase.AddressPath)
+		addr, signedData, loopErr := poolUnit.SignData(context.Background(), accountIdentity, tCase.DataForSign)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to sign data:", loopErr)
 		}
@@ -272,7 +278,8 @@ func TestMnemonicWalletUnit_SignData(t *testing.T) {
 			t.Fatalf("%s", "address in pool not loaded")
 		}
 
-		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath[0], tCase.AddressPath[1], tCase.AddressPath[2])
+		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath.AccountIndex,
+			tCase.AddressPath.InternalIndex, tCase.AddressPath.AddressIndex)
 		addrData, ok := poolUnit.addressPool[key]
 		if !ok || addrData == nil {
 			t.Fatalf("%s", "missing data by key in address pool")
@@ -320,7 +327,7 @@ func TestMnemonicWalletUnit_SignData(t *testing.T) {
 func TestMnemonicWalletUnit_UnloadWallet(t *testing.T) {
 	type testCase struct {
 		Mnemonic    string
-		AddressPath [3]uint32
+		AddressPath *AccountIdentity
 
 		ExpectedAddress string
 	}
@@ -331,23 +338,23 @@ func TestMnemonicWalletUnit_UnloadWallet(t *testing.T) {
 	testCases := []*testCase{
 		{
 			Mnemonic:        "input erase buzz crew miss auction habit cargo wrestle perfect like midnight buddy chase grit only treat stuff rival worth alien tennis parent artist",
-			AddressPath:     [3]uint32{5, 8, 11},
+			AddressPath:     &AccountIdentity{AccountIndex: 5, InternalIndex: 8, AddressIndex: 11},
 			ExpectedAddress: "TNnvBFnjrsdTqCnjPRsZZP24pPA1VYUqAi",
 		},
 		{
 			Mnemonic:        "empower plate axis divorce neither noodle above flight very indoor zone mango sand exhaust nominee solid combine picnic gospel myth stem raw garage veteran",
-			AddressPath:     [3]uint32{2, 4, 8},
+			AddressPath:     &AccountIdentity{AccountIndex: 2, InternalIndex: 4, AddressIndex: 8},
 			ExpectedAddress: "TWnoUuXdREoJFFc2vAuwHPUz33tuKJaonK",
 		},
 		{
 			Mnemonic:        "sea vault tattoo laugh ugly where saddle six usage install one cube affair sick used actress zebra fuel sunny tackle can siege develop drop",
-			AddressPath:     [3]uint32{8, 64, 4096},
+			AddressPath:     &AccountIdentity{AccountIndex: 8, InternalIndex: 64, AddressIndex: 4096},
 			ExpectedAddress: "TDXRtZoqjkJxtr68deRyKJ5Kkkf8u4kJS1",
 		},
 	}
 
 	for _, tCase := range testCases {
-		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), []byte(tCase.Mnemonic))
+		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), tCase.Mnemonic)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", loopErr)
 		}
@@ -357,7 +364,8 @@ func TestMnemonicWalletUnit_UnloadWallet(t *testing.T) {
 			t.Fatalf("%s", "unable to cast interface to pool unit worker")
 		}
 
-		addr, loopErr := poolUnit.LoadAddressByPath(context.Background(), tCase.AddressPath)
+		accountIdentity, _ := proto.Marshal(tCase.AddressPath)
+		addr, loopErr := poolUnit.LoadAccount(context.Background(), accountIdentity)
 		if loopErr != nil {
 			t.Fatalf("%s: %e", "unable to sign data:", loopErr)
 		}
@@ -370,7 +378,8 @@ func TestMnemonicWalletUnit_UnloadWallet(t *testing.T) {
 			t.Fatalf("%s", "address in pool not loaded")
 		}
 
-		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath[0], tCase.AddressPath[1], tCase.AddressPath[2])
+		key := fmt.Sprintf(addrPatKeyTemplate, tCase.AddressPath.AccountIndex,
+			tCase.AddressPath.InternalIndex, tCase.AddressPath.AddressIndex)
 		addrData, ok := poolUnit.addressPool[key]
 		if !ok || addrData == nil {
 			t.Fatalf("%s", "missing data by key in address pool")

@@ -3,7 +3,6 @@ package wallet_manager
 import (
 	"context"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-	"github.com/google/uuid"
 )
 
 type configService interface {
@@ -15,23 +14,21 @@ type walletMakerFunc func(walletUUID string,
 ) (interface{}, error)
 
 type WalletPoolUnitService interface {
-	Init(ctx context.Context) error
-	Run(ctx context.Context) error
-	Shutdown(ctx context.Context) error
+	UnloadWallet() error
 
-	GetMnemonicUUID() *uuid.UUID
-	LoadAddressByPath(ctx context.Context,
-		account, change, index uint32,
+	GetWalletUUID() string
+	LoadAccount(ctx context.Context,
+		accountIdentity []byte,
 	) (*string, error)
-	GetAddressByPath(ctx context.Context,
-		account, change, index uint32,
+	GetAccountAddressByPath(ctx context.Context,
+		accountIdentityRaw []byte,
 	) (*string, error)
 	GetAddressesByPathByRange(ctx context.Context,
 		rangeIterable types.AddrRangeIterable,
 		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
 	) error
 	SignData(ctx context.Context,
-		account, change, index uint32,
+		accountIdentity []byte,
 		dataForSign []byte,
 	) (*string, []byte, error)
 }
