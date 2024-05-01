@@ -2,7 +2,6 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/google/uuid"
 )
@@ -12,7 +11,7 @@ type configService interface {
 }
 
 type walletMakerFunc func(walletUUID string,
-	mnemonicDecryptedData []byte,
+	mnemonicDecryptedData string,
 ) (interface{}, error)
 
 type WalletPoolUnitService interface {
@@ -35,15 +34,6 @@ type WalletPoolUnitService interface {
 		account, change, index uint32,
 		dataForSign []byte,
 	) (*string, []byte, error)
-}
-
-type hdWalleter interface {
-	PublicHex() string
-	PublicHash() ([]byte, error)
-
-	NewTronWallet(account, change, address uint32) (*hdwallet.Tron, error)
-
-	ClearSecrets()
 }
 
 type encryptService interface {

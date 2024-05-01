@@ -5,17 +5,30 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
+	"math/big"
 	"sync"
 
-	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"google.golang.org/protobuf/proto"
 )
+
+const addrPatKeyTemplate = "%d'/%d/%d"
 
 type addressData struct {
 	address    string
 	privateKey *ecdsa.PrivateKey
+}
+
+func (e *addressData) ClonePrivateKey() *ecdsa.PrivateKey {
+	return &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: btcec.S256(),
+			X:     (&big.Int{}).SetBytes(e.privateKey.X.Bytes()),
+			Y:     (&big.Int{}).SetBytes(e.privateKey.Y.Bytes()),
+		},
+		D: (&big.Int{}).SetBytes(e.privateKey.D.Bytes()),
+	}
 }
 
 type mnemonicWalletUnit struct {
@@ -40,8 +53,6 @@ func (u *mnemonicWalletUnit) Shutdown(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("unable to unload wallet: %w", err)
 	}
-
-	u.mnemonicWalletUUID = "0"
 
 	return nil
 }
@@ -70,36 +81,27 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 	}
 
 	u.addressPool = nil
+	u.mnemonicWalletUUID = "0"
+	u.mnemonicHash = "0"
 
 	return nil
 }
 
-func (u *mnemonicWalletUnit) GetMnemonicUUID() string {
-	return u.mnemonicWalletUUID[:]
-}
-
-func (u *mnemonicWalletUnit) GetWalletIdentity() *pbCommon.MnemonicWalletIdentity {
-	return &pbCommon.MnemonicWalletIdentity{
-		WalletUUID: u.mnemonicWalletUUID,
-		WalletHash: u.mnemonicHash,
-	}
+func (u *mnemonicWalletUnit) GetWalletUUID() string {
+	return u.mnemonicWalletUUID
 }
 
 func (u *mnemonicWalletUnit) SignData(ctx context.Context,
-	accountIdentities []byte,
+	accountIdentities [3]uint32,
 	dataForSign []byte,
 ) (*string, []byte, error) {
-	accData := &pbCommon.DerivationAddressIdentity{}
-	err := proto.Unmarshal(accountIdentities, accData)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
 	return u.signData(ctx,
-		accData.AccountIndex, accData.InternalIndex, accData.AccountIndex,
+		accountIdentities[0],
+		accountIdentities[1],
+		accountIdentities[2],
 		dataForSign)
 }
 
@@ -107,7 +109,7 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	account, change, index uint32,
 	dataForSign []byte,
 ) (*string, []byte, error) {
-	addrData, err := u.loadAddressByPath(ctx, account, change, index)
+	addr, privKey, err := u.loadAddressDataByPath(ctx, account, change, index)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -116,27 +118,24 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	h256h.Write(dataForSign)
 	hash := h256h.Sum(nil)
 
-	signedData, err := crypto.Sign(hash, addrData.privateKey)
+	signedData, err := crypto.Sign(hash, privKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to sign: %w", err)
 	}
 
-	return &addrData.address, signedData, nil
+	return addr, signedData, nil
 }
 
 func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
-	accountIdentities []byte,
+	accountIdentities [3]uint32,
 ) (*string, error) {
-	accData := &pbCommon.DerivationAddressIdentity{}
-	err := proto.Unmarshal(accountIdentities, accData)
-	if err != nil {
-		return nil, err
-	}
-
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	addrData, err := u.loadAddressByPath(ctx, accData.AccountIndex, accData.InternalIndex, accData.AccountIndex)
+	addrData, _, err := u.loadAddressDataByPath(ctx,
+		accountIdentities[0],
+		accountIdentities[1],
+		accountIdentities[2])
 	if err != nil {
 		return nil, err
 	}
@@ -145,49 +144,48 @@ func (u *mnemonicWalletUnit) LoadAddressByPath(ctx context.Context,
 		return nil, nil
 	}
 
-	return &addrData.address, nil
+	return addrData, nil
 }
 
-func (u *mnemonicWalletUnit) loadAddressByPath(ctx context.Context,
+func (u *mnemonicWalletUnit) loadAddressDataByPath(ctx context.Context,
 	account, change, index uint32,
-) (*addressData, error) {
-	mapKey := fmt.Sprintf("%d'/%d/%d", account, change, index)
+) (*string, *ecdsa.PrivateKey, error) {
+	mapKey := fmt.Sprintf(addrPatKeyTemplate, account, change, index)
 	addrData, isExists := u.addressPool[mapKey]
 	if !isExists {
 		tronAccount, walletErr := u.hdWalletSvc.NewAccount(account, change, index)
 		if walletErr != nil {
-			return nil, walletErr
+			return nil, nil, walletErr
 		}
 
 		addr, walletErr := tronAccount.GetAddress()
 		if walletErr != nil {
-			return nil, walletErr
+			return nil, nil, walletErr
 		}
 
-		clonedPrivKey, walletErr := tronAccount.CloneECDSAPrivateKey()
-		if walletErr != nil {
-			return nil, walletErr
-		}
-
-		u.addressPool[mapKey] = &addressData{
+		addrData = &addressData{
 			address:    addr,
-			privateKey: clonedPrivKey,
+			privateKey: tronAccount.CloneECDSAPrivateKey(),
 		}
+		u.addressPool[mapKey] = addrData
 
 		tronAccount.ClearSecrets()
 		tronAccount = nil
 	}
 
-	return addrData, nil
+	return &addrData.address, addrData.ClonePrivateKey(), nil
 }
 
 func (u *mnemonicWalletUnit) GetAddressByPath(ctx context.Context,
-	account, change, index uint32,
+	accountIdentities [3]uint32,
 ) (*string, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	return u.getAddressByPath(ctx, account, change, index)
+	return u.getAddressByPath(ctx,
+		accountIdentities[0],
+		accountIdentities[1],
+		accountIdentities[2])
 }
 
 func (u *mnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
@@ -283,9 +281,9 @@ func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 }
 
 func NewPoolUnit(walletUUID string,
-	mnemonicDecryptedData []byte,
+	mnemonicDecryptedData string,
 ) (interface{}, error) {
-	hdWalletSvc, createErr := newWalletFromMnemonic(string(mnemonicDecryptedData))
+	hdWalletSvc, createErr := newWalletFromMnemonic(mnemonicDecryptedData)
 	if createErr != nil {
 		return nil, createErr
 	}

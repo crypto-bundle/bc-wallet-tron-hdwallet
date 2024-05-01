@@ -22,8 +22,22 @@ hdwallet_proto:
 default: hdwallet
 
 plugin:
-	CGO_ENABLED=1 go build -race -v -installsuffix cgo -o ./build/api -ldflags "-linkmode external -extldflags -w" ./cmd/hdwallet_api
-	CGO_ENABLED=1 go build -race -v -installsuffix cgo -o ./build/tron.so -ldflags "-linkmode external -extldflags -w"  -buildmode=plugin ./plugins/tron
+	$(eval short_commit_id=$(shell git rev-parse --short HEAD))
+	$(eval commit_id=$(shell git rev-parse HEAD))
+	$(eval build_number=0)
+	$(eval build_date=$(shell date +%s))
+	$(eval release_tag=$(shell git describe --tags $(commit_id))-$(short_commit_id)-$(build_number))
+
+	CGO_ENABLED=1 go build -race -installsuffix cgo -gcflags all=-N \
+		-ldflags "-linkmode external -extldflags -w \
+			-X 'main.BuildDateTS=${BUILD_DATE_TS}' \
+			-X 'main.BuildNumber=${BUILD_NUMBER}' \
+			-X 'main.ReleaseTag=${RELEASE_TAG}' \
+			-X 'main.CommitID=${COMMIT_ID}' \
+			-X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
+		-buildmode=plugin \
+		-o ../../build/tron.so \
+		./plugins/tron
 
 deploy:
 	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))

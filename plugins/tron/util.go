@@ -7,25 +7,25 @@
 // Examples
 //
 //          // Generate a random 256 bit seed
-//          seed, err := hdwallet.genSeed(256)
+//          seed, _ := genSeed(256)
 //
 //          // Create a master private key
-//          masterprv := hdwallet.masterKey(seed)
+//          masterPrv := masterKey(seed)
 //
 //          // Convert a private key to public key
-//          masterpub := masterprv.Pub()
+//          masterPub := masterPrv.Pub()
 //
 //          // Generate new child key based on private or public key
-//          childprv, err := masterprv.Child(0)
-//          childpub, err := masterpub.Child(0)
+//          childPrv, err := masterPrv.Child(0)
+//          childPub, err := masterPrv.Child(0)
 //
 //          // Create bitcoin address from public key
-//          address := childpub.Address()
+//          address := childPub.Address()
 //
 //          // Convenience string -> string Child and Address functions
-//          walletstring := childpub.String()
-//          childstring, err := hdwallet.stringChild(walletstring,0)
-//          childaddress, err := hdwallet.stringAddress(childstring)
+//          walletString := childPub.String()
+//          childString, _ := stringChild(walletString,0)
+//          childAddress, _ := stringAddress(childString)
 //
 // Extended Keys
 //
@@ -44,6 +44,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/shengdoushi/base58"
 	"math/big"
 
 	btcec "github.com/btcsuite/btcd/btcec/v2"
@@ -61,6 +63,25 @@ func stringToMagic(magic string) [4]byte {
 	copy(b[:], t)
 
 	return b
+}
+
+func pubKeyToTronAddress(key ecdsa.PublicKey) string {
+	addr := crypto.PubkeyToAddress(key)
+
+	addrTrxBytes := make([]byte, 0)
+	addrTrxBytes = append(addrTrxBytes, TronBytePrefix)
+	addrTrxBytes = append(addrTrxBytes, addr.Bytes()...)
+
+	crc := calcCheckSum(addrTrxBytes)
+
+	addrTrxBytes = append(addrTrxBytes, crc...)
+
+	//nolint:gocritic // ok. Just reminder hot to generate address_hex for TronKey table
+	// addrTrxHex := hex.EncodeToString(addrTrxBytes)
+
+	addrTrx := base58.Encode(addrTrxBytes, base58.BitcoinAlphabet)
+
+	return addrTrx
 }
 
 func hash160(data []byte) ([]byte, error) {

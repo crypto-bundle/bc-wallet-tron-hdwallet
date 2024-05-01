@@ -114,10 +114,13 @@ Start of big application refactoring
   * bc-wallet-common-lib-tracer v0.0.4
   * bc-wallet-common-lib-vault v0.0.13
 
-## [v0.0.25] 01.05.2024
+## [v0.0.26] 01.05.2024
 ### Added
 * Added plugin path ENV variable
 * Added ldflags support in build application flow
+* Added unit-tests to all mnemonicWalletUnit methods 
+* Added plugin wrapper package
+* Added ldflags support in build plugin flow
 ### Changed
 * Refactored hd-wallet service-component
   * All struct and variables is un-exportable

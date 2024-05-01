@@ -2,7 +2,6 @@ package wallet_manager
 
 import (
 	"context"
-	"plugin"
 	"sync"
 	"time"
 
@@ -139,7 +138,7 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		return err
 	}
 
-	walletUnitInt, err := p.walletMakerFunc(walletUUID.String(), decryptedData)
+	walletUnitInt, err := p.walletMakerFunc(walletUUID.String(), string(decryptedData))
 	if err != nil {
 		return err
 	}
@@ -254,32 +253,15 @@ func (p *Pool) SignData(ctx context.Context,
 func NewWalletPool(ctx context.Context,
 	logger *zap.Logger,
 	cfg configService,
+	mnemoWalletMakerFunc walletMakerFunc,
 	encryptSrv encryptService,
-) (*Pool, error) {
-	p, err := plugin.Open(cfg.GetHdWalletPluginPath())
-	if err != nil {
-		return nil, err
-	}
-
-	unitMakerFuncSymbol, err := p.Lookup("NewPoolUnit")
-	if err != nil {
-		return nil, err
-	}
-
-	unitMakerFunc, ok := unitMakerFuncSymbol.(func(walletUUID string,
-		mnemonicDecryptedData []byte,
-	) (interface{}, error))
-	if !ok {
-		logger.Info("maker", zap.Any("symbol", unitMakerFuncSymbol))
-		return nil, ErrUnableCastPluginEntryToPoolUnitMaker
-	}
-
+) *Pool {
 	return &Pool{
 		runTimeCtx:      ctx,
 		logger:          logger,
 		cfg:             cfg,
 		encryptSvc:      encryptSrv,
-		walletMakerFunc: unitMakerFunc,
+		walletMakerFunc: mnemoWalletMakerFunc,
 		walletUnits:     make(map[uuid.UUID]*unitWrapper),
-	}, nil
+	}
 }

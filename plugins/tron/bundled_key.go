@@ -230,7 +230,7 @@ func (k *keyBundle) AddressP2WPKHInP2SH() (string, error) {
 }
 
 // CloneECDSAPrivateKey full clone ECDSA private key
-func (k *keyBundle) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
+func (k *keyBundle) CloneECDSAPrivateKey() *ecdsa.PrivateKey {
 	clonedPrivKey := ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: btcec.S256(),
@@ -240,7 +240,7 @@ func (k *keyBundle) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
 		D: (&big.Int{}).SetBytes(k.PrivateECDSA.D.Bytes()),
 	}
 
-	return &clonedPrivKey, nil
+	return &clonedPrivKey
 }
 
 func (k *keyBundle) ClearSecrets() {

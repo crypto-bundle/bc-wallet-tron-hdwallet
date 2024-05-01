@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/plugin"
 	"log"
 	"os"
 	"os/signal"
@@ -70,11 +71,22 @@ func main() {
 	encryptorSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
 	seedPhraseGenerator := mnemonic.NewMnemonicGenerator(loggerEntry, appCfg.GetDefaultMnemonicWordsCount())
 	mnemonicValidatorSvc := mnemonic.NewMnemonicValidator()
-	walletsPoolSvc, err := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg, encryptorSvc)
+
+	pluginWrapper := plugin.NewPlugin(appCfg.GetHdWalletPluginPath())
+	err = pluginWrapper.Init(ctx)
 	if err != nil {
-		loggerEntry.Fatal("unable to create grpc server instance", zap.Error(err),
-			zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
+		loggerEntry.Fatal("unable to init plugin", zap.Error(err))
 	}
+	loggerEntry.Info("plugin successfully loaded",
+		zap.String(app.PluginNameTag, pluginWrapper.GetPluginName()),
+		zap.String(app.PluginReleaseTag, pluginWrapper.GetReleaseTag()),
+		zap.Uint64(app.PluginBuildNumberTag, pluginWrapper.GetBuildNumber()),
+		zap.Int64(app.PluginBuildDateTag, pluginWrapper.GetBuildDateTS()),
+		zap.String(app.PluginCommitIDTag, pluginWrapper.GetCommitID()),
+		zap.String(app.PluginShortCommitIDTag, pluginWrapper.GetShortCommitID()))
+
+	walletsPoolSvc := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg,
+		pluginWrapper.GetMakeWalletCallback(), encryptorSvc)
 
 	apiHandlers := grpc.NewHandlers(loggerEntry, seedPhraseGenerator,
 		transitSvc, encryptorSvc, mnemonicValidatorSvc, walletsPoolSvc)

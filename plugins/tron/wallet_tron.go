@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/shengdoushi/base58"
 )
 
 // tron parent
@@ -46,22 +44,7 @@ func (w *wallet) NewAccount(account, change, index uint32) (*tron, error) {
 
 // GetAddress get address with 0x
 func (e *tron) GetAddress() (string, error) {
-	addr := crypto.PubkeyToAddress(*e.extendedKey.PublicECDSA)
-
-	addrTrxBytes := make([]byte, 0)
-	addrTrxBytes = append(addrTrxBytes, TronBytePrefix)
-	addrTrxBytes = append(addrTrxBytes, addr.Bytes()...)
-
-	crc := calcCheckSum(addrTrxBytes)
-
-	addrTrxBytes = append(addrTrxBytes, crc...)
-
-	//nolint:gocritic // ok. Just reminder hot to generate address_hex for TronKey table
-	// addrTrxHex := hex.EncodeToString(addrTrxBytes)
-
-	addrTrx := base58.Encode(addrTrxBytes, base58.BitcoinAlphabet)
-
-	return addrTrx, nil
+	return pubKeyToTronAddress(*e.extendedKey.PublicECDSA), nil
 }
 
 // GetPubKey get key with 0x
@@ -91,13 +74,8 @@ func (e *tron) GetCoinType() int {
 	return TronCoinNumber
 }
 
-func (e *tron) CloneECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
-	clonedPrivKey, err := e.extendedKey.CloneECDSAPrivateKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return clonedPrivKey, nil
+func (e *tron) CloneECDSAPrivateKey() *ecdsa.PrivateKey {
+	return e.extendedKey.CloneECDSAPrivateKey()
 }
 
 func (e *tron) ClearSecrets() {
