@@ -77,10 +77,10 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 	}
 
 	mnemonicHash := fmt.Sprintf("%x", sha256.Sum256(decryptedData))
-	req.MnemonicIdentity.WalletHash = mnemonicHash
+	req.WalletIdentifier.WalletHash = mnemonicHash
 
 	return &pbApi.EncryptMnemonicResponse{
-		MnemonicIdentity:      req.MnemonicIdentity,
+		WalletIdentifier:      req.WalletIdentifier,
 		EncryptedMnemonicData: encryptedMnemonicData,
 	}, nil
 }
@@ -91,5 +91,8 @@ func MakeEncryptMnemonicHandler(loggerEntry *zap.Logger,
 ) *encryptMnemonicHandler {
 	return &encryptMnemonicHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameEncryptMnemonic)),
+
+		transitEncryptorSvc: transitEncryptorSvc,
+		appEncryptorSvc:     appEncryptorSvc,
 	}
 }

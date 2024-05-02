@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"context"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/anypb"
 	"time"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
@@ -14,20 +15,15 @@ const (
 	MethodNameTag = "method_name"
 )
 
+type generateMnemonicFunc func() (string, error)
+type validateMnemonicFunc func(mnemonic string) bool
+
 type configService interface {
 	IsDev() bool
 	IsDebug() bool
 	IsLocal() bool
 
 	GetConnectionPath() string
-}
-
-type mnemonicGeneratorService interface {
-	Generate(ctx context.Context) (string, error)
-}
-
-type mnemonicValidatorService interface {
-	IsMnemonicValid(mnemonic string) bool
 }
 
 type encryptService interface {
@@ -50,9 +46,9 @@ type walletPoolService interface {
 		timeToLive time.Duration,
 		mnemonicEncryptedData []byte,
 	) error
-	LoadAddressByPath(ctx context.Context,
+	LoadAccount(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
-		account, change, index uint32,
+		accountParameters *anypb.Any,
 	) (*string, error)
 	UnloadWalletUnit(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
@@ -60,18 +56,17 @@ type walletPoolService interface {
 	UnloadMultipleWalletUnit(ctx context.Context,
 		mnemonicWalletUUIDs []uuid.UUID,
 	) error
-	GetAddressByPath(ctx context.Context,
+	GetAccountAddress(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
-		account, change, index uint32,
+		accountParameters *anypb.Any,
 	) (*string, error)
-	GetAddressesByPathByRange(ctx context.Context,
+	GetMultipleAccounts(ctx context.Context,
 		mnemonicWalletUUID uuid.UUID,
-		rangeIterable types.AddrRangeIterable,
-		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-	) error
+		multipleAccountsParameters *anypb.Any,
+	) (uint, []*pbCommon.AccountIdentity, error)
 	SignData(ctx context.Context,
 		mnemonicUUID uuid.UUID,
-		account, change, index uint32,
+		accountParameters *anypb.Any,
 		transactionData []byte,
 	) (*string, []byte, error)
 }
@@ -106,13 +101,13 @@ type encryptMnemonicHandlerService interface {
 
 type getDerivationsAddressesHandlerService interface {
 	Handle(ctx context.Context,
-		req *pbApi.DerivationAddressByRangeRequest,
-	) (*pbApi.DerivationAddressByRangeResponse, error)
+		req *pbApi.GetMultipleAccountRequest,
+	) (*pbApi.GetMultipleAccountResponse, error)
 }
 type loadDerivationsAddressesHandlerService interface {
 	Handle(ctx context.Context,
-		req *pbApi.LoadDerivationAddressRequest,
-	) (*pbApi.LoadDerivationAddressResponse, error)
+		req *pbApi.LoadAccountRequest,
+	) (*pbApi.LoadAccountsResponse, error)
 }
 
 type signDataHandlerService interface {
@@ -121,8 +116,8 @@ type signDataHandlerService interface {
 	) (*pbApi.SignDataResponse, error)
 }
 
-type getDerivationAddressHandlerService interface {
+type getAccountHandlerService interface {
 	Handle(ctx context.Context,
-		req *pbApi.DerivationAddressRequest,
-	) (*pbApi.DerivationAddressResponse, error)
+		req *pbApi.GetAccountRequest,
+	) (*pbApi.GetAccountResponse, error)
 }

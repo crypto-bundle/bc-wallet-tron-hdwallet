@@ -11,7 +11,6 @@ import (
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/grpc"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_manager"
 
 	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
@@ -69,8 +68,6 @@ func main() {
 
 	transitSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
 	encryptorSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
-	seedPhraseGenerator := mnemonic.NewMnemonicGenerator(loggerEntry, appCfg.GetDefaultMnemonicWordsCount())
-	mnemonicValidatorSvc := mnemonic.NewMnemonicValidator()
 
 	pluginWrapper := plugin.NewPlugin(appCfg.GetHdWalletPluginPath())
 	err = pluginWrapper.Init(ctx)
@@ -88,8 +85,10 @@ func main() {
 	walletsPoolSvc := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg,
 		pluginWrapper.GetMakeWalletCallback(), encryptorSvc)
 
-	apiHandlers := grpc.NewHandlers(loggerEntry, seedPhraseGenerator,
-		transitSvc, encryptorSvc, mnemonicValidatorSvc, walletsPoolSvc)
+	apiHandlers := grpc.NewHandlers(loggerEntry,
+		pluginWrapper.GetMnemonicGeneratorFunc(),
+		pluginWrapper.GetMnemonicValidatorFunc(),
+		transitSvc, encryptorSvc, walletsPoolSvc)
 	GRPCSrv, err := grpc.NewServer(ctx, loggerEntry, appCfg, apiHandlers)
 	if err != nil {
 		loggerEntry.Fatal("unable to create grpc server instance", zap.Error(err),

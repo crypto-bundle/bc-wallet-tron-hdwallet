@@ -14,19 +14,19 @@ import (
 )
 
 const (
-	MethodNameLoadDerivationAddress = "LoadDerivationAddress"
+	MethodNameGetDerivationAddress = "GetDerivationAddress"
 )
 
-type loadDerivationAddressHandler struct {
+type getDerivationAddressHandler struct {
 	l *zap.Logger
 
 	walletPoolSvc walletPoolService
 }
 
 // nolint:funlen // fixme
-func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
-	req *pbApi.LoadDerivationAddressRequest,
-) (*pbApi.LoadDerivationAddressResponse, error) {
+func (h *getDerivationAddressHandler) Handle(ctx context.Context,
+	req *pbApi.GetAccountRequest,
+) (*pbApi.GetAccountResponse, error) {
 	var err error
 	tCtx, span, finish := tracer.Trace(ctx)
 
@@ -34,8 +34,8 @@ func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &AddressForm{}
-	valid, err := vf.LoadAndValidateLoadAddrReq(tCtx, req)
+	vf := &AccountForm{}
+	valid, err := vf.LoadAndValidateGetAddrReq(tCtx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))
 
@@ -46,10 +46,8 @@ func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	addr, err := h.walletPoolSvc.LoadAddressByPath(tCtx, vf.WalletUUIDRaw,
-		vf.AccountIndex,
-		vf.InternalIndex,
-		vf.AddressIndex)
+	addr, err := h.walletPoolSvc.GetAccountAddress(tCtx, vf.WalletUUIDRaw,
+		vf.AccountParameters)
 	if err != nil {
 		h.l.Error("unable to get address by path", zap.Error(err),
 			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
@@ -61,19 +59,20 @@ func (h *loadDerivationAddressHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.ResourceExhausted, "wallet not loaded")
 	}
 
-	req.AddressIdentifier.Address = *addr
+	req.AccountIdentifier.Address = *addr
 
-	return &pbApi.LoadDerivationAddressResponse{
-		MnemonicWalletIdentifier: req.MnemonicWalletIdentifier,
-		TxOwnerIdentity:          req.AddressIdentifier,
+	return &pbApi.GetAccountResponse{
+		WalletIdentifier:  req.WalletIdentifier,
+		AccountIdentifier: req.AccountIdentifier,
 	}, nil
 }
 
-func MakeLoadDerivationAddressHandlerHandler(loggerEntry *zap.Logger,
+func MakeGetDerivationAddressHandler(loggerEntry *zap.Logger,
 	walletPoolSvc walletPoolService,
-) *loadDerivationAddressHandler {
-	return &loadDerivationAddressHandler{
-		l:             loggerEntry.With(zap.String(MethodNameTag, MethodNameLoadDerivationAddress)),
+) *getDerivationAddressHandler {
+	return &getDerivationAddressHandler{
+		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameGetDerivationAddress)),
+
 		walletPoolSvc: walletPoolSvc,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 
@@ -11,45 +12,49 @@ import (
 	"github.com/google/uuid"
 )
 
-type AddressForm struct {
+type AccountForm struct {
 	WalletUUID    string    `valid:"type(string),uuid,required"`
 	WalletUUIDRaw uuid.UUID `valid:"-"`
 
-	AccountIndex  uint32 `valid:"type(uint32)"`
-	InternalIndex uint32 `valid:"type(uint32)"`
-	AddressIndex  uint32 `valid:"type(uint32)"`
+	AccountParameters *anypb.Any `valid:"required"`
 }
 
-func (f *AddressForm) LoadAndValidateLoadAddrReq(ctx context.Context,
-	req *pbApi.LoadDerivationAddressRequest,
+func (f *AccountForm) LoadAndValidateLoadAddrReq(ctx context.Context,
+	req *pbApi.LoadAccountRequest,
 ) (valid bool, err error) {
-	if req.MnemonicWalletIdentifier == nil {
+	if req.WalletIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
 	}
 
-	if req.AddressIdentifier == nil {
+	if req.AccountIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity")
 	}
+	if req.AccountIdentifier.Parameters == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity parameters")
+	}
 
-	return f.validate(req.MnemonicWalletIdentifier, req.AddressIdentifier)
+	return f.validate(req.WalletIdentifier, req.AccountIdentifier)
 }
 
-func (f *AddressForm) LoadAndValidateGetAddrReq(ctx context.Context,
-	req *pbApi.DerivationAddressRequest,
+func (f *AccountForm) LoadAndValidateGetAddrReq(ctx context.Context,
+	req *pbApi.GetAccountRequest,
 ) (valid bool, err error) {
-	if req.MnemonicWalletIdentifier == nil {
+	if req.WalletIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
 	}
 
-	if req.AddressIdentity == nil {
+	if req.AccountIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity")
 	}
+	if req.AccountIdentifier.Parameters == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity parameters")
+	}
 
-	return f.validate(req.MnemonicWalletIdentifier, req.AddressIdentity)
+	return f.validate(req.WalletIdentifier, req.AccountIdentifier)
 }
 
-func (f *AddressForm) validate(mnemoIdentifier *pbCommon.MnemonicWalletIdentity,
-	addrIdentifier *pbCommon.DerivationAddressIdentity,
+func (f *AccountForm) validate(mnemoIdentifier *pbCommon.MnemonicWalletIdentity,
+	accIdentifier *pbCommon.AccountIdentity,
 ) (valid bool, err error) {
 
 	f.WalletUUID = mnemoIdentifier.WalletUUID
@@ -58,9 +63,7 @@ func (f *AddressForm) validate(mnemoIdentifier *pbCommon.MnemonicWalletIdentity,
 		return false, err
 	}
 
-	f.AccountIndex = addrIdentifier.AccountIndex
-	f.InternalIndex = addrIdentifier.InternalIndex
-	f.AddressIndex = addrIdentifier.AddressIndex
+	f.AccountParameters = accIdentifier.Parameters
 
 	_, err = govalidator.ValidateStruct(f)
 	if err != nil {

@@ -25,8 +25,8 @@ type getDerivationsAddressesHandler struct {
 
 // nolint:funlen // fixme
 func (h *getDerivationsAddressesHandler) Handle(ctx context.Context,
-	req *pbApi.DerivationAddressByRangeRequest,
-) (*pbApi.DerivationAddressByRangeResponse, error) {
+	req *pbApi.GetMultipleAccountRequest,
+) (*pbApi.GetMultipleAccountResponse, error) {
 	var err error
 	tCtx, span, finish := tracer.Trace(ctx)
 
@@ -46,21 +46,18 @@ func (h *getDerivationsAddressesHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	// marshallerSvc - instance of marshaller with closure usage
-	marshallerSvc := newAddrRangeMarshaller(vf.RangeSize)
-
-	err = h.walletPoolSvc.GetAddressesByPathByRange(tCtx, vf.MnemonicWalletUUIDRaw,
-		vf, marshallerSvc.MarshallPath)
+	count, list, err := h.walletPoolSvc.GetMultipleAccounts(tCtx, vf.MnemonicWalletUUIDRaw,
+		vf.AccountsParameters)
 	if err != nil {
 		h.l.Error("unable get derivative addresses by range", zap.Error(err))
 
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	return &pbApi.DerivationAddressByRangeResponse{
-		MnemonicWalletIdentifier: req.MnemonicWalletIdentifier,
-		AddressIdentitiesCount:   uint64(vf.RangeSize),
-		AddressIdentities:        marshallerSvc.GetMarshaled(),
+	return &pbApi.GetMultipleAccountResponse{
+		WalletIdentifier:       req.WalletIdentifier,
+		AddressIdentitiesCount: uint64(count),
+		AccountIdentifier:      list,
 	}, nil
 }
 

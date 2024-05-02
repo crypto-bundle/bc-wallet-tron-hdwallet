@@ -2,12 +2,12 @@ package wallet_manager
 
 import (
 	"context"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"google.golang.org/protobuf/types/known/anypb"
 	"sync"
 	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -202,47 +202,45 @@ func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
 	return nil
 }
 
-func (p *Pool) GetAddressByPath(ctx context.Context,
+func (p *Pool) GetAccountAddress(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	accountIdentity []byte,
+	accountParameters *anypb.Any,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.GetAccountAddressByPath(ctx, accountIdentity)
+	return wUnit.Unit.GetAccountAddressByPath(ctx, accountParameters)
 }
 
-func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
+func (p *Pool) GetMultipleAccounts(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	rangeIterable types.AddrRangeIterable,
-	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-) error {
+	multipleAccountsParameters *anypb.Any,
+) (uint, []*pbCommon.AccountIdentity, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return nil
+		return 0, nil, nil
 	}
 
-	return wUnit.Unit.GetAddressesByPathByRange(ctx,
-		rangeIterable, marshallerCallback)
+	return wUnit.Unit.GetMultipleAccounts(ctx, multipleAccountsParameters)
 }
 
-func (p *Pool) LoadAddressByPath(ctx context.Context,
+func (p *Pool) LoadAccount(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	accountIdentity []byte,
+	accountParameters *anypb.Any,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.LoadAccount(ctx, accountIdentity)
+	return wUnit.Unit.LoadAccount(ctx, accountParameters)
 }
 
 func (p *Pool) SignData(ctx context.Context,
 	mnemonicUUID uuid.UUID,
-	accountIdentity []byte,
+	accountParameters *anypb.Any,
 	dataForSign []byte,
 ) (*string, []byte, error) {
 	wUnit, isExists := p.walletUnits[mnemonicUUID]
@@ -253,7 +251,7 @@ func (p *Pool) SignData(ctx context.Context,
 		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return wUnit.Unit.SignData(ctx, accountIdentity, dataForSign)
+	return wUnit.Unit.SignData(ctx, accountParameters, dataForSign)
 }
 
 func NewWalletPool(ctx context.Context,

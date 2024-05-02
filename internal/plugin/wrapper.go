@@ -16,13 +16,17 @@ const (
 	getPluginBuildNumberSymbol   = "GetPluginBuildNumber"
 	getPluginBuildDateTSSymbol   = "GetPluginBuildDateTS"
 
-	pluginNewPoolUnitSymbol = "NewPoolUnit"
+	pluginGenerateMnemonicSymbol = "GenerateMnemonic"
+	pluginValidateMnemonicSymbol = "ValidateMnemonic"
+	pluginNewPoolUnitSymbol      = "NewPoolUnit"
 )
 
 type wrapper struct {
 	pluginPath string
 	pluginName string
 
+	generateFunc   generateMnemonicFunc
+	validateFunc   validateMnemonicFunc
 	walletMakerClb walletMakerFunc
 
 	ldFlagManager
@@ -30,6 +34,14 @@ type wrapper struct {
 
 func (w *wrapper) GetPluginName() string {
 	return w.pluginName
+}
+
+func (w *wrapper) GetMnemonicGeneratorFunc() func() (string, error) {
+	return w.generateFunc
+}
+
+func (w *wrapper) GetMnemonicValidatorFunc() func(mnemonic string) bool {
+	return w.validateFunc
 }
 
 func (w *wrapper) GetMakeWalletCallback() func(walletUUID string,
@@ -74,6 +86,26 @@ func (w *wrapper) Init(_ context.Context) error {
 		return err
 	}
 
+	generateMnemonicFuncSymbol, err := p.Lookup(pluginGenerateMnemonicSymbol)
+	if err != nil {
+		return err
+	}
+
+	generateMnemoFunc, ok := generateMnemonicFuncSymbol.(func() (string, error))
+	if !ok {
+		return fmt.Errorf("%w: %s", ErrUnableCastPluginEntry, pluginGenerateMnemonicSymbol)
+	}
+
+	validateMnemonicFuncSymbol, err := p.Lookup(pluginValidateMnemonicSymbol)
+	if err != nil {
+		return err
+	}
+
+	validateMnemoFunc, ok := validateMnemonicFuncSymbol.(func(mnemonic string) bool)
+	if !ok {
+		return fmt.Errorf("%w: %s", ErrUnableCastPluginEntry, pluginValidateMnemonicSymbol)
+	}
+
 	unitMakerFuncSymbol, err := p.Lookup(pluginNewPoolUnitSymbol)
 	if err != nil {
 		return err
@@ -93,6 +125,8 @@ func (w *wrapper) Init(_ context.Context) error {
 		return err
 	}
 
+	w.generateFunc = generateMnemoFunc
+	w.validateFunc = validateMnemoFunc
 	w.ldFlagManager = flagManagerSvc
 	w.pluginName = getPluginNameFunc()
 	w.walletMakerClb = unitMakerFunc

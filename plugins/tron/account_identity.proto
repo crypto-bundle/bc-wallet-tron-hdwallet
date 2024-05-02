@@ -34,9 +34,13 @@ message accountIdentity {
   string Address = 4;
 }
 
-message rangeAccountRequestUnit {
-  uint32 AccountIndex = 3;
-  uint32 InternalIndex = 4;
-  uint32 AddressIndexFrom = 5;
-  uint32 AddressIndexTo = 6;
+message RangeRequestUnit {
+  uint32 AccountIndex = 1;
+  uint32 InternalIndex = 2;
+  uint32 AddressIndexFrom = 3;
+  uint32 AddressIndexTo = 4;
+}
+
+message RangeUnitsList {
+  repeated RangeRequestUnit RangeUnits = 1;
 }

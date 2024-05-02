@@ -22,7 +22,7 @@ const (
 type generateMnemonicHandler struct {
 	l *zap.Logger
 
-	generatorSvc    mnemonicGeneratorService
+	generatorFunc   generateMnemonicFunc
 	appEncryptorSvc encryptService
 }
 
@@ -49,7 +49,7 @@ func (h *generateMnemonicHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	seedPhrase, err := h.generatorSvc.Generate(ctx)
+	seedPhrase, err := h.generatorFunc()
 	if err != nil {
 		h.l.Error("unable to generate mnemonic", zap.Error(err),
 			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
@@ -66,7 +66,7 @@ func (h *generateMnemonicHandler) Handle(ctx context.Context,
 
 	mnemonicHash := fmt.Sprintf("%x", sha256.Sum256(seedPhraseRaw))
 
-	req.MnemonicIdentity.WalletHash = mnemonicHash
+	req.WalletIdentifier.WalletHash = mnemonicHash
 
 	defer func() {
 		for i := range seedPhraseRaw {
@@ -77,19 +77,19 @@ func (h *generateMnemonicHandler) Handle(ctx context.Context,
 	}()
 
 	return &pbApi.GenerateMnemonicResponse{
-		MnemonicIdentity:      req.MnemonicIdentity,
+		WalletIdentifier:      req.WalletIdentifier,
 		EncryptedMnemonicData: encryptedMnemonicData,
 	}, nil
 }
 
 func MakeGenerateMnemonicHandler(loggerEntry *zap.Logger,
-	generatorSvc mnemonicGeneratorService,
+	mnemoGenFunc generateMnemonicFunc,
 	appEncryptorSvc encryptService,
 ) *generateMnemonicHandler {
 	return &generateMnemonicHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameGenerateMnemonic)),
 
-		generatorSvc:    generatorSvc,
+		generatorFunc:   mnemoGenFunc,
 		appEncryptorSvc: appEncryptorSvc,
 	}
 }

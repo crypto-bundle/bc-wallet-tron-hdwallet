@@ -2,6 +2,9 @@ package plugin
 
 import "time"
 
+type generateMnemonicFunc func() (string, error)
+type validateMnemonicFunc func(mnemonic string) bool
+
 type walletMakerFunc func(walletUUID string,
 	mnemonicDecryptedData string,
 ) (interface{}, error)

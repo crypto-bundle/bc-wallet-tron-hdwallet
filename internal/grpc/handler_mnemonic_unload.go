@@ -58,7 +58,7 @@ func (h *unLoadMnemonicHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.NotFound, "wallet not found")
 	}
 
-	if walletUUID.String() != req.MnemonicIdentity.WalletUUID {
+	if walletUUID.String() != req.WalletIdentifier.WalletUUID {
 		h.l.Error("requested wallet uuid not equal with wallet pool unit uuid",
 			zap.Error(ErrWalletUUIDMismatched),
 			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
@@ -67,7 +67,7 @@ func (h *unLoadMnemonicHandler) Handle(ctx context.Context,
 	}
 
 	return &pbApi.UnLoadMnemonicResponse{
-		MnemonicIdentity: req.MnemonicIdentity,
+		WalletIdentifier: req.WalletIdentifier,
 	}, nil
 }
 

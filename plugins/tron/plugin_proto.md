@@ -4,8 +4,9 @@
 ## Table of Contents
 
 - [account_identity.proto](#account_identity.proto)
+    - [RangeRequestUnit](#main.RangeRequestUnit)
+    - [RangeUnitsList](#main.RangeUnitsList)
     - [accountIdentity](#main.accountIdentity)
-    - [rangeAccountRequestUnit](#main.rangeAccountRequestUnit)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -15,6 +16,39 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## account_identity.proto
+
+
+
+<a name="main.RangeRequestUnit"></a>
+
+### RangeRequestUnit
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| AccountIndex | [uint32](#uint32) |  |  |
+| InternalIndex | [uint32](#uint32) |  |  |
+| AddressIndexFrom | [uint32](#uint32) |  |  |
+| AddressIndexTo | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="main.RangeUnitsList"></a>
+
+### RangeUnitsList
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RangeUnits | [RangeRequestUnit](#main.RangeRequestUnit) | repeated |  |
+
+
+
 
 
 
@@ -30,24 +64,6 @@
 | InternalIndex | [uint32](#uint32) |  |  |
 | AddressIndex | [uint32](#uint32) |  |  |
 | Address | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="main.rangeAccountRequestUnit"></a>
-
-### rangeAccountRequestUnit
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| AccountIndex | [uint32](#uint32) |  |  |
-| InternalIndex | [uint32](#uint32) |  |  |
-| AddressIndexFrom | [uint32](#uint32) |  |  |
-| AddressIndexTo | [uint32](#uint32) |  |  |
 
 
 

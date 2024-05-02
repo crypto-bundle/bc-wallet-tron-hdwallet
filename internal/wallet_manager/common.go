@@ -2,7 +2,8 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type configService interface {
@@ -18,17 +19,16 @@ type WalletPoolUnitService interface {
 
 	GetWalletUUID() string
 	LoadAccount(ctx context.Context,
-		accountIdentity []byte,
+		accountParameters *anypb.Any,
 	) (*string, error)
 	GetAccountAddressByPath(ctx context.Context,
-		accountIdentityRaw []byte,
+		accountParameters *anypb.Any,
 	) (*string, error)
-	GetAddressesByPathByRange(ctx context.Context,
-		rangeIterable types.AddrRangeIterable,
-		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-	) error
+	GetMultipleAccounts(ctx context.Context,
+		multipleAccountsParameters *anypb.Any,
+	) (uint, []*pbCommon.AccountIdentity, error)
 	SignData(ctx context.Context,
-		accountIdentity []byte,
+		accountParameters *anypb.Any,
 		dataForSign []byte,
 	) (*string, []byte, error)
 }

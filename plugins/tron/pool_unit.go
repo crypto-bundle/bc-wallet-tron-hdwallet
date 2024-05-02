@@ -5,12 +5,13 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"math/big"
 	"sync"
 
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -93,11 +94,11 @@ func (u *mnemonicWalletUnit) GetWalletUUID() string {
 }
 
 func (u *mnemonicWalletUnit) SignData(ctx context.Context,
-	accountIdentity []byte,
+	accountParameters *anypb.Any,
 	dataForSign []byte,
 ) (*string, []byte, error) {
 	accIdentity := &AccountIdentity{}
-	err := proto.Unmarshal(accountIdentity, accIdentity)
+	err := proto.Unmarshal(accountParameters.GetValue(), accIdentity)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -205,42 +206,44 @@ func (u *mnemonicWalletUnit) GetAccountAddressByPath(ctx context.Context,
 		accIdentity.AddressIndex)
 }
 
-func (u *mnemonicWalletUnit) GetAddressesByPathByRange(ctx context.Context,
-	rangeIterable types.AddrRangeIterable,
-	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-) error {
+func (u *mnemonicWalletUnit) GetMultipleAccounts(ctx context.Context,
+	multipleAccountsParameters *anypb.Any,
+) (uint, []*pbCommon.AccountIdentity, error) {
+	list := &RangeUnitsList{}
+	err := proto.Unmarshal(multipleAccountsParameters.GetValue(), list)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	return u.getAddressesByPathByRange(ctx, rangeIterable, marshallerCallback)
+	return u.getMultipleAccounts(ctx, list)
 }
 
-func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
-	rangeIterable types.AddrRangeIterable,
-	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-) error {
+func (u *mnemonicWalletUnit) getMultipleAccounts(ctx context.Context,
+	rangeList *RangeUnitsList,
+) (uint, []*pbCommon.AccountIdentity, error) {
 	var err error
 	wg := sync.WaitGroup{}
-	wg.Add(int(rangeIterable.GetRangesSize()))
+	size := len(rangeList.RangeUnits)
+	wg.Add(size)
 
-	position := uint32(0)
-	for {
-		rangeUnit := rangeIterable.GetNext()
-		if rangeUnit == nil {
-			break
-		}
+	list := make([]*pbCommon.AccountIdentity, size)
+
+	for i := uint32(0); i != uint32(size); i++ {
+		rangeUnit := rangeList.RangeUnits[i]
 
 		if rangeUnit.AddressIndexFrom == rangeUnit.AddressIndexTo { // if one item in range
-			address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
+			accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
 				rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom)
-			if getAddrErr != nil {
-				err = getAddrErr
+			if loopErr != nil {
+				err = loopErr
 
 				continue
 			}
 
-			marshallerCallback(rangeUnit.AccountIndex, rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom,
-				position, *address)
+			list[i] = accountIdentifier
 
 			wg.Done()
 
@@ -251,29 +254,53 @@ func (u *mnemonicWalletUnit) getAddressesByPathByRange(ctx context.Context,
 			go func(accountIdx, internalIdx, addressIdx, position uint32) {
 				defer wg.Done()
 
-				address, getAddrErr := u.getAddressByPath(ctx, rangeUnit.AccountIndex,
+				accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
 					rangeUnit.InternalIndex, addressIdx)
-				if getAddrErr != nil {
-					err = getAddrErr
+				if loopErr != nil {
+					err = loopErr
+
 					return
 				}
 
-				marshallerCallback(accountIdx, internalIdx, addressIdx, position, *address)
+				list[i] = accountIdentifier
 
 				return
-			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)
-
-			position++
+			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, i)
 		}
 	}
 
 	wg.Wait()
 
 	if err != nil {
-		return err
+		return 0, nil, err
 	}
 
-	return nil
+	return uint(size), list, nil
+}
+
+func (u *mnemonicWalletUnit) getAddressAndMarshal(ctx context.Context,
+	account, change, index uint32,
+) (*pbCommon.AccountIdentity, error) {
+	address, err := u.getAddressByPath(ctx, account,
+		change, index)
+	if err != nil {
+		return nil, err
+	}
+
+	addrParams := &anypb.Any{}
+	err = addrParams.MarshalFrom(&pbCommon.DerivationAddressIdentity{
+		AccountIndex:  account,
+		InternalIndex: change,
+		AddressIndex:  index,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbCommon.AccountIdentity{
+		Parameters: addrParams,
+		Address:    *address,
+	}, nil
 }
 
 func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,

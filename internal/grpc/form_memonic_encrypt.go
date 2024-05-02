@@ -20,11 +20,11 @@ type EncryptMnemonicForm struct {
 func (f *EncryptMnemonicForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.EncryptMnemonicRequest,
 ) (valid bool, err error) {
-	if req.MnemonicIdentity == nil {
+	if req.WalletIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
 	}
-	f.WalletUUID = req.MnemonicIdentity.WalletUUID
-	f.WalletUUIDRaw, err = uuid.Parse(req.MnemonicIdentity.WalletUUID)
+	f.WalletUUID = req.WalletIdentifier.WalletUUID
+	f.WalletUUIDRaw, err = uuid.Parse(req.WalletIdentifier.WalletUUID)
 	if err != nil {
 		return false, err
 	}

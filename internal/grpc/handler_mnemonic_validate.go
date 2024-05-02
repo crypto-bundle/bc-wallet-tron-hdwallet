@@ -22,8 +22,8 @@ const (
 type validateMnemonicHandler struct {
 	l *zap.Logger
 
-	appEncryptorSvc      encryptService
-	mnemonicValidatorSvc mnemonicValidatorService
+	appEncryptorSvc       encryptService
+	mnemonicValidatorFunc validateMnemonicFunc
 }
 
 // nolint:funlen // fixme
@@ -63,28 +63,28 @@ func (h *validateMnemonicHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	isValid := h.mnemonicValidatorSvc.IsMnemonicValid(string(decryptedData))
+	isValid := h.mnemonicValidatorFunc(string(decryptedData))
 	if !isValid {
 		return nil, status.Error(codes.InvalidArgument, "seed phrase is not valid")
 	}
 
 	mnemonicHash := fmt.Sprintf("%x", sha256.Sum256(decryptedData))
-	req.MnemonicIdentity.WalletHash = mnemonicHash
+	req.WalletIdentifier.WalletHash = mnemonicHash
 
 	return &pbApi.ValidateMnemonicResponse{
-		MnemonicIdentity: req.MnemonicIdentity,
+		WalletIdentifier: req.WalletIdentifier,
 		IsValid:          isValid,
 	}, nil
 }
 
 func MakeValidateMnemonicHandler(loggerEntry *zap.Logger,
+	mnemoValidatorSvc validateMnemonicFunc,
 	appEncryptorSvc encryptService,
-	mnemoValidatorSvc mnemonicValidatorService,
 ) *validateMnemonicHandler {
 	return &validateMnemonicHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameValidateMnemonic)),
 
-		appEncryptorSvc:      appEncryptorSvc,
-		mnemonicValidatorSvc: mnemoValidatorSvc,
+		appEncryptorSvc:       appEncryptorSvc,
+		mnemonicValidatorFunc: mnemoValidatorSvc,
 	}
 }

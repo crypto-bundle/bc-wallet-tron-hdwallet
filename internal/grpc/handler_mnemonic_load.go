@@ -58,7 +58,7 @@ func (h *loadMnemonicHandler) Handle(ctx context.Context,
 	}
 
 	return &pbApi.LoadMnemonicResponse{
-		MnemonicIdentity: req.MnemonicIdentity,
+		WalletIdentifier: req.WalletIdentifier,
 	}, nil
 }
 
