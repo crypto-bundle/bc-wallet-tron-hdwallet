@@ -21,7 +21,7 @@ type WalletPoolUnitService interface {
 	LoadAccount(ctx context.Context,
 		accountParameters *anypb.Any,
 	) (*string, error)
-	GetAccountAddressByPath(ctx context.Context,
+	GetAccountAddress(ctx context.Context,
 		accountParameters *anypb.Any,
 	) (*string, error)
 	GetMultipleAccounts(ctx context.Context,

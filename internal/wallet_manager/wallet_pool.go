@@ -60,7 +60,7 @@ func (w *unitWrapper) Run() error {
 		wrapped.onShutDownFunc(rawUUID)
 
 		w.logger.Info("wallet successfully unloaded",
-			zap.String(app.WalletUUIDTag, wrapped.Unit.GetWalletUUID()))
+			zap.String(app.WalletUUIDTag, rawUUID.String()))
 
 		return
 	}(w, startedWg)
@@ -211,7 +211,7 @@ func (p *Pool) GetAccountAddress(ctx context.Context,
 		return nil, nil
 	}
 
-	return wUnit.Unit.GetAccountAddressByPath(ctx, accountParameters)
+	return wUnit.Unit.GetAccountAddress(ctx, accountParameters)
 }
 
 func (p *Pool) GetMultipleAccounts(ctx context.Context,

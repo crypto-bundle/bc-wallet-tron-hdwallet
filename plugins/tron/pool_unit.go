@@ -97,7 +97,7 @@ func (u *mnemonicWalletUnit) SignData(ctx context.Context,
 	accountParameters *anypb.Any,
 	dataForSign []byte,
 ) (*string, []byte, error) {
-	accIdentity := &AccountIdentity{}
+	accIdentity := &pbCommon.DerivationAddressIdentity{}
 	err := proto.Unmarshal(accountParameters.GetValue(), accIdentity)
 	if err != nil {
 		return nil, nil, err
@@ -117,7 +117,7 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 	account, change, index uint32,
 	dataForSign []byte,
 ) (*string, []byte, error) {
-	addr, privKey, err := u.loadAddressDataByPath(ctx, account, change, index)
+	addr, privKey, err := u.loadAccountDataByPath(ctx, account, change, index)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -135,10 +135,10 @@ func (u *mnemonicWalletUnit) signData(ctx context.Context,
 }
 
 func (u *mnemonicWalletUnit) LoadAccount(ctx context.Context,
-	accountIdentity []byte,
+	accountParameters *anypb.Any,
 ) (*string, error) {
-	accIdentity := &AccountIdentity{}
-	err := proto.Unmarshal(accountIdentity, accIdentity)
+	accIdentity := &pbCommon.DerivationAddressIdentity{}
+	err := accountParameters.UnmarshalTo(accIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (u *mnemonicWalletUnit) LoadAccount(ctx context.Context,
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	addrData, _, err := u.loadAddressDataByPath(ctx, accIdentity.AccountIndex,
+	addrData, _, err := u.loadAccountDataByPath(ctx, accIdentity.AccountIndex,
 		accIdentity.InternalIndex,
 		accIdentity.AddressIndex)
 	if err != nil {
@@ -160,7 +160,7 @@ func (u *mnemonicWalletUnit) LoadAccount(ctx context.Context,
 	return addrData, nil
 }
 
-func (u *mnemonicWalletUnit) loadAddressDataByPath(ctx context.Context,
+func (u *mnemonicWalletUnit) loadAccountDataByPath(ctx context.Context,
 	account, change, index uint32,
 ) (*string, *ecdsa.PrivateKey, error) {
 	mapKey := fmt.Sprintf(addrPatKeyTemplate, account, change, index)
@@ -189,17 +189,17 @@ func (u *mnemonicWalletUnit) loadAddressDataByPath(ctx context.Context,
 	return &addrData.address, addrData.ClonePrivateKey(), nil
 }
 
-func (u *mnemonicWalletUnit) GetAccountAddressByPath(ctx context.Context,
-	accountIdentityRaw []byte,
+func (u *mnemonicWalletUnit) GetAccountAddress(ctx context.Context,
+	accountParameters *anypb.Any,
 ) (*string, error) {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
-	accIdentity := &AccountIdentity{}
-	err := proto.Unmarshal(accountIdentityRaw, accIdentity)
+	accIdentity := &pbCommon.DerivationAddressIdentity{}
+	err := accountParameters.UnmarshalTo(accIdentity)
 	if err != nil {
 		return nil, err
 	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
 
 	return u.getAddressByPath(ctx, accIdentity.AccountIndex,
 		accIdentity.InternalIndex,
@@ -209,8 +209,8 @@ func (u *mnemonicWalletUnit) GetAccountAddressByPath(ctx context.Context,
 func (u *mnemonicWalletUnit) GetMultipleAccounts(ctx context.Context,
 	multipleAccountsParameters *anypb.Any,
 ) (uint, []*pbCommon.AccountIdentity, error) {
-	list := &RangeUnitsList{}
-	err := proto.Unmarshal(multipleAccountsParameters.GetValue(), list)
+	list := &pbCommon.RangeUnitsList{}
+	err := multipleAccountsParameters.UnmarshalTo(list)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -222,60 +222,74 @@ func (u *mnemonicWalletUnit) GetMultipleAccounts(ctx context.Context,
 }
 
 func (u *mnemonicWalletUnit) getMultipleAccounts(ctx context.Context,
-	rangeList *RangeUnitsList,
+	rangeList *pbCommon.RangeUnitsList,
 ) (uint, []*pbCommon.AccountIdentity, error) {
 	var err error
-	wg := sync.WaitGroup{}
 	size := len(rangeList.RangeUnits)
-	wg.Add(size)
 
-	list := make([]*pbCommon.AccountIdentity, size)
+	result := make([]*pbCommon.AccountIdentity, 0)
+	var resCount uint
 
 	for i := uint32(0); i != uint32(size); i++ {
 		rangeUnit := rangeList.RangeUnits[i]
 
-		if rangeUnit.AddressIndexFrom == rangeUnit.AddressIndexTo { // if one item in range
-			accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
-				rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom)
-			if loopErr != nil {
-				err = loopErr
-
-				continue
-			}
-
-			list[i] = accountIdentifier
-
-			wg.Done()
-
-			continue
+		count, list, loopErr := u.getAccountsByRange(ctx, rangeUnit)
+		if loopErr != nil {
+			return 0, nil, loopErr
 		}
 
-		for addressIndex := rangeUnit.AddressIndexFrom; addressIndex <= rangeUnit.AddressIndexTo; addressIndex++ {
-			go func(accountIdx, internalIdx, addressIdx, position uint32) {
-				defer wg.Done()
-
-				accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
-					rangeUnit.InternalIndex, addressIdx)
-				if loopErr != nil {
-					err = loopErr
-
-					return
-				}
-
-				list[i] = accountIdentifier
-
-				return
-			}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, i)
-		}
+		resCount += count
+		result = append(result, list...)
 	}
-
-	wg.Wait()
 
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return uint(size), list, nil
+	return resCount, result, nil
+}
+
+func (u *mnemonicWalletUnit) getAccountsByRange(ctx context.Context,
+	rangeUnit *pbCommon.RangeRequestUnit,
+) (uint, []*pbCommon.AccountIdentity, error) {
+	diff := rangeUnit.AddressIndexTo - rangeUnit.AddressIndexFrom
+	if diff == 0 { // if one item in range
+		accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
+			rangeUnit.InternalIndex, rangeUnit.AddressIndexFrom)
+		if loopErr != nil {
+			return 0, nil, loopErr
+		}
+
+		return 1, []*pbCommon.AccountIdentity{accountIdentifier}, nil
+	}
+	elementsCount := diff + 1
+	result := make([]*pbCommon.AccountIdentity, elementsCount)
+
+	wg := sync.WaitGroup{}
+	wg.Add(int(elementsCount))
+	var position uint32
+
+	for addressIndex := rangeUnit.AddressIndexFrom; addressIndex <= rangeUnit.AddressIndexTo; addressIndex++ {
+		go func(accountIdx, internalIdx, addressIdx, position uint32) {
+			defer wg.Done()
+
+			accountIdentifier, loopErr := u.getAddressAndMarshal(ctx, rangeUnit.AccountIndex,
+				rangeUnit.InternalIndex, addressIdx)
+			if loopErr != nil {
+				return
+			}
+
+			result[position] = accountIdentifier
+
+			return
+		}(rangeUnit.AccountIndex, rangeUnit.InternalIndex, addressIndex, position)
+
+		position++
+	}
+
+	wg.Wait()
+
+	return uint(len(result)), result, nil
 }
 
 func (u *mnemonicWalletUnit) getAddressAndMarshal(ctx context.Context,

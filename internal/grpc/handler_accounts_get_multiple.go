@@ -56,7 +56,7 @@ func (h *getDerivationsAddressesHandler) Handle(ctx context.Context,
 
 	return &pbApi.GetMultipleAccountResponse{
 		WalletIdentifier:       req.WalletIdentifier,
-		AddressIdentitiesCount: uint64(count),
+		AccountIdentitiesCount: uint64(count),
 		AccountIdentifier:      list,
 	}, nil
 }

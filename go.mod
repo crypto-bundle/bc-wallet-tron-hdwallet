@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-3
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-4
 	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.5
 	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.4
