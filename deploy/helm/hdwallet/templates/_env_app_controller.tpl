@@ -31,4 +31,7 @@
 - name: EVENT_CHANNEL_BUFFER_SIZE
   value: {{ pluck .Values.global.env .Values.app.controller.events.buffer_size | first | default .Values.app.controller.events.buffer_size._default | quote }}
 
+- name: HDWALLET_UNIX_SOCKET_PATH
+  value: {{ pluck .Values.global.env .Values.common.unix_socket_path | first | default .Values.common.unix_socket_path._default | quote }}
+
 {{- end }}

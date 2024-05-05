@@ -135,6 +135,9 @@ common:
       test: test
       production: prod
 
+  unix_socket_path:
+    _default: /tmp/hdwallet_api.sock
+
   vault:
     use_https:
       _default: true

@@ -1,3 +1,5 @@
+ARG PARENT_CONTAINER_IMAGE_NAME="/crypto-bundle/bc-wallet-common-hdwallet-api:latest"
+
 FROM golang:1.22-alpine AS gobuild
 
 ENV GO111MODULE on
@@ -8,7 +10,7 @@ ENV GOPRIVATE $GOPRIVATE,github.com/crypto-bundle
 # add private github token
 RUN apk add --no-cache git openssh build-base && \
     mkdir -p -m 0700 ~/.ssh && \
-    ssh-keyscan gitlab.heronodes.io >> ~/.ssh/known_hosts && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts && \
     git config --global url."git@github.com".insteadOf "https://github.com/"
 
 WORKDIR /src
@@ -29,25 +31,20 @@ ARG BUILD_DATE_TS="1713280105"
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p /src/bin && \
-    GOOS=linux CGO_ENABLED=${CGO} go build ${RACE} -v -installsuffix cgo -o ./bin/api \
-          -ldflags "-linkmode external -extldflags -static -s -w \
-                    -X 'main.BuildDateTS=${BUILD_DATE_TS}' \
-          			-X 'main.BuildNumber=${BUILD_NUMBER}' \
-          			-X 'main.ReleaseTag=${RELEASE_TAG}' \
-          			-X 'main.CommitID=${COMMIT_ID}' \
-          			-X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
-          ./cmd/api
+    GOOS=linux CGO_ENABLED=${CGO} go build ${RACE} -trimpath -race -installsuffix cgo -gcflags all=-N \
+        -ldflags "-linkmode external -extldflags -w \
+            -X 'main.BuildDateTS=${BUILD_DATE_TS}' \
+            -X 'main.BuildNumber=${BUILD_NUMBER}' \
+            -X 'main.ReleaseTag=${RELEASE_TAG}' \
+            -X 'main.CommitID=${COMMIT_ID}' \
+            -X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
+        -buildmode=plugin \
+        -o /src/bin/hdwallet_plugin_tron.so \
+        ./plugin
 
-FROM scratch
+FROM $PARENT_CONTAINER_IMAGE_NAME
 
-# Import the user and group files from the build stage.
-#COPY --from=gobuild /etc/group /etc/passwd /etc/
+ARG PLUGIN_ROOT="/usr/local/bin/"
+ENV HDWALLET_PLUGIN_PATH="$PLUGIN_ROOT/hdwallet_plugin_tron.so"
 
-ENV APP_ROOT /opt/appworker
-ENV PATH /opt/appworker
-
-COPY --from=gobuild /src/bin $APP_ROOT
-
-EXPOSE 8080
-USER appworker
-CMD ["/opt/appworker/api"]
+COPY --from=gobuild /src/bin $PLUGIN_ROOT
