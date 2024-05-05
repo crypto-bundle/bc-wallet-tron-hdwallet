@@ -20,16 +20,16 @@ type UnLoadMultipleMnemonicForm struct {
 func (f *UnLoadMultipleMnemonicForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.UnLoadMultipleMnemonicsRequest,
 ) (valid bool, err error) {
-	if req.MnemonicIdentity == nil {
+	if req.WalletIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identities")
 	}
 
-	f.MnemonicsList = make([]*UnLoadMnemonicForm, len(req.MnemonicIdentity))
-	f.MnemonicWalletsUUIDs = make([]uuid.UUID, len(req.MnemonicIdentity))
+	f.MnemonicsList = make([]*UnLoadMnemonicForm, len(req.WalletIdentifier))
+	f.MnemonicWalletsUUIDs = make([]uuid.UUID, len(req.WalletIdentifier))
 
-	for i, _ := range req.MnemonicIdentity {
+	for i, _ := range req.WalletIdentifier {
 		walletIdentityForm := &UnLoadMnemonicForm{
-			WalletUUID: req.MnemonicIdentity[i].WalletUUID,
+			WalletUUID: req.WalletIdentifier[i].WalletUUID,
 		}
 
 		_, err = govalidator.ValidateStruct(walletIdentityForm)
@@ -42,7 +42,7 @@ func (f *UnLoadMultipleMnemonicForm) LoadAndValidate(ctx context.Context,
 		f.MnemonicWalletsUUIDs[i] = walletIdentityForm.WalletUUIDRaw
 	}
 
-	f.WalletsCount = uint(len(req.MnemonicIdentity))
+	f.WalletsCount = uint(len(req.WalletIdentifier))
 
 	return true, nil
 }

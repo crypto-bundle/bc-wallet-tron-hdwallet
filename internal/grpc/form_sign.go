@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 
@@ -14,9 +15,7 @@ type SignDataForm struct {
 	WalletUUID    string    `valid:"type(string),uuid,required"`
 	WalletUUIDRaw uuid.UUID `valid:"-"`
 
-	AccountIndex  uint32 `valid:"type(uint32)"`
-	InternalIndex uint32 `valid:"type(uint32)"`
-	AddressIndex  uint32 `valid:"type(uint32)"`
+	AccountParameters *anypb.Any `valid:"required"`
 
 	DataForSign []byte `valid:"required"`
 }
@@ -24,22 +23,23 @@ type SignDataForm struct {
 func (f *SignDataForm) LoadAndValidate(ctx context.Context,
 	req *pbApi.SignDataRequest,
 ) (valid bool, err error) {
-	if req.MnemonicWalletIdentifier == nil {
+	if req.WalletIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Wallet identity")
 	}
-	f.WalletUUID = req.MnemonicWalletIdentifier.WalletUUID
-	f.WalletUUIDRaw, err = uuid.Parse(req.MnemonicWalletIdentifier.WalletUUID)
+	f.WalletUUID = req.WalletIdentifier.WalletUUID
+	f.WalletUUIDRaw, err = uuid.Parse(req.WalletIdentifier.WalletUUID)
 	if err != nil {
 		return false, err
 	}
 
-	if req.AddressIdentifier == nil {
+	if req.AccountIdentifier == nil {
 		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity")
 	}
-	f.AccountIndex = req.AddressIdentifier.AccountIndex
-	f.InternalIndex = req.AddressIdentifier.InternalIndex
-	f.AddressIndex = req.AddressIdentifier.AddressIndex
+	if req.AccountIdentifier.Parameters == nil {
+		return false, fmt.Errorf("%w:%s", ErrMissedRequiredData, "Address identity parameters")
+	}
 
+	f.AccountParameters = req.AccountIdentifier.Parameters
 	f.DataForSign = req.DataForSign
 
 	_, err = govalidator.ValidateStruct(f)

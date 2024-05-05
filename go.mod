@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.25
 	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.5
 	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.4
@@ -19,7 +19,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.22.0
 	google.golang.org/grpc v1.63.2
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.33.0
 )
 
 require (

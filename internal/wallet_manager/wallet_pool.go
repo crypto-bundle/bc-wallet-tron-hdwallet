@@ -2,12 +2,12 @@ package wallet_manager
 
 import (
 	"context"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"google.golang.org/protobuf/types/known/anypb"
 	"sync"
 	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -23,16 +23,17 @@ type unitWrapper struct {
 }
 
 func (w *unitWrapper) Run() error {
-	err := w.Unit.Run(w.ctx)
-	if err != nil {
-		return err
-	}
-
 	startedWg := &sync.WaitGroup{}
 	startedWg.Add(1)
 
 	go func(wrapped *unitWrapper, workDoneWaiter *sync.WaitGroup) {
-		walletUUIDInt := wrapped.Unit.GetMnemonicUUID()
+		rawUUID, funcErr := uuid.Parse(wrapped.Unit.GetWalletUUID())
+		if funcErr != nil {
+			wrapped.logger.Error("unable parse wallet uuid string", zap.Error(funcErr),
+				zap.String(app.WalletUUIDTag, wrapped.Unit.GetWalletUUID()))
+			return
+		}
+
 		wrapped.Timer = time.NewTimer(wrapped.ttl)
 
 		workDoneWaiter.Done()
@@ -56,10 +57,10 @@ func (w *unitWrapper) Run() error {
 			break
 		}
 
-		wrapped.onShutDownFunc(*walletUUIDInt)
+		wrapped.onShutDownFunc(rawUUID)
 
 		w.logger.Info("wallet successfully unloaded",
-			zap.String(app.MnemonicWalletUUIDTag, walletUUIDInt.String()))
+			zap.String(app.WalletUUIDTag, rawUUID.String()))
 
 		return
 	}(w, startedWg)
@@ -76,7 +77,7 @@ func (w *unitWrapper) Shutdown() {
 }
 
 func (w *unitWrapper) shutdown() error {
-	err := w.Unit.Shutdown(w.ctx)
+	err := w.Unit.UnloadWallet()
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,8 @@ type Pool struct {
 
 	runTimeCtx context.Context
 
-	encryptSvc encryptService
+	encryptSvc      encryptService
+	walletMakerFunc walletMakerFunc
 
 	walletUnits map[uuid.UUID]*unitWrapper
 }
@@ -132,12 +134,26 @@ func (p *Pool) AddAndStartWalletUnit(_ context.Context,
 		return nil
 	}
 
-	walletUnit := newMnemonicWalletPoolUnit(p.logger, walletUUID, p.encryptSvc, mnemonicEncryptedData)
+	decryptedData, err := p.encryptSvc.Decrypt(mnemonicEncryptedData)
+	if err != nil {
+		return err
+	}
+
+	walletUnitInt, err := p.walletMakerFunc(walletUUID.String(), string(decryptedData))
+	if err != nil {
+		return err
+	}
+
+	walletUnit, isCasted := walletUnitInt.(WalletPoolUnitService)
+	if !isCasted {
+		return ErrUnableCastPluginEntryToPoolUnitWorker
+	}
+
 	wrapper := newUnitWrapper(p.runTimeCtx, p.logger, timeToLive, walletUnit, p.unloadWalletUnit)
 
 	p.walletUnits[walletUUID] = wrapper
 
-	err := wrapper.Run()
+	err = wrapper.Run()
 	if err != nil {
 		return err
 	}
@@ -152,11 +168,16 @@ func (p *Pool) UnloadWalletUnit(ctx context.Context,
 	if !isExists {
 		return nil, nil
 	}
-	walletUUID := wUint.Unit.GetMnemonicUUID()
+	walletUUID := wUint.Unit.GetWalletUUID()
 
 	wUint.Shutdown()
 
-	return walletUUID, nil
+	rawUUID, err := uuid.Parse(walletUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rawUUID, nil
 }
 
 func (p *Pool) unloadWalletUnit(mnemonicWalletUUID uuid.UUID) {
@@ -181,47 +202,45 @@ func (p *Pool) UnloadMultipleWalletUnit(ctx context.Context,
 	return nil
 }
 
-func (p *Pool) GetAddressByPath(ctx context.Context,
+func (p *Pool) GetAccountAddress(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	account, change, index uint32,
+	accountParameters *anypb.Any,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.GetAddressByPath(ctx, account, change, index)
+	return wUnit.Unit.GetAccountAddress(ctx, accountParameters)
 }
 
-func (p *Pool) GetAddressesByPathByRange(ctx context.Context,
+func (p *Pool) GetMultipleAccounts(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	rangeIterable types.AddrRangeIterable,
-	marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-) error {
+	multipleAccountsParameters *anypb.Any,
+) (uint, []*pbCommon.AccountIdentity, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
-		return nil
+		return 0, nil, nil
 	}
 
-	return wUnit.Unit.GetAddressesByPathByRange(ctx,
-		rangeIterable, marshallerCallback)
+	return wUnit.Unit.GetMultipleAccounts(ctx, multipleAccountsParameters)
 }
 
-func (p *Pool) LoadAddressByPath(ctx context.Context,
+func (p *Pool) LoadAccount(ctx context.Context,
 	mnemonicWalletUUID uuid.UUID,
-	account, change, index uint32,
+	accountParameters *anypb.Any,
 ) (*string, error) {
 	wUnit, isExists := p.walletUnits[mnemonicWalletUUID]
 	if !isExists {
 		return nil, nil
 	}
 
-	return wUnit.Unit.LoadAddressByPath(ctx, account, change, index)
+	return wUnit.Unit.LoadAccount(ctx, accountParameters)
 }
 
 func (p *Pool) SignData(ctx context.Context,
 	mnemonicUUID uuid.UUID,
-	account, change, index uint32,
+	accountParameters *anypb.Any,
 	dataForSign []byte,
 ) (*string, []byte, error) {
 	wUnit, isExists := p.walletUnits[mnemonicUUID]
@@ -232,19 +251,21 @@ func (p *Pool) SignData(ctx context.Context,
 		return nil, nil, ErrPassedWalletNotFound
 	}
 
-	return wUnit.Unit.SignData(ctx, account, change, index, dataForSign)
+	return wUnit.Unit.SignData(ctx, accountParameters, dataForSign)
 }
 
 func NewWalletPool(ctx context.Context,
 	logger *zap.Logger,
 	cfg configService,
+	mnemoWalletMakerFunc walletMakerFunc,
 	encryptSrv encryptService,
 ) *Pool {
 	return &Pool{
-		runTimeCtx:  ctx,
-		logger:      logger,
-		cfg:         cfg,
-		encryptSvc:  encryptSrv,
-		walletUnits: make(map[uuid.UUID]*unitWrapper),
+		runTimeCtx:      ctx,
+		logger:          logger,
+		cfg:             cfg,
+		encryptSvc:      encryptSrv,
+		walletMakerFunc: mnemoWalletMakerFunc,
+		walletUnits:     make(map[uuid.UUID]*unitWrapper),
 	}
 }

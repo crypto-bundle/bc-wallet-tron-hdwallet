@@ -1,8 +1,8 @@
-package wallet_manager
+package plugin
 
 import "errors"
 
 var (
-	ErrPassedWalletNotFound                  = errors.New("passed wallet not found")
+	ErrUnableCastPluginEntry                 = errors.New("unable to cast plugin entry to traget")
 	ErrUnableCastPluginEntryToPoolUnitWorker = errors.New("unable to cast plugin to pool unit worker")
 )

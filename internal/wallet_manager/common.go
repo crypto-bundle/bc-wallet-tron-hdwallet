@@ -2,43 +2,35 @@ package wallet_manager
 
 import (
 	"context"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/types"
-	"github.com/google/uuid"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type configService interface {
+	GetHdWalletPluginPath() string
 }
+
+type walletMakerFunc func(walletUUID string,
+	mnemonicDecryptedData string,
+) (interface{}, error)
 
 type WalletPoolUnitService interface {
-	Init(ctx context.Context) error
-	Run(ctx context.Context) error
-	Shutdown(ctx context.Context) error
+	UnloadWallet() error
 
-	GetMnemonicUUID() *uuid.UUID
-	LoadAddressByPath(ctx context.Context,
-		account, change, index uint32,
+	GetWalletUUID() string
+	LoadAccount(ctx context.Context,
+		accountParameters *anypb.Any,
 	) (*string, error)
-	GetAddressByPath(ctx context.Context,
-		account, change, index uint32,
+	GetAccountAddress(ctx context.Context,
+		accountParameters *anypb.Any,
 	) (*string, error)
-	GetAddressesByPathByRange(ctx context.Context,
-		rangeIterable types.AddrRangeIterable,
-		marshallerCallback func(accountIndex, internalIndex, addressIdx, position uint32, address string),
-	) error
+	GetMultipleAccounts(ctx context.Context,
+		multipleAccountsParameters *anypb.Any,
+	) (uint, []*pbCommon.AccountIdentity, error)
 	SignData(ctx context.Context,
-		account, change, index uint32,
+		accountParameters *anypb.Any,
 		dataForSign []byte,
 	) (*string, []byte, error)
-}
-
-type hdWalleter interface {
-	PublicHex() string
-	PublicHash() ([]byte, error)
-
-	NewTronWallet(account, change, address uint32) (*hdwallet.Tron, error)
-
-	ClearSecrets()
 }
 
 type encryptService interface {

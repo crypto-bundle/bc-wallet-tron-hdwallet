@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/plugin"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,6 @@ import (
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/config"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/grpc"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/mnemonic"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/wallet_manager"
 
 	commonLogger "github.com/crypto-bundle/bc-wallet-common-lib-logger/pkg/logger"
@@ -68,12 +68,27 @@ func main() {
 
 	transitSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
 	encryptorSvc := commonVault.NewEncryptService(vaultSvc, appCfg.GetVaultCommonTransit())
-	seedPhraseGenerator := mnemonic.NewMnemonicGenerator(loggerEntry, appCfg.GetDefaultMnemonicWordsCount())
-	mnemonicValidatorSvc := mnemonic.NewMnemonicValidator()
-	walletsPoolSvc := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg, encryptorSvc)
 
-	apiHandlers := grpc.NewHandlers(loggerEntry, seedPhraseGenerator,
-		transitSvc, encryptorSvc, mnemonicValidatorSvc, walletsPoolSvc)
+	pluginWrapper := plugin.NewPlugin(appCfg.GetHdWalletPluginPath())
+	err = pluginWrapper.Init(ctx)
+	if err != nil {
+		loggerEntry.Fatal("unable to init plugin", zap.Error(err))
+	}
+	loggerEntry.Info("plugin successfully loaded",
+		zap.String(app.PluginNameTag, pluginWrapper.GetPluginName()),
+		zap.String(app.PluginReleaseTag, pluginWrapper.GetReleaseTag()),
+		zap.Uint64(app.PluginBuildNumberTag, pluginWrapper.GetBuildNumber()),
+		zap.Int64(app.PluginBuildDateTag, pluginWrapper.GetBuildDateTS()),
+		zap.String(app.PluginCommitIDTag, pluginWrapper.GetCommitID()),
+		zap.String(app.PluginShortCommitIDTag, pluginWrapper.GetShortCommitID()))
+
+	walletsPoolSvc := wallet_manager.NewWalletPool(ctx, loggerEntry, appCfg,
+		pluginWrapper.GetMakeWalletCallback(), encryptorSvc)
+
+	apiHandlers := grpc.NewHandlers(loggerEntry,
+		pluginWrapper.GetMnemonicGeneratorFunc(),
+		pluginWrapper.GetMnemonicValidatorFunc(),
+		transitSvc, encryptorSvc, walletsPoolSvc)
 	GRPCSrv, err := grpc.NewServer(ctx, loggerEntry, appCfg, apiHandlers)
 	if err != nil {
 		loggerEntry.Fatal("unable to create grpc server instance", zap.Error(err),
@@ -93,13 +108,12 @@ func main() {
 	//checker.AddStartupProbeUnit(pgConn)
 	//checker.AddStartupProbeUnit(natsConnSvc)
 
-	go func() {
-		err = GRPCSrv.ListenAndServe(ctx)
-		if err != nil {
-			loggerEntry.Error("unable to start grpc", zap.Error(err),
-				zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
-		}
-	}()
+	err = GRPCSrv.ListenAndServe(ctx)
+	if err != nil {
+		loggerEntry.Fatal("unable to start grpc", zap.Error(err),
+			zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))
+
+	}
 
 	loggerEntry.Info("application started successfully",
 		zap.String(app.GRPCBindPathTag, appCfg.GetConnectionPath()))

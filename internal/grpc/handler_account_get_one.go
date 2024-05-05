@@ -2,8 +2,6 @@ package grpc
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 
@@ -11,6 +9,8 @@ import (
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -25,8 +25,8 @@ type getDerivationAddressHandler struct {
 
 // nolint:funlen // fixme
 func (h *getDerivationAddressHandler) Handle(ctx context.Context,
-	req *pbApi.DerivationAddressRequest,
-) (*pbApi.DerivationAddressResponse, error) {
+	req *pbApi.GetAccountRequest,
+) (*pbApi.GetAccountResponse, error) {
 	var err error
 	tCtx, span, finish := tracer.Trace(ctx)
 
@@ -34,7 +34,7 @@ func (h *getDerivationAddressHandler) Handle(ctx context.Context,
 
 	span.SetTag(app.BlockChainNameTag, app.BlockChainName)
 
-	vf := &AddressForm{}
+	vf := &AccountForm{}
 	valid, err := vf.LoadAndValidateGetAddrReq(tCtx, req)
 	if err != nil {
 		h.l.Error("unable load and validate request values", zap.Error(err))
@@ -46,10 +46,8 @@ func (h *getDerivationAddressHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.Internal, "something went wrong")
 	}
 
-	addr, err := h.walletPoolSvc.GetAddressByPath(tCtx, vf.WalletUUIDRaw,
-		vf.AccountIndex,
-		vf.InternalIndex,
-		vf.AddressIndex)
+	addr, err := h.walletPoolSvc.GetAccountAddress(tCtx, vf.WalletUUIDRaw,
+		vf.AccountParameters)
 	if err != nil {
 		h.l.Error("unable to get address by path", zap.Error(err),
 			zap.String(app.MnemonicWalletUUIDTag, vf.WalletUUID))
@@ -61,11 +59,11 @@ func (h *getDerivationAddressHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.ResourceExhausted, "wallet not loaded")
 	}
 
-	req.AddressIdentity.Address = *addr
+	req.AccountIdentifier.Address = *addr
 
-	return &pbApi.DerivationAddressResponse{
-		MnemonicWalletIdentifier: req.MnemonicWalletIdentifier,
-		AddressIdentity:          req.AddressIdentity,
+	return &pbApi.GetAccountResponse{
+		WalletIdentifier:  req.WalletIdentifier,
+		AccountIdentifier: req.AccountIdentifier,
 	}, nil
 }
 

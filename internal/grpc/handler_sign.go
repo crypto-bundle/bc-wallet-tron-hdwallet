@@ -2,9 +2,12 @@ package grpc
 
 import (
 	"context"
+
+	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
-	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -44,9 +47,7 @@ func (h *signDataHandler) Handle(ctx context.Context,
 	}
 
 	addr, signedData, err := h.walletPoolSvc.SignData(tCtx, vf.WalletUUIDRaw,
-		vf.AccountIndex,
-		vf.InternalIndex,
-		vf.AddressIndex,
+		vf.AccountParameters,
 		vf.DataForSign)
 	if err != nil {
 		h.l.Error("unable to sign data", zap.Error(err),
@@ -59,12 +60,12 @@ func (h *signDataHandler) Handle(ctx context.Context,
 		return nil, status.Error(codes.ResourceExhausted, "wallet not loaded")
 	}
 
-	req.AddressIdentifier.Address = *addr
+	req.AccountIdentifier.Address = *addr
 
 	return &pbApi.SignDataResponse{
-		MnemonicWalletIdentifier: req.MnemonicWalletIdentifier,
-		TxOwnerIdentity:          req.AddressIdentifier,
-		SignedData:               signedData,
+		WalletIdentifier:  req.WalletIdentifier,
+		AccountIdentifier: req.AccountIdentifier,
+		SignedData:        signedData,
 	}, nil
 }
 

@@ -22,8 +22,8 @@ type grpcServerHandle struct {
 	unLoadMnemonicHandlerSvc          unLoadMnemonicHandlerService
 	unLoadMultipleMnemonicsHandlerSvc unLoadMultipleMnemonicsHandlerService
 	encryptMnemonicHandlerSvc         encryptMnemonicHandlerService
-	getDerivationAddressSvc           getDerivationAddressHandlerService
-	getDerivationsAddressesSvc        getDerivationsAddressesHandlerService
+	getAccountHandlerSvc              getAccountHandlerService
+	getAccountsSvc                    getDerivationsAddressesHandlerService
 	loadDerivationAddressSvc          loadDerivationsAddressesHandlerService
 	signDataSvc                       signDataHandlerService
 }
@@ -64,21 +64,21 @@ func (h *grpcServerHandle) EncryptMnemonic(context.Context,
 	return nil, status.Errorf(codes.Unimplemented, "method EncryptMnemonic not implemented")
 }
 
-func (h *grpcServerHandle) GetDerivationAddress(ctx context.Context,
-	req *pbApi.DerivationAddressRequest,
-) (*pbApi.DerivationAddressResponse, error) {
-	return h.getDerivationAddressSvc.Handle(ctx, req)
+func (h *grpcServerHandle) GetAccount(ctx context.Context,
+	req *pbApi.GetAccountRequest,
+) (*pbApi.GetAccountResponse, error) {
+	return h.getAccountHandlerSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) GetDerivationAddressByRange(ctx context.Context,
-	req *pbApi.DerivationAddressByRangeRequest,
-) (*pbApi.DerivationAddressByRangeResponse, error) {
-	return h.getDerivationsAddressesSvc.Handle(ctx, req)
+func (h *grpcServerHandle) GetMultipleAccounts(ctx context.Context,
+	req *pbApi.GetMultipleAccountRequest,
+) (*pbApi.GetMultipleAccountResponse, error) {
+	return h.getAccountsSvc.Handle(ctx, req)
 }
 
-func (h *grpcServerHandle) LoadDerivationAddress(ctx context.Context,
-	req *pbApi.LoadDerivationAddressRequest,
-) (*pbApi.LoadDerivationAddressResponse, error) {
+func (h *grpcServerHandle) LoadAccount(ctx context.Context,
+	req *pbApi.LoadAccountRequest,
+) (*pbApi.LoadAccountsResponse, error) {
 	return h.loadDerivationAddressSvc.Handle(ctx, req)
 }
 
@@ -90,33 +90,29 @@ func (h *grpcServerHandle) SignData(ctx context.Context,
 
 // NewHandlers - create instance of grpc-handler service
 func NewHandlers(loggerSrv *zap.Logger,
-	mnemoGenSvc mnemonicGeneratorService,
+	mnemoGenFunc generateMnemonicFunc,
+	mnemoValidatorFunc validateMnemonicFunc,
 	transitEncryptorSvc encryptService,
 	appEncryptorSvc encryptService,
-	mnemoValidatorSvc mnemonicValidatorService,
 	walletPoolSvc walletPoolService,
 ) pbApi.HdWalletApiServer {
 
 	l := loggerSrv.Named("grpc.server.handler").With(
 		zap.String(app.BlockChainNameTag, app.BlockChainName))
 
-	//addrRespPool := &sync.Pool{NewHandlers: func() any {
-	//	return new(pbApi.DerivationAddressIdentity)
-	//}}
-
 	return &grpcServerHandle{
 		UnimplementedHdWalletApiServer: &pbApi.UnimplementedHdWalletApiServer{},
 		logger:                         l,
 
-		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l, mnemoGenSvc, appEncryptorSvc),
-		validateMnemonicHandlerSvc:        MakeValidateMnemonicHandler(l, appEncryptorSvc, mnemoValidatorSvc),
+		generateMnemonicHandlerSvc:        MakeGenerateMnemonicHandler(l, mnemoGenFunc, appEncryptorSvc),
+		validateMnemonicHandlerSvc:        MakeValidateMnemonicHandler(l, mnemoValidatorFunc, appEncryptorSvc),
 		loadMnemonicHandlerSvc:            MakeLoadMnemonicHandler(l, walletPoolSvc),
 		unLoadMnemonicHandlerSvc:          MakeUnLoadMnemonicHandler(l, walletPoolSvc),
 		unLoadMultipleMnemonicsHandlerSvc: MakeUnLoadMultipleMnemonicsHandler(l, walletPoolSvc),
 		encryptMnemonicHandlerSvc:         MakeEncryptMnemonicHandler(l, transitEncryptorSvc, appEncryptorSvc),
 		loadDerivationAddressSvc:          MakeLoadDerivationAddressHandlerHandler(l, walletPoolSvc),
-		getDerivationAddressSvc:           MakeGetDerivationAddressHandler(l, walletPoolSvc),
-		getDerivationsAddressesSvc:        MakeGetDerivationsAddressesHandler(l, walletPoolSvc),
+		getAccountHandlerSvc:              MakeGetDerivationAddressHandler(l, walletPoolSvc),
+		getAccountsSvc:                    MakeGetDerivationsAddressesHandler(l, walletPoolSvc),
 		signDataSvc:                       MakeSignDataHandler(l, walletPoolSvc),
 	}
 }

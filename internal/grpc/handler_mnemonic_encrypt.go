@@ -4,16 +4,17 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
+
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/hdwallet"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	pbApi "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/hdwallet"
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -76,10 +77,10 @@ func (h *encryptMnemonicHandler) Handle(ctx context.Context,
 	}
 
 	mnemonicHash := fmt.Sprintf("%x", sha256.Sum256(decryptedData))
-	req.MnemonicIdentity.WalletHash = mnemonicHash
+	req.WalletIdentifier.WalletHash = mnemonicHash
 
 	return &pbApi.EncryptMnemonicResponse{
-		MnemonicIdentity:      req.MnemonicIdentity,
+		WalletIdentifier:      req.WalletIdentifier,
 		EncryptedMnemonicData: encryptedMnemonicData,
 	}, nil
 }
@@ -90,5 +91,8 @@ func MakeEncryptMnemonicHandler(loggerEntry *zap.Logger,
 ) *encryptMnemonicHandler {
 	return &encryptMnemonicHandler{
 		l: loggerEntry.With(zap.String(MethodNameTag, MethodNameEncryptMnemonic)),
+
+		transitEncryptorSvc: transitEncryptorSvc,
+		appEncryptorSvc:     appEncryptorSvc,
 	}
 }

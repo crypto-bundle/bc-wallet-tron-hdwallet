@@ -21,4 +21,11 @@ const (
 	HDWalletAddressTag       = "hd_wallet_address"
 
 	NatsCacheBucketNameTag = "nats_kv_bucket_name"
+
+	PluginNameTag          = "plugin_name"
+	PluginReleaseTag       = "plugin_release_tag"
+	PluginCommitIDTag      = "plugin_commit_id_tag"
+	PluginShortCommitIDTag = "plugin_short_commit_id_tag"
+	PluginBuildNumberTag   = "plugin_build_number_tag"
+	PluginBuildDateTag     = "plugin_build_date_tag"
 )

@@ -284,3 +284,6 @@ app:
       words_count:
         _default: 24
         production: 24
+
+      plugin_path:
+        _default: /usr/lib/hdwallet/tron.so

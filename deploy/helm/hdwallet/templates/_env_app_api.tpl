@@ -26,4 +26,7 @@
 
 - name: HDWALLET_WORDS_COUNT
   value: {{ pluck .Values.global.env .Values.app.mnemonic.words_count | first | default .Values.app.mnemonic.words_count._default | quote }}
+
+- name: HDWALLET_WORDS_COUNT
+  value: {{ pluck .Values.global.env .Values.app.mnemonic.plugin_path | first | default .Values.app.mnemonic.plugin_path._default | quote }}
 {{- end }}

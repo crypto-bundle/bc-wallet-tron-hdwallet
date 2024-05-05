@@ -2,8 +2,6 @@ package grpc
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"time"
 
 	"github.com/crypto-bundle/bc-wallet-tron-hdwallet/internal/app"
@@ -12,6 +10,8 @@ import (
 	tracer "github.com/crypto-bundle/bc-wallet-common-lib-tracer/pkg/tracer/opentracing"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -58,7 +58,7 @@ func (h *loadMnemonicHandler) Handle(ctx context.Context,
 	}
 
 	return &pbApi.LoadMnemonicResponse{
-		MnemonicIdentity: req.MnemonicIdentity,
+		WalletIdentifier: req.WalletIdentifier,
 	}, nil
 }
 

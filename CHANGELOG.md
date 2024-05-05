@@ -113,3 +113,32 @@ Start of big application refactoring
   * bc-wallet-common-lib-redis v0.0.7
   * bc-wallet-common-lib-tracer v0.0.4
   * bc-wallet-common-lib-vault v0.0.13
+
+## [v0.0.26] 05.05.2024
+### Added
+* Added plugin path ENV variable
+* Added ldflags support in build application flow
+* Added unit-tests to all mnemonicWalletUnit methods 
+* Added plugin wrapper package
+* Added ldflags support in build plugin flow
+* Added support of new version bc-wallet-common-hdwallet-controller v0.0.25
+### Changed
+* Refactored hd-wallet service-component
+  * All struct and variables is un-exportable
+  * Moved to tron plugin directory
+* Changed gRPC methods:
+  * GetDerivationAddress replaced by GetAccount
+  * GetDerivationAddressByRange replaced by GetMultipleAccounts
+* Refactored wallet pool unit service-component
+  * Changed code for support plugin flow
+  * Moved to tron plugin directory
+  * Now plugin must support next exported functions:
+    * NewPoolUnit
+    * GenerateMnemonic
+    * ValidateMnemonic
+    * GetPluginName
+    * GetPluginReleaseTag
+    * GetPluginCommitID
+    * GetPluginShortCommitID
+    * GetPluginBuildNumber
+    * GetPluginBuildDateTS
