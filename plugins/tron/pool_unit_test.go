@@ -161,7 +161,7 @@ func TestMnemonicWalletUnit_GetMultipleAccounts(t *testing.T) {
 		Mnemonic        string
 		AddressPathList *pbCommon.RangeUnitsList
 
-		ExpectedAddress map[string]*AccountIdentity
+		ExpectedAddress map[string]*pbCommon.DerivationAddressIdentity
 	}
 
 	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
@@ -177,7 +177,7 @@ func TestMnemonicWalletUnit_GetMultipleAccounts(t *testing.T) {
 					{AccountIndex: 2555, InternalIndex: 50, AddressIndexFrom: 250, AddressIndexTo: 255},
 				},
 			},
-			ExpectedAddress: map[string]*AccountIdentity{
+			ExpectedAddress: map[string]*pbCommon.DerivationAddressIdentity{
 				"TAMcYXxBevDjYK1wVBoUsGr9F1Gc1BvgYX": {AccountIndex: 3, InternalIndex: 8, AddressIndex: 114},
 				"TAT4RTK3FKQbgevkiTATT9EnFar8hK3hzK": {AccountIndex: 3, InternalIndex: 8, AddressIndex: 115},
 				"TU88zp2gvowrvxxuskzbZhRWPcdB96yQNi": {AccountIndex: 3, InternalIndex: 8, AddressIndex: 116},

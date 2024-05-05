@@ -5,14 +5,15 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"fmt"
-	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
-	"github.com/golang/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"math/big"
 	"sync"
 
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/ethereum/go-ethereum/crypto"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const addrPatKeyTemplate = "%d'/%d/%d"

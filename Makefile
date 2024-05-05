@@ -5,23 +5,9 @@
 #  go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
 #  go get -d github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 
-plugin_proto:
-	protoc -I ./plugins/tron/ -I . \
-    		--go_out=./plugins/tron/ \
-    		--go_opt=paths=source_relative \
-    		--go-grpc_out=./plugins/tron/ \
-    		--go-grpc_opt=paths=source_relative \
-    		--openapiv2_out=logtostderr=true:./plugins/tron/ \
-    		--grpc-gateway_out=./plugins/tron/ \
-    		--grpc-gateway_opt=logtostderr=true \
-    		--grpc-gateway_opt=paths=source_relative \
-    		--doc_out=./plugins/tron/ \
-    		--doc_opt=markdown,$@.md \
-    		./plugins/tron/*.proto
+default: build_plugin
 
-default: hdwallet
-
-plugin: plugin_proto
+build_plugin:
 	$(eval short_commit_id=$(shell git rev-parse --short HEAD))
 	$(eval commit_id=$(shell git rev-parse HEAD))
 	$(eval build_number=0)
@@ -36,7 +22,7 @@ plugin: plugin_proto
 			-X 'main.CommitID=${COMMIT_ID}' \
 			-X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
 		-buildmode=plugin \
-		-o ../../build/tron.so \
+		-o ./build/tron.so \
 		./plugins/tron
 
 deploy:

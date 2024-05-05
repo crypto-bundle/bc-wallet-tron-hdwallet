@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/btcsuite/btcd v0.24.0
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.24-wip-4
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.25
 	github.com/crypto-bundle/bc-wallet-common-lib-config v0.0.5
 	github.com/crypto-bundle/bc-wallet-common-lib-grpc v0.0.4
 	github.com/crypto-bundle/bc-wallet-common-lib-healthcheck v0.0.4
@@ -26,7 +26,6 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/btcsuite/btcd/btcutil v1.1.5
-	github.com/golang/protobuf v1.5.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.50.0
 )
 
@@ -41,6 +40,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
