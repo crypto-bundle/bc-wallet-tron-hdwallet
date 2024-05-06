@@ -1,6 +1,3 @@
-// Package keyconvert
-// взял отсюда https://github.com/wemeetagain/go-hdwallet
-// несколько переписал, чтоб можно было работать с разными криптовалютами
 package main
 
 import (

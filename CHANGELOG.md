@@ -147,4 +147,7 @@ Start of big application refactoring
 ### Changed
 * Bc-wallet-tron-hdwallet-api moved to another repository
   * Now it's a common application for all hd-wallet support blockchain - bc-wallet-common-hdwallet-api
-  * 
+* Fixed bugs in Helm-chart 
+* Changed Docker container build flow:
+  * Changed stages in docker file
+* Changed content README.md file 

@@ -1,11 +1,11 @@
 default: build_plugin
 
 build_plugin:
-	$(eval short_commit_id=$(shell git rev-parse --short HEAD))
-	$(eval commit_id=$(shell git rev-parse HEAD))
-	$(eval build_number=0)
-	$(eval build_date=$(shell date +%s))
-	$(eval release_tag=$(shell git describe --tags $(commit_id))-$(short_commit_id)-$(build_number))
+	$(eval SHORT_COMMIT_ID=$(shell git rev-parse --short HEAD))
+	$(eval COMMIT_ID=$(shell git rev-parse HEAD))
+	$(eval BUILD_NUMBER=0)
+	$(eval BUILD_DATE_TS=$(shell date +%s))
+	$(eval RELEASE_TAG=$(shell git describe --tags $(COMMIT_ID))-$(SHORT_COMMIT_ID)-$(BUILD_NUMBER))
 
 	CGO_ENABLED=1 go build -trimpath -race -installsuffix cgo -gcflags all=-N \
 		-ldflags "-linkmode external -extldflags -w \
@@ -17,6 +17,15 @@ build_plugin:
 		-buildmode=plugin \
 		-o ./build/tron.so \
 		./plugin
+
+test_plugin:
+	CGO_ENABLED=1 go build -trimpath -race -trimpath -installsuffix cgo \
+		-gcflags all=-N \
+		-o ./build/loader_test \
+		-ldflags "-linkmode external -extldflags -w" \
+		./cmd/loader_test
+
+	./build/loader_test
 
 deploy:
 	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))
