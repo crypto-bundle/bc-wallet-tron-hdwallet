@@ -1,142 +1,49 @@
-# bc-wallet-tron-hdwallet
+# Bc-wallet-tron-hdwallet
 
 ## Description
 
-Service of management owned hd-wallets - mnemonic wallets for Tron blockchain. 
-Application purpose - create new mnemonic wallet, sign transaction, get derivation address
+HdWallet-plugin is third and last part of hd-wallet applications bundle. This repository contains implementation of
+**Hierarchical Deterministic Wallet** for Tron blockchain. Also, this repo contains Helm-chart description for deploy full
+hdwallet applications bundle for Tron.  
 
-## Api
+Another two parts of hdwallet-bundle is:
 
-Service has a GRPC-api - api doc [here](./docs/hdwallet_api/hdwallet_proto.md)
+* [bc-wallet-common-hdwallet-controller](https://github.com/crypto-bundle/bc-wallet-common-hdwallet-controller) - 
+Application for control access to wallets. Create or disable wallets, get account addresses, sign transactions.
 
-## Mnemmonic wallets
+* [bc-wallet-common-hdwallet-api](https://github.com/crypto-bundle/bc-wallet-common-hdwallet-api) - 
+Storage-less application for manage in-memory HD-wallets and execute session and signature requests.
 
-Mnemonic wallets stored in Postgresql database as encrypted Hashicord **Vault** data
+### Tron HdWallet plugin
+Implementation of HdWallet plugin contains exported functions:
+* ```NewPoolUnitfunc(walletUUID string, mnemonicDecryptedData string) (interface{}, error)```
+* ```GenerateMnemonic func() (string, error)```
+* ```ValidateMnemonic func(mnemonic string) bool```
+* ```GetPluginName func() string```
+* ```GetPluginReleaseTag func() string```
+* ```GetPluginCommitID func() string```
+* ```GetPluginShortCommitID func() string```
+* ```GetPluginBuildNumber func() string```
+* ```GetPluginBuildDateTS func() string```
 
-## Requirements
-
-### k8s
-Helm deploy describes in [./deploy/helm/api](./deploy/helm/hdwallet)
-
-### PostgreSQL
-* Database: bc-wallet-tron-hdwallet
-* Users:
-  * bc-wallet-tron-hdwallet-api - SELECT, INSERT, UPDATE privileges
-  * bc-wallet-tron-hdwallet-migrator - CREATE, DELETE, DROP, SELECT, INSERT, UPDATE privileges
-  * bc-wallet-tron-hdwallet-updater - CREATE, DELETE, DROP, SELECT, INSERT, UPDATE privileges
-
-### Nats
-* Users:
-  * bc-wallet-tron-hdwallet-api
-  * bc-wallet-tron-hdwallet-migrator
-  * bc-wallet-tron-hdwallet-updater
-* KV buckets:
-  * <STAGE_PREFIX>__BC_WALLET_TRON_HDWALLET__MNEMONIC-WALLETS
-
-### Vault
-* Users:
-  * bc-wallet-tron-hdwallet-api
-  * bc-wallet-tron-hdwallet-migrator
-  * bc-wallet-tron-hdwallet-updater
-* Tokens:
-  * vault token create -display-name bc-wallet-tron-hdwallet-api
-  * vault token create -display-name bc-wallet-tron-hdwallet-migrator
-  * vault token create -display-name bc-wallet-tron-hdwallet-updater
-* Buckets:
-    * kv/crypto-bundle/bc-wallet-tron-hdwallet/commo
-    * kv/crypto-bundle/bc-wallet-tron-hdwallet/api
-    * kv/crypto-bundle/bc-wallet-tron-hdwallet/migrator
-    * kv/crypto-bundle/bc-wallet-tron-hdwallet/updater
-* Transit
-  * vault write -f transit/keys/crypto-bundle/bc-wallet-tron-hdwallet
-
-### k8s secrets
-* Vault tokens:
-    * vault_bc_wallet_tron_hdwallet_api_user_token
-    * vault_bc_wallet_tron_hdwallet_migrator_user_token
-    * vault_bc_wallet_tron_hdwallet_updater_user_token
+Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
+Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.
 
 ## Deployment
 
-### K8s
+Currently, support only kubernetes deployment flow via Helm
 
-#### Secrets
+### Kubernetes
+Application must be deployed as part of bc-wallet-<BLOCKCHAIN_NAME>-hdwallet bundle.
+Application must be started as single container in Kubernetes Pod with shared volume.
 
-```
-kubectl create secret generic bc-wallet-tron-hdwallet \
-  --from-literal=vault_api_user_token='<insert_token_here>' \
-  --from-literal=vault_migrator_user_token='<insert_token_here>' \
-  --from-literal=vault_updater_user_token='<insert_token_here>' \
-  --from-literal=vault_transit_secret_key='crypto-bundle-bc-wallet-tron-hdwallet'
-```
+You can see example of HELM-chart deployment application in next repositories:
+* [deploy/helm/hdwallet](deploy/helm/hdwallet)
+* [bc-wallet-ethereum-hdwallet-api/deploy/helm/hdwallet](https://github.com/crypto-bundle/bc-wallet-ethereum-hdwallet/tree/develop/deploy/helm/hdwallet)
 
-### DB
-
-In production environment application require 3 database users, for example:
-* bc-wallet-tron-hdwallet-api - regular worker user for api
-* bc-wallet-tron-hdwallet-migrator - user for run database migration
-* bc-wallet-tron-hdwallet-updater - user for run infrastructure migration
-
-#### Local migrations
-
-```
-make migrate
-```
-
-## Nats
-
-Pattern to create buckets or streams is
-```
-%s__BC-WALLET-TRON-HDWALLET__MNEMONIC-WALLETS 
-```
-%s - is STAGE name, for example - dev, prod, bc_team1 (personal test stand for bc team)
-
-### Create Buckets
-
-```
-nats kv add DEV__BC-WALLET-TRON-HDWALLET__MNEMONIC-WALLETS --replicas 1 --history 3 --storage=memory --description="mnemonic wallets cache storage for TRON hdwallet service"
-```
-### Clear Buckets
-```
-nats kv purge DEV__BC-WALLET-TRON-HDWALLET__MNEMONIC-WALLETS
-```
-
-### Vault
-
-In production environment application require 3 Vault tokens:
-* bc-wallet-tron-hdwallet-api 
-* bc-wallet-tron-hdwallet-migrator
-* bc-wallet-tron-hdwallet-updater
-
-#### Vault local prepare
-```bash
-vault token create -display-name bc-wallet-tron-hdwallet-api
-vault token create -display-name bc-wallet-tron-hdwallet-migrator
-vault token create -display-name bc-wallet-tron-hdwallet-updater
-
-vault write -f transit/keys/crypto-bundle-bc-wallet-tron-hdwallet
-
-vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/common DB_DATABASE=bc-wallet-tron-hdwallet
-vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/api \
-  DB_USERNAME=bc-wallet-tron-hdwallet-api \
-  DB_PASSWORD=password \
-  
-vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/migrator \
-  DB_USERNAME=bc-wallet-tron-hdwallet-migrator \
-  DB_PASSWORD=password \
-  REDIS_USER=bc-wallet-tron-hdwallet-migrator \
-  REDIS_PASSWORD=password \
-  NATS_USER=bc-wallet-tron-hdwallet-migrator \
-  NATS_PASSWORD=password
-  
-vault kv put kv/crypto-bundle/bc-wallet-tron-hdwallet/updater \
-  DB_USERNAME=bc-wallet-tron-hdwallet-updater \
-  DB_PASSWORD=password \
-  REDIS_USER=bc-wallet-tron-hdwallet-updater \
-  REDIS_PASSWORD=password \
-  NATS_USER=bc-wallet-tron-hdwallet-updater \
-  NATS_PASSWORD=password
-```
+## Third party libraries
+Some parts of this plugin picked up from another repository - [Go HD Wallet tools](https://github.com/wemeetagain/go-hdwallet)
+written by [Cayman(wemeetagain)](https://github.com/wemeetagain)
 
 ## Licence
 

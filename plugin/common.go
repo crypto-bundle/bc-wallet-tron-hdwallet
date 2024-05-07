@@ -18,7 +18,7 @@ var (
 	// ShortCommitID - first 12 characters from CommitID.
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
 	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
-	ShortCommitID = "00000000"
+	ShortCommitID = "0000000"
 
 	// BuildNumber - ci/cd build number for BuildNumber
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants

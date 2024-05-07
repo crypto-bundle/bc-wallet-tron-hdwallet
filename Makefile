@@ -1,20 +1,13 @@
-# Install plugins:
-#  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-#  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-#  go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-#  go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
-#  go get -d github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
-
 default: build_plugin
 
 build_plugin:
-	$(eval short_commit_id=$(shell git rev-parse --short HEAD))
-	$(eval commit_id=$(shell git rev-parse HEAD))
-	$(eval build_number=0)
-	$(eval build_date=$(shell date +%s))
-	$(eval release_tag=$(shell git describe --tags $(commit_id))-$(short_commit_id)-$(build_number))
+	$(eval SHORT_COMMIT_ID=$(shell git rev-parse --short HEAD))
+	$(eval COMMIT_ID=$(shell git rev-parse HEAD))
+	$(eval BUILD_NUMBER=0)
+	$(eval BUILD_DATE_TS=$(shell date +%s))
+	$(eval RELEASE_TAG=$(shell git describe --tags $(COMMIT_ID))-$(SHORT_COMMIT_ID)-$(BUILD_NUMBER))
 
-	CGO_ENABLED=1 go build -race -installsuffix cgo -gcflags all=-N \
+	CGO_ENABLED=1 go build -trimpath -race -installsuffix cgo -gcflags all=-N \
 		-ldflags "-linkmode external -extldflags -w \
 			-X 'main.BuildDateTS=${BUILD_DATE_TS}' \
 			-X 'main.BuildNumber=${BUILD_NUMBER}' \
@@ -23,13 +16,24 @@ build_plugin:
 			-X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
 		-buildmode=plugin \
 		-o ./build/tron.so \
-		./plugins/tron
+		./plugin
+
+test_plugin:
+	CGO_ENABLED=1 go build -trimpath -race -trimpath -installsuffix cgo \
+		-gcflags all=-N \
+		-o ./build/loader_test \
+		-ldflags "-linkmode external -extldflags -w" \
+		./cmd/loader_test
+
+	./build/loader_test
 
 deploy:
 	$(if $(and $(env),$(repository)),,$(error 'env' and/or 'repository' is not defined))
 
 	$(eval build_tag=$(env)-$(shell git rev-parse --short HEAD)-$(shell date +%s))
-	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-hdwallet)
+	$(eval controller_container_registry=$(repository)/crypto-bundle/bc-wallet-common-hdwallet-controller)
+	$(eval parent_container_registry=$(repository)/crypto-bundle/bc-wallet-common-hdwallet-api)
+	$(eval container_registry=$(repository)/crypto-bundle/bc-wallet-tron-hdwalleta-api)
 	$(eval context=$(or $(context),k0s-dev-cluster))
 	$(eval platform=$(or $(platform),linux/amd64))
 
@@ -42,6 +46,7 @@ deploy:
 	docker build \
 		--ssh default=$(SSH_AUTH_SOCK) \
 		--platform $(platform) \
+		--build-arg PARENT_CONTAINER_IMAGE_NAME=$(parent_container_registry):latest \
 		--build-arg RELEASE_TAG=$(release_tag) \
 		--build-arg COMMIT_ID=$(commit_id) \
 		--build-arg SHORT_COMMIT_ID=$(short_commit_id) \
@@ -53,7 +58,8 @@ deploy:
 
 	helm --kube-context $(context) upgrade \
 		--install bc-wallet-tron-hdwallet-api \
-		--set "global.container_registry=$(container_registry)" \
+		--set "global.api_container_path=$(container_registry)" \
+		--set "global.controller_container_path=$(controller_container_registry)" \
 		--set "global.build_tag=$(build_tag)" \
 		--set "global.env=$(env)" \
 		--values=./deploy/helm/hdwallet/values.yaml \
