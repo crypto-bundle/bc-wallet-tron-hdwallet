@@ -143,7 +143,7 @@ Start of big application refactoring
     * GetPluginBuildNumber
     * GetPluginBuildDateTS
 
-## [v0.0.27] 05.05.2024
+## [v0.0.27] 07.05.2024
 ### Changed
 * Bc-wallet-tron-hdwallet-api moved to another repository
   * Now it's a common application for all hd-wallet support blockchain - bc-wallet-common-hdwallet-api
