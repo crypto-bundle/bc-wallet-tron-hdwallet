@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+	"github.com/google/uuid"
+	"github.com/tyler-smith/go-bip39"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"plugin"
@@ -10,6 +15,25 @@ import (
 )
 
 func main() {
+	type walletPoolUnitService interface {
+		UnloadWallet() error
+
+		GetWalletUUID() string
+		LoadAccount(ctx context.Context,
+			accountParameters *anypb.Any,
+		) (*string, error)
+		GetAccountAddress(ctx context.Context,
+			accountParameters *anypb.Any,
+		) (*string, error)
+		GetMultipleAccounts(ctx context.Context,
+			multipleAccountsParameters *anypb.Any,
+		) (uint, []*pbCommon.AccountIdentity, error)
+		SignData(ctx context.Context,
+			accountParameters *anypb.Any,
+			dataForSign []byte,
+		) (*string, []byte, error)
+	}
+
 	const (
 		getPluginNameSymbol          = "GetPluginName"
 		getPluginReleaseTagSymbol    = "GetPluginReleaseTag"
@@ -42,7 +66,7 @@ func main() {
 		log.Fatalf("%s: %e", "unable to load pluggable extension", err)
 	}
 
-	log.Printf("--- RUN: %s\n", getPluginNameSymbol)
+	log.Printf("=== RUN: %s\n", getPluginNameSymbol)
 
 	getPluginReleaseTagFunc, err := stringFuncSymbolLookUp(p, getPluginReleaseTagSymbol)
 	if err != nil {
@@ -60,7 +84,7 @@ func main() {
 
 	log.Printf("--- PASS: %s\n", getPluginNameSymbol)
 
-	log.Printf("--- RUN: %s\n", getPluginCommitIDSymbol)
+	log.Printf("=== RUN: %s\n", getPluginCommitIDSymbol)
 
 	getPluginCommitIDFunc, err := stringFuncSymbolLookUp(p, getPluginCommitIDSymbol)
 	if err != nil {
@@ -78,7 +102,7 @@ func main() {
 
 	log.Printf("--- PASS: %s\n", getPluginCommitIDSymbol)
 
-	log.Printf("--- RUN: %s\n", getPluginShortCommitIDSymbol)
+	log.Printf("=== RUN: %s\n", getPluginShortCommitIDSymbol)
 
 	getPluginShortCommitIDFunc, err := stringFuncSymbolLookUp(p, getPluginShortCommitIDSymbol)
 	if err != nil {
@@ -97,7 +121,7 @@ func main() {
 
 	log.Printf("--- PASS: %s\n", getPluginShortCommitIDSymbol)
 
-	log.Printf("--- RUN: %s\n", getPluginBuildNumberSymbol)
+	log.Printf("=== RUN: %s\n", getPluginBuildNumberSymbol)
 
 	getPluginBuildNumberFunc, err := stringFuncSymbolLookUp(p, getPluginBuildNumberSymbol)
 	if err != nil {
@@ -115,7 +139,7 @@ func main() {
 
 	log.Printf("--- PASS: %s\n", getPluginBuildNumberSymbol)
 
-	log.Printf("--- RUN: %s\n", getPluginBuildDateTSSymbol)
+	log.Printf("=== RUN: %s\n", getPluginBuildDateTSSymbol)
 
 	getPluginBuildDateTSFunc, err := stringFuncSymbolLookUp(p, getPluginBuildDateTSSymbol)
 	if err != nil {
@@ -139,6 +163,88 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginBuildDateTSSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginGenerateMnemonicSymbol)
+
+	generateMnemonicFuncSymbol, err := p.Lookup(pluginGenerateMnemonicSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if generateMnemonicFuncSymbol == nil {
+		log.Fatal("missing Generate mnemonic function symbol")
+	}
+
+	generateMnemoFunc, ok := generateMnemonicFuncSymbol.(func() (string, error))
+	if !ok {
+		log.Fatal("unable to cast generate mnemonic function")
+	}
+
+	generatedMnemonic, err := generateMnemoFunc()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !bip39.IsMnemonicValid(generatedMnemonic) {
+		log.Fatal("generated mnemonic phares is not valid")
+	}
+
+	log.Printf("--- PASS: %s\n", pluginGenerateMnemonicSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginValidateMnemonicSymbol)
+
+	validateMnemonicFuncSymbol, err := p.Lookup(pluginValidateMnemonicSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if validateMnemonicFuncSymbol == nil {
+		log.Fatal("missing Validate mnemonic function symbol")
+	}
+
+	validateMnemoFunc, isCasted := validateMnemonicFuncSymbol.(func(mnemonic string) bool)
+	if !isCasted {
+		log.Fatal("unable to cast validate function")
+	}
+
+	if validateMnemoFunc == nil {
+		log.Fatal("missing Validate mnemonic function")
+	}
+
+	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
+	mnemoPhrase := "beach large spray gentle buyer hover flock dream hybrid match whip ten mountain pitch enemy lobster afford barrel patrol desk trigger output excuse truck"
+	if !validateMnemoFunc(mnemoPhrase) {
+		log.Fatal("failed mnemonic validation validation")
+	}
+
+	log.Printf("--- PASS: %s\n", pluginValidateMnemonicSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginNewPoolUnitSymbol)
+
+	unitMakerFuncSymbol, err := p.Lookup(pluginNewPoolUnitSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	unitMakerFunc, isCasted := unitMakerFuncSymbol.(func(walletUUID string,
+		mnemonicDecryptedData string,
+	) (interface{}, error))
+	if !isCasted {
+		log.Fatal("unable to cast pool unit Maker function")
+	}
+
+	unitInterface, err := unitMakerFunc(uuid.NewString(), mnemoPhrase)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, isCasted = unitInterface.(walletPoolUnitService)
+	if !isCasted {
+		log.Fatal("unable to cast pool unit Maker to named interface")
+	}
+
+	log.Printf("--- PASS: %s\n", pluginNewPoolUnitSymbol)
+
 	log.Println("PASS")
 
 	os.Exit(0)

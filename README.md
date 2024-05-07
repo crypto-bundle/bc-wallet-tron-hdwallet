@@ -2,16 +2,16 @@
 
 ## Description
 
-HdWallet-plugin is third and last part of hd-walelt applications bundle. This repository contains implementation of
+HdWallet-plugin is third and last part of hd-wallet applications bundle. This repository contains implementation of
 **Hierarchical Deterministic Wallet** for Tron blockchain. Also, this repo contains Helm-chart description for deploy full
 hdwallet applications bundle for Tron.  
 
 Another two parts of hdwallet-bundle is:
 
-* [bc-wallet-common-hdwallet-controller](github.com/crypto-bundle/bc-wallet-common-hdwallet-controller) - 
+* [bc-wallet-common-hdwallet-controller](https://github.com/crypto-bundle/bc-wallet-common-hdwallet-controller) - 
 Application for control access to wallets. Create or disable wallets, get account addresses, sign transactions.
 
-* [bc-wallet-common-hdwallet-api](github.com/crypto-bundle/bc-wallet-common-hdwallet-api) - 
+* [bc-wallet-common-hdwallet-api](https://github.com/crypto-bundle/bc-wallet-common-hdwallet-api) - 
 Storage-less application for manage in-memory HD-wallets and execute session and signature requests.
 
 ### Tron HdWallet plugin
@@ -27,6 +27,7 @@ Implementation of HdWallet plugin contains exported functions:
 * ```GetPluginBuildDateTS func() string```
 
 Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
+Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.
 
 ## Deployment
 
@@ -37,7 +38,7 @@ Application must be deployed as part of bc-wallet-<BLOCKCHAIN_NAME>-hdwallet bun
 Application must be started as single container in Kubernetes Pod with shared volume.
 
 You can see example of HELM-chart deployment application in next repositories:
-* [bc-wallet-tron-hdwallet-api/deploy/helm/hdwallet](https://github.com/crypto-bundle/bc-wallet-tron-hdwallet/tree/develop/deploy/helm/hdwallet)
+* [deploy/helm/hdwallet](deploy/helm/hdwallet)
 * [bc-wallet-ethereum-hdwallet-api/deploy/helm/hdwallet](https://github.com/crypto-bundle/bc-wallet-ethereum-hdwallet/tree/develop/deploy/helm/hdwallet)
 
 ## Third party libraries
