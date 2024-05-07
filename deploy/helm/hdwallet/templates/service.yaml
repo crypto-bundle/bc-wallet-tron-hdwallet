@@ -6,7 +6,7 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   ports:
-    - port: {{ pluck .Values.global.env .Values.app.api.grpc_port | first | default .Values.app.api.grpc_port._default }}
+    - port: {{ pluck .Values.global.env .Values.controller.grpc_port | first | default .Values.controller.grpc_port._default }}
       targetPort: grpc
       protocol: TCP
       name: grpc

@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.common.autoscaling.enabled }}
+  replicas: {{ .Values.common.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.common.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.common.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: {{ .Chart.Name }}-shared-socket-data
+          emptyDir: {}
+      {{- with .Values.common.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.common.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.common.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      initContainers:
+        - name: {{ .Chart.Name }}-migrator
+          image: {{ .Values.migrator.image.path }}:{{ .Values.migrator.image.tag }}
+          imagePullPolicy: {{ .Values.migrator.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.common.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.common.resources | nindent 12 }}
+          env:
+            {{ include "_env_common" . | nindent 12 }}
+            {{ include "_env_vault" . | nindent 12 }}
+            {{ include "_env_store" . | nindent 12 }}
+            {{ include "_env_app_migrator" . | nindent 12 }}
+          command: [ "/opt/appworker/migrator" ]
+          args:
+            - "-dir"
+            - {{ .Values.migrator.migration_dir }}
+            - "up"
+
+      containers:
+        - name: {{ .Chart.Name }}-controller
+          securityContext:
+            {{- toYaml .Values.common.securityContext | nindent 12 }}
+          image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: {{ pluck .Values.global.env .Values.controller.grpc_port | first | default .Values.controller.grpc_port._default }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.common.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-shared-socket-data
+              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket_path | first | default .Values.common.unix_socket_path._default }}
+          env:
+    {{ include "_env_common" . | nindent 12 }}
+    {{ include "_env_vault" . | nindent 12 }}
+    {{ include "_env_store" . | nindent 12 }}
+    {{ include "_env_app_controller" . | nindent 12 }}
+
+      {{- if pluck  .Values.global.env .Values.controller.startupProbe.enabled | first | default .Values.controller.startupProbe.enabled._default }}
+      {{- with .Values.controller.startupProbe.podSettings }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- end }}
+
+      {{- if pluck .Values.global.env .Values.controller.readinessProbe.enabled | first | default .Values.controller.readinessProbe.enabled._default }}
+      {{- with .Values.controller.readinessProbe.podSettings }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- end }}
+
+      {{- if pluck .Values.global.env .Values.controller.livenessProbe.enabled | first | default .Values.controller.livenessProbe.enabled._default }}
+      {{- with .Values.controller.livenessProbe.podSettings }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- end }}
+
+        - name: {{ .Chart.Name }}-api
+          securityContext:
+            {{- toYaml .Values.common.securityContext | nindent 12 }}
+          image: {{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}
+          imagePullPolicy: {{ .Values.api.pullPolicy }}
+          resources:
+            {{- toYaml .Values.common.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ .Chart.Name }}-shared-socket-data
+              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket_path | first | default .Values.common.unix_socket_path._default }}
+          env:
+  {{ include "_env_common" . | nindent 12 }}
+  {{ include "_env_vault" . | nindent 12 }}
+  {{ include "_env_app_api" . | nindent 12 }}
+
+        {{- if pluck .Values.global.env .Values.api.startupProbe.enabled | first | default .Values.api.startupProbe.enabled._default }}
+        {{- with .Values.api.startupProbe.podSettings }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- end }}
+
+      {{- if pluck .Values.global.env .Values.api.readinessProbe.enabled | first | default .Values.api.readinessProbe.enabled._default }}
+      {{- with .Values.api.readinessProbe.podSettings }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- end }}
+
+      {{- if pluck .Values.global.env .Values.api.livenessProbe.enabled | first | default .Values.api.livenessProbe.enabled._default }}
+      {{- with .Values.api.livenessProbe.podSettings }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- end }}

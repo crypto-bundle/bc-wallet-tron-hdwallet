@@ -54,17 +54,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "app.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "app.fullname" .) .Values.serviceAccount.name }}
+{{- if .Values.common.serviceAccount.create }}
+{{- default (include "app.fullname" .) .Values.common.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- default "default" .Values.common.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
 {{- define "app.encryptionRsaFullFilePath" -}}
 {{- printf "%s/%s" .Values.app.encryption.rsa.dir._default .Values.app.encryption.rsa.file._default }}
-{{- end }}
-
-{{- define "app.container.tag" -}}
-{{- default .Values.image.tag .Values.global.build_tag -}}
 {{- end }}
