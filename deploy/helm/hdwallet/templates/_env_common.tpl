@@ -4,7 +4,7 @@
 - name: APP_DEBUG
   value: {{ pluck .Values.global.env .Values.common.debug_mode | first | default .Values.common.debug_mode._default | quote }}
 - name: APP_STAGE
-  value: {{ pluck .Values.global.env .Values.common.stage | first | default .Values.common.stage._default | quote }}
+  value: {{ pluck .Values.global.env .Values.common.stage.name | first | default .Values.common.stage.name._default | quote }}
 
 - name: LOGGER_LEVEL
   value: {{ pluck .Values.global.env .Values.common.logger.minimal_level | first | default .Values.common.logger.minimal_level._default | quote }}

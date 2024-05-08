@@ -47,7 +47,7 @@ spec:
 
       initContainers:
         - name: {{ .Chart.Name }}-migrator
-          image: {{ .Values.migrator.image.path }}:{{ .Values.migrator.image.tag }}
+          image: {{ .Values.global.migrator.image.path }}:{{ .Values.global.migrator.image.tag }}
           imagePullPolicy: {{ .Values.migrator.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.common.securityContext | nindent 12 }}
@@ -68,7 +68,7 @@ spec:
         - name: {{ .Chart.Name }}-controller
           securityContext:
             {{- toYaml .Values.common.securityContext | nindent 12 }}
-          image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+          image: {{ .Values.global.controller.image.path }}:{{ .Values.global.controller.image.tag }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
           ports:
             - name: grpc
@@ -109,7 +109,7 @@ spec:
         - name: {{ .Chart.Name }}-api
           securityContext:
             {{- toYaml .Values.common.securityContext | nindent 12 }}
-          image: {{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}
+          image: {{ .Values.global.api.image.path }}:{{ .Values.global.api.image.tag }}
           imagePullPolicy: {{ .Values.api.pullPolicy }}
           resources:
             {{- toYaml .Values.common.resources | nindent 12 }}

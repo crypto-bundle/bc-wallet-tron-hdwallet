@@ -114,8 +114,8 @@ common:
     host:
       _default: "postgresql.default.svc.cluster.local"
     port:
-      _default: "5432"
-      production: "5432"
+      _default: 5432
+      production: 5432
     open_connections:
       _default: 4
       production: 8
@@ -134,7 +134,7 @@ common:
 
   redis:
     host:
-      _default: "redis-master.default.svc.cluster.local"
+      _default: redis-master.default.svc.cluster.local
     db:
       _default: 5
     port:
@@ -184,9 +184,9 @@ common:
 
     hosts:
       _default:
-        - nats://nats.default.svc.cluster.local:4223
+        - nats://nats.default.svc.cluster.local:4222
       production:
-        - nats://nats.default.svc.cluster.local:4223
+        - nats://nats.default.svc.cluster.local:4222
 
 migrator:
   image:
@@ -213,6 +213,7 @@ controller:
   vault:
     data_path:
       _default:
+        - kv/data/crypto-bundle/bc-wallet-common/transit
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/controller
 
@@ -281,6 +282,7 @@ api:
   vault:
     data_path:
       _default:
+        - kv/data/crypto-bundle/bc-wallet-common/transit
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/api
 
@@ -335,4 +337,4 @@ api:
       production: 24
 
     plugin_path:
-      _default: /usr/lib/hdwallet/tron.so
+      _default: /usr/local/lib/hdwallet_plugin_tron.so

@@ -53,21 +53,23 @@ deploy:
 		--build-arg SHORT_COMMIT_ID=$(short_commit_id) \
 		--build-arg BUILD_NUMBER=$(build_number) \
 		--build-arg BUILD_DATE_TS=$(build_date) \
-		--tag $(target_container_path):$(build_tag) .
+		--tag $(target_container_path):$(build_tag) \
+		--tag $(target_container_path):latest .
 
 	docker push $(target_container_path):$(build_tag)
 	docker push $(target_container_path):latest
 
-	helm --kube-context $(context) template --debug \
+	helm --kube-context $(context) upgrade \
+		--install bc-wallet-tron-hdwallet \
 		--set "global.migrator.image.path=$(migrator_container_path)" \
 		--set "global.migrator.image.tag=latest" \
-		--set "global.api.image.path=$(parent_api_container_path)" \
+		--set "global.api.image.path=$(target_container_path)" \
 		--set "global.api.image.tag=$(build_tag)" \
 		--set "global.controller.image.path=$(controller_container_path)" \
 		--set "global.controller.image.tag=latest" \
 		--set "global.env=$(env)" \
 		--values=./deploy/helm/hdwallet/values.yaml \
 		--values=./deploy/helm/hdwallet/values_$(env).yaml \
-		./deploy/helm/hdwallet > deploy.yaml
+		./deploy/helm/hdwallet
 
 .PHONY: hdwallet_proto deploy

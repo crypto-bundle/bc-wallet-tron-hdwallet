@@ -5,22 +5,8 @@
 - name: VAULT_AUTH_TOKEN
   valueFrom:
     secretKeyRef:
-      name: bc-wallet-tron-hdwallet-controller
-      key: vault_controller_user_token
-      optional: false
-
-- name: VAULT_COMMON_TRANSIT_KEY
-  valueFrom:
-    secretKeyRef:
-      name: bc-wallet-common
-      key: vault_transit_secret_key
-      optional: false
-
-- name: VAULT_APP_ENCRYPTION_KEY
-  valueFrom:
-    secretKeyRef:
       name: bc-wallet-tron-hdwallet
-      key: vault_transit_secret_key_controller
+      key: vault_controller_user_token
       optional: false
 
 {{- if pluck .Values.global.env .Values.controller.startupProbe.enabled | first | default .Values.controller.startupProbe.enabled._default }}

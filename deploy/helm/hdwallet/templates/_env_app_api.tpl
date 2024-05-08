@@ -5,24 +5,9 @@
 - name: VAULT_AUTH_TOKEN
   valueFrom:
     secretKeyRef:
-      name: bc-wallet-tron-hdwallet-api
+      name: bc-wallet-tron-hdwallet
       key: vault_api_user_token
       optional: false
-
-- name: VAULT_COMMON_TRANSIT_KEY
-  valueFrom:
-    secretKeyRef:
-      name: bc-wallet-common
-      key: vault_transit_secret_key
-      optional: false
-
-- name: VAULT_APP_ENCRYPTION_KEY
-  valueFrom:
-    secretKeyRef:
-      name: bc-wallet-tron-hdwallet
-      key: vault_transit_secret_key_controller
-      optional: false
-
 
 {{- if pluck .Values.global.env .Values.api.startupProbe.enabled | first | default .Values.api.startupProbe.enabled._default }}
 - name: HEALTH_CHECK_STARTUP_ENABLED
