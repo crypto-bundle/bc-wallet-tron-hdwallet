@@ -1,13 +1,13 @@
 module github.com/crypto-bundle/bc-wallet-tron-hdwallet
 
-go 1.22
+go 1.22.2
 
 require (
 	github.com/btcsuite/btcd v0.24.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/btcsuite/btcd/btcutil v1.1.5
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.26
-	github.com/ethereum/go-ethereum v1.14.0
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.26-wip-2
+	github.com/ethereum/go-ethereum v1.14.3
 	github.com/google/uuid v1.6.0
 	github.com/shengdoushi/base58 v1.0.0
 	github.com/tyler-smith/go-bip39 v1.1.0

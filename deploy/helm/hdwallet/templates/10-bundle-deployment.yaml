@@ -78,7 +78,7 @@ spec:
             {{- toYaml .Values.common.resources | nindent 12 }}
           volumeMounts:
             - name: {{ .Chart.Name }}-shared-socket-data
-              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket_path | first | default .Values.common.unix_socket_path._default }}
+              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket.dir_path | first | default .Values.common.unix_socket.dir_path._default }}
           env:
     {{ include "_env_common" . | nindent 12 }}
     {{ include "_env_vault" . | nindent 12 }}
@@ -115,7 +115,7 @@ spec:
             {{- toYaml .Values.common.resources | nindent 12 }}
           volumeMounts:
             - name: {{ .Chart.Name }}-shared-socket-data
-              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket_path | first | default .Values.common.unix_socket_path._default }}
+              mountPath: {{ pluck .Values.global.env .Values.common.unix_socket.dir_path | first | default .Values.common.unix_socket.dir_path._default }}
           env:
   {{ include "_env_common" . | nindent 12 }}
   {{ include "_env_vault" . | nindent 12 }}

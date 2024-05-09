@@ -85,8 +85,11 @@ common:
       test: test
       production: prod
 
-  unix_socket_path:
-    _default: /tmp/hdwallet_api.sock
+  unix_socket:
+    dir_path:
+      _default: /tmp/
+    file_pattern:
+      _default: hdwallet_tron_*.sock
 
   vault:
     use_https:
