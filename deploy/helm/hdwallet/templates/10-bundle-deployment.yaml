@@ -74,6 +74,11 @@ spec:
             - name: grpc
               containerPort: {{ pluck .Values.global.env .Values.controller.grpc_port | first | default .Values.controller.grpc_port._default }}
               protocol: TCP
+          {{ if pluck .Values.global.env .Values.controller.profiler.enabled | first | default .Values.controller.profiler.enabled._default }}
+            - name: cntrlr-profiler
+              containerPort: {{ pluck .Values.global.env .Values.controller.profiler.port | first | default .Values.controller.profiler.port._default }}
+              protocol: TCP
+          {{ end }}
           resources:
             {{- toYaml .Values.common.resources | nindent 12 }}
           volumeMounts:
@@ -111,6 +116,13 @@ spec:
             {{- toYaml .Values.common.securityContext | nindent 12 }}
           image: {{ .Values.global.api.image.path }}:{{ .Values.global.api.image.tag }}
           imagePullPolicy: {{ .Values.api.pullPolicy }}
+          {{ if pluck .Values.global.env .Values.api.profiler.enabled | first | default .Values.api.profiler.enabled._default }}
+          ports:
+            - name: api-profiler
+              containerPort: {{ pluck .Values.global.env .Values.api.profiler.port | first | default .Values.api.profiler.port._default }}
+              protocol: TCP
+          {{ end }}
+
           resources:
             {{- toYaml .Values.common.resources | nindent 12 }}
           volumeMounts:

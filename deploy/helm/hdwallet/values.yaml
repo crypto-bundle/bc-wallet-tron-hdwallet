@@ -265,6 +265,28 @@ controller:
       initialDelaySeconds: 8
       periodSeconds: 30
 
+  profiler:
+    enabled:
+      _default: false
+    host:
+      _default: 0.0.0.0
+    port:
+      _default: 8090
+    read_timeout:
+      _default: 60s
+    write_timeout:
+      _default: 60s
+    http_index_path:
+      _default: /debug/pprof/
+    http_cmdline_path:
+      _default: /debug/pprof/cmdline
+    http_profile_path:
+      _default: /debug/pprof/profile
+    http_symbol_path:
+      _default: /debug/pprof/symbol
+    http_trace_path:
+      _default: /debug/pprof/trace
+
   grpc_port:
     _default: 8098
     production: 8098
@@ -333,6 +355,28 @@ api:
         port: 8103
       initialDelaySeconds: 8
       periodSeconds: 30
+
+  profiler:
+    enabled:
+      _default: false
+    host:
+      _default: 0.0.0.0
+    port:
+      _default: 8091
+    read_timeout:
+      _default: 60s
+    write_timeout:
+      _default: 60s
+    http_index_path:
+      _default: /debug/pprof/
+    http_cmdline_path:
+      _default: /debug/pprof/cmdline
+    http_profile_path:
+      _default: /debug/pprof/profile
+    http_symbol_path:
+      _default: /debug/pprof/symbol
+    http_trace_path:
+      _default: /debug/pprof/trace
 
   mnemonic:
     words_count:

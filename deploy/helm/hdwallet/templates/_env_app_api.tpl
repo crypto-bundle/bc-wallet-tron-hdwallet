@@ -48,6 +48,29 @@
   value: {{ .Values.api.livenessProbe.podSettings.httpGet.path }}
 {{- end }}
 
+{{- if pluck .Values.global.env .Values.api.profiler.enabled | first | default .Values.api.profiler.enabled._default }}
+- name: PROFILER_ENABLED
+  value: {{ pluck .Values.global.env .Values.api.profiler.enabled | first | default .Values.api.profiler.enabled._default | quote }}
+- name: PROFILER_HTTP_HOST
+  value: {{ pluck .Values.global.env .Values.api.profiler.host | first | default .Values.api.profiler.host._default | quote }}
+- name: PROFILER_HTTP_PORT
+  value: {{ pluck .Values.global.env .Values.api.profiler.port | first | default .Values.api.profiler.port._default | quote }}
+- name: PROFILER_HTTP_READ_TIMEOUT
+  value: {{ pluck .Values.global.env .Values.api.profiler.read_timeout | first | default .Values.api.profiler.read_timeout._default | quote }}
+- name: PROFILER_HTTP_WRITE_TIMEOUT
+  value: {{ pluck .Values.global.env .Values.api.profiler.write_timeout | first | default .Values.api.profiler.write_timeout._default | quote }}
+- name: PROFILER_HTTP_INDEX_PATH
+  value: {{ pluck .Values.global.env .Values.api.profiler.http_index_path | first | default .Values.api.profiler.http_index_path._default | quote }}
+- name: PROFILER_HTTP_CMD_LINE_PATH
+  value: {{ pluck .Values.global.env .Values.api.profiler.http_cmdline_path | first | default .Values.api.profiler.http_cmdline_path._default | quote }}
+- name: PROFILER_HTTP_PROFILE_PATH
+  value: {{ pluck .Values.global.env .Values.api.profiler.http_profile_path | first | default .Values.api.profiler.http_profile_path._default | quote }}
+- name: PROFILER_HTTP_SYMBOL_PATH
+  value: {{ pluck .Values.global.env .Values.api.profiler.http_symbol_path | first | default .Values.api.profiler.http_symbol_path._default | quote }}
+- name: PROFILER_HTTP_TRACE_PATH
+  value: {{ pluck .Values.global.env .Values.api.profiler.http_trace_path | first | default .Values.api.profiler.http_trace_path._default | quote }}
+{{- end }}
+
 - name: HDWALLET_WORDS_COUNT
   value: {{ pluck .Values.global.env .Values.api.mnemonic.words_count | first | default .Values.api.mnemonic.words_count._default | quote }}
 - name: HDWALLET_PLUGIN_PATH
