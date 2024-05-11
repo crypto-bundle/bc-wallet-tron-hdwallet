@@ -74,6 +74,7 @@ func (w *wallet) ClearSecrets() {
 	for j := len(pattern); j < len(w.seed); j *= 2 {
 		copy(w.seed[j:], w.seed[:j])
 	}
+	w.seed = nil
 
 	w.keyBundle.ClearSecrets()
 }

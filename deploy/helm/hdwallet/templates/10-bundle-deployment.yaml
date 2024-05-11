@@ -26,7 +26,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "app.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.common.podSecurityContext | nindent 8 }}
       volumes:
         - name: {{ .Chart.Name }}-shared-socket-data
           emptyDir: {}
@@ -115,7 +115,7 @@ spec:
           securityContext:
             {{- toYaml .Values.common.securityContext | nindent 12 }}
           image: {{ .Values.global.api.image.path }}:{{ .Values.global.api.image.tag }}
-          imagePullPolicy: {{ .Values.api.pullPolicy }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           {{ if pluck .Values.global.env .Values.api.profiler.enabled | first | default .Values.api.profiler.enabled._default }}
           ports:
             - name: api-profiler

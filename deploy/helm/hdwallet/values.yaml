@@ -7,11 +7,11 @@ common:
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
     limits:
-      cpu: 500m
-      memory: 256Mi
-    requests:
-      cpu: 100m
+      cpu: 2500m
       memory: 128Mi
+    requests:
+      cpu: 500m
+      memory: 96Mi
 
   autoscaling:
     enabled: false
@@ -267,7 +267,7 @@ controller:
 
   profiler:
     enabled:
-      _default: false
+      _default: true
     host:
       _default: 0.0.0.0
     port:
@@ -358,7 +358,7 @@ api:
 
   profiler:
     enabled:
-      _default: false
+      _default: true
     host:
       _default: 0.0.0.0
     port:

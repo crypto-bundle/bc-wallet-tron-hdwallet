@@ -210,7 +210,9 @@ func calcCheckSum(data []byte) []byte {
 }
 
 func zeroKey(key *ecdsa.PrivateKey) {
-	key.D.SetBytes([]byte{0x0})
-	key.X.SetBytes([]byte{0x0})
-	key.Y.SetBytes([]byte{0x0})
+	tpl := []big.Word{0x0}
+
+	key.D.SetBits(tpl)
+	key.X.SetBits(tpl)
+	key.Y.SetBits(tpl)
 }

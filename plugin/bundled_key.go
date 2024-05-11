@@ -23,6 +23,7 @@ var (
 
 // keyBundle struct
 type keyBundle struct {
+	filler []big.Word
 	// ExtendedKey hdwallet
 	ExtendedKey *hdkeychain.ExtendedKey
 
@@ -48,6 +49,7 @@ func newBundledKeyBySeed(seed []byte) (*keyBundle, error) {
 	}
 
 	bundle := &keyBundle{
+		filler:      []big.Word{0, 0, 0, 0},
 		ExtendedKey: extendedKey,
 		Network:     defaultNetwork,
 	}
@@ -61,6 +63,7 @@ func newBundledKeyBySeed(seed []byte) (*keyBundle, error) {
 // newBundledKeyByExtendedKey generate new bundled key
 func newBundledKeyByExtendedKey(extendedKey *hdkeychain.ExtendedKey) (*keyBundle, error) {
 	bundle := &keyBundle{
+		filler:      []big.Word{0, 0, 0, 0},
 		ExtendedKey: extendedKey,
 		Network:     defaultNetwork,
 	}
@@ -128,6 +131,8 @@ func (k *keyBundle) GetChildKey(purpose, coinType,
 
 		if i == 2 {
 			accKey = extendedKey
+
+			continue
 		}
 	}
 
@@ -247,18 +252,21 @@ func (k *keyBundle) ClearSecrets() {
 	k.ExtendedKey.Zero()
 	k.Private.Zero()
 
-	k.PublicECDSA.X.SetBytes([]byte{0x0})
-	k.PublicECDSA.Y.SetBytes([]byte{0x0})
+	k.PublicECDSA.X.SetBits(k.filler)
+	k.PublicECDSA.X = nil
+	k.PublicECDSA.Y.SetBits(k.filler)
+	k.PublicECDSA.Y = nil
+	k.PublicECDSA.Curve = nil
 
-	k.PrivateECDSA.X.SetBytes([]byte{0x0})
-	k.PrivateECDSA.Y.SetBytes([]byte{0x0})
-	k.PrivateECDSA.D.SetBytes([]byte{0x0})
+	k.PrivateECDSA.D.SetBits(k.filler)
+	k.PrivateECDSA.D = nil
 
 	k.Network = nil
-	k.PrivateECDSA.Curve = nil
 	k.PrivateECDSA = nil
 	k.PublicECDSA = nil
 	k.Private = nil
 	k.Public = nil
 	k.ExtendedKey = nil
+
+	k.filler = nil
 }

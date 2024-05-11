@@ -68,17 +68,22 @@ func (u *mnemonicWalletUnit) UnloadWallet() error {
 }
 
 func (u *mnemonicWalletUnit) unloadWallet() error {
-	u.hdWalletSvc.ClearSecrets()
-	u.hdWalletSvc = nil
-
-	for accountPath, data := range u.addressPool {
-		if data == nil {
+	for accountPath, _ := range u.addressPool {
+		addrData, isExist := u.addressPool[accountPath]
+		if !isExist {
 			continue
 		}
 
-		if data.privateKey != nil {
-			zeroKey(data.privateKey)
+		if addrData == nil {
+			continue
 		}
+
+		if addrData.privateKey != nil {
+			zeroKey(addrData.privateKey)
+		}
+		addrData.address = ""
+
+		u.addressPool[accountPath] = nil
 
 		delete(u.addressPool, accountPath)
 	}
@@ -86,6 +91,9 @@ func (u *mnemonicWalletUnit) unloadWallet() error {
 	u.addressPool = nil
 	u.mnemonicWalletUUID = "0"
 	u.mnemonicHash = "0"
+
+	u.hdWalletSvc.ClearSecrets()
+	u.hdWalletSvc = nil
 
 	return nil
 }
@@ -199,9 +207,6 @@ func (u *mnemonicWalletUnit) GetAccountAddress(ctx context.Context,
 		return nil, err
 	}
 
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
 	return u.getAddressByPath(ctx, accIdentity.AccountIndex,
 		accIdentity.InternalIndex,
 		accIdentity.AddressIndex)
@@ -215,9 +220,6 @@ func (u *mnemonicWalletUnit) GetMultipleAccounts(ctx context.Context,
 	if err != nil {
 		return 0, nil, err
 	}
-
-	u.mu.Lock()
-	defer u.mu.Unlock()
 
 	return u.getMultipleAccounts(ctx, list)
 }
@@ -327,8 +329,10 @@ func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	}
 
 	defer func() {
-		tronWallet.ClearSecrets()
-		tronWallet = nil
+		go func() {
+			tronWallet.ClearSecrets()
+			tronWallet = nil
+		}()
 	}()
 
 	blockchainAddress, err := tronWallet.GetAddress()

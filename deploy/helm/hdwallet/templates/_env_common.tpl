@@ -10,4 +10,14 @@
   value: {{ pluck .Values.global.env .Values.common.logger.minimal_level | first | default .Values.common.logger.minimal_level._default | quote }}
 - name: LOGGER_STACKTRACE_ENABLE
   value: {{ pluck .Values.global.env .Values.common.logger.enabled_stack_trace | first | default .Values.common.logger.enabled_stack_trace._default | quote }}
+
+- name: GOMEMLIMIT
+  valueFrom:
+    resourceFieldRef:
+      resource: limits.memory
+
+- name: GOMAXPROCS
+  valueFrom:
+    resourceFieldRef:
+      resource: limits.cpu
 {{ end }}

@@ -47,6 +47,7 @@ deploy:
 	docker build \
 		--ssh default=$(SSH_AUTH_SOCK) \
 		--platform $(platform) \
+		--build-arg RACE= \
 		--build-arg PARENT_CONTAINER_IMAGE_NAME=$(parent_api_container_path):latest \
 		--build-arg RELEASE_TAG=$(release_tag) \
 		--build-arg COMMIT_ID=$(commit_id) \

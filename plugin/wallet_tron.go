@@ -87,6 +87,7 @@ func (e *tron) ClearSecrets() {
 
 	e.blockChainParams = nil
 	e.accountKey.Network = nil
+	e.accountKey = nil
 	e.extendedKey = nil
 	e.account = 0
 	e.change = 0
