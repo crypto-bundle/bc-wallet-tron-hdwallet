@@ -329,10 +329,8 @@ func (u *mnemonicWalletUnit) getAddressByPath(_ context.Context,
 	}
 
 	defer func() {
-		go func() {
-			tronWallet.ClearSecrets()
-			tronWallet = nil
-		}()
+		tronWallet.ClearSecrets()
+		tronWallet = nil
 	}()
 
 	blockchainAddress, err := tronWallet.GetAddress()
