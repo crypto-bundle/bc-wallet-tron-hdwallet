@@ -7,11 +7,11 @@ common:
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
     # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
     limits:
-      cpu: 500m
-      memory: 256Mi
-    requests:
-      cpu: 100m
+      cpu: 2500m
       memory: 128Mi
+    requests:
+      cpu: 500m
+      memory: 96Mi
 
   autoscaling:
     enabled: false
@@ -25,27 +25,6 @@ common:
   tolerations: []
 
   affinity: {}
-
-  startupProbe:
-    httpGet:
-      path: /startup
-      port: 8101
-    initialDelaySeconds: 8
-    periodSeconds: 3
-
-  readinessProbe:
-    httpGet:
-      path: /rediness
-      port: 8102
-    initialDelaySeconds: 8
-    periodSeconds: 3
-
-  livenessProbe:
-    httpGet:
-      path: /liveness
-      port: 8103
-    initialDelaySeconds: 8
-    periodSeconds: 3
 
   serviceAccount:
     # Specifies whether a service account should be created
@@ -73,8 +52,7 @@ common:
     type: ClusterIP
     port: 80
 
-  imagePullSecrets:
-    - name: selectel
+  imagePullSecrets: []
 
   environment:
     _default: staging
@@ -101,42 +79,17 @@ common:
       test: debug
       production: error
 
-  healthcheck:
-    startup:
-      enabled:
-        _default: true
-      http_server:
-        read_timeout:
-          _default: 4s
-        write_timeout:
-          _default: 4s
-
-    readiness:
-      enabled:
-        _default: true
-      http_server:
-        read_timeout:
-          _default: 4s
-        write_timeout:
-          _default: 4s
-
-    liveness:
-      enabled:
-        _default: true
-      http_server:
-        read_timeout:
-          _default: 4s
-        write_timeout:
-          _default: 4s
-
   stage:
     name:
       _default: dev
       test: test
       production: prod
 
-  unix_socket_path:
-    _default: /tmp/hdwallet_api.sock
+  unix_socket:
+    dir_path:
+      _default: /tmp/
+    file_pattern:
+      _default: hdwallet_tron_*.sock
 
   vault:
     use_https:
@@ -164,8 +117,8 @@ common:
     host:
       _default: "postgresql.default.svc.cluster.local"
     port:
-      _default: "5432"
-      production: "5432"
+      _default: 5432
+      production: 5432
     open_connections:
       _default: 4
       production: 8
@@ -184,7 +137,9 @@ common:
 
   redis:
     host:
-      _default: redis
+      _default: redis-master.default.svc.cluster.local
+    db:
+      _default: 5
     port:
       _default: 6379
     connection_retry_timeout:
@@ -226,67 +181,207 @@ common:
     workers:
       _default: 8
       production: 4223
+    kv_bucket_replicas:
+      _default: 1
+      production: 2
 
     hosts:
       _default:
-        - nats://nats-s1:4223
-        - nats://nats-s1:4224
-        - nats://nats-s1:4225
-
+        - nats://nats.default.svc.cluster.local:4222
       production:
-        - nats://nats-s1:4223
-        - nats://nats-s2:4223
-        - nats://nats-s3:4223
+        - nats://nats.default.svc.cluster.local:4222
 
+migrator:
+  image:
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    path: repository.local/crypto-bundle/bc-wallet-common-hdwallet-migrator
+    tag: latest
 
-app:
-  migrator:
-    image:
-      pullPolicy: Always
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: "latest"
-    vault:
-      data_path:
-        _default:
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/migrator
+  migration_dir: /opt/bc-wallet-common-migrator/migrations
 
-  controller:
-    image:
-      pullPolicy: Always
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: "latest"
-    vault:
-      data_path:
-        _default:
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/controller
+  vault:
+    data_path:
+      _default:
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/migrator
 
-    grpc_port:
-      _default: 8098
-      production: 8098
+controller:
+  image:
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    path: repository.local/crypto-bundle/bc-wallet-common-hdwallet-controller
+    tag: latest
 
-    events:
-      workers_count:
-        _default: 8
-      buffer_size:
-        _default: 8
+  vault:
+    data_path:
+      _default:
+        - kv/data/crypto-bundle/bc-wallet-common/transit
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/controller
 
-  api:
-    image:
-      pullPolicy: Always
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: "latest"
-    vault:
-      data_path:
-        _default:
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
-          - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/api
+  startupProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /startup
+        port: 8101
+      initialDelaySeconds: 8
+      periodSeconds: 3
 
-    mnemonic:
-      words_count:
-        _default: 24
-        production: 24
+  readinessProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /rediness
+        port: 8102
+      initialDelaySeconds: 12
+      periodSeconds: 3
 
-      plugin_path:
-        _default: /usr/lib/hdwallet/tron.so
+  livenessProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /liveness
+        port: 8103
+      initialDelaySeconds: 8
+      periodSeconds: 30
+
+  profiler:
+    enabled:
+      _default: true
+    host:
+      _default: 0.0.0.0
+    port:
+      _default: 8090
+    read_timeout:
+      _default: 60s
+    write_timeout:
+      _default: 60s
+    http_index_path:
+      _default: /debug/pprof/
+    http_cmdline_path:
+      _default: /debug/pprof/cmdline
+    http_profile_path:
+      _default: /debug/pprof/profile
+    http_symbol_path:
+      _default: /debug/pprof/symbol
+    http_trace_path:
+      _default: /debug/pprof/trace
+
+  grpc_port:
+    _default: 8098
+    production: 8098
+
+  events:
+    workers_count:
+      _default: 8
+    buffer_size:
+      _default: 8
+
+api:
+  image:
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    path: repository.local/crypto-bundle/bc-wallet-tron-hdwallet-api
+    tag: latest
+
+  vault:
+    data_path:
+      _default:
+        - kv/data/crypto-bundle/bc-wallet-common/transit
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
+        - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/api
+
+  startupProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /startup
+        port: 8101
+      initialDelaySeconds: 8
+      periodSeconds: 3
+
+  readinessProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /rediness
+        port: 8102
+      initialDelaySeconds: 12
+      periodSeconds: 3
+
+  livenessProbe:
+    enabled:
+      _default: false
+    http_server:
+      read_timeout:
+        _default: 4s
+      write_timeout:
+        _default: 4s
+    podSettings:
+      httpGet:
+        path: /liveness
+        port: 8103
+      initialDelaySeconds: 8
+      periodSeconds: 30
+
+  profiler:
+    enabled:
+      _default: true
+    host:
+      _default: 0.0.0.0
+    port:
+      _default: 8091
+    read_timeout:
+      _default: 60s
+    write_timeout:
+      _default: 60s
+    http_index_path:
+      _default: /debug/pprof/
+    http_cmdline_path:
+      _default: /debug/pprof/cmdline
+    http_profile_path:
+      _default: /debug/pprof/profile
+    http_symbol_path:
+      _default: /debug/pprof/symbol
+    http_trace_path:
+      _default: /debug/pprof/trace
+
+  mnemonic:
+    words_count:
+      _default: 24
+      production: 24
+
+    plugin_path:
+      _default: /usr/local/lib/hdwallet_plugin_tron.so

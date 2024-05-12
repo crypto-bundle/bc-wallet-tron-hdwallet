@@ -5,13 +5,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
+
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
 	"github.com/tyler-smith/go-bip39"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestNewPoolUnit(t *testing.T) {
@@ -153,6 +154,78 @@ func TestMnemonicWalletUnit_GetAccountAddress(t *testing.T) {
 		if tCase.ExpectedAddress != *addr {
 			t.Fatalf("%s", "address not equal with expected")
 		}
+
+		loopErr = poolUnit.Shutdown(context.Background())
+		if loopErr != nil {
+			t.Fatalf("%s", "unable to shurdown pool unit")
+		}
+	}
+}
+
+func TestMnemonicWalletUnit_GetMultipleAccounts_3_by_50(t *testing.T) {
+	type testCase struct {
+		Mnemonic        string
+		AddressPathList *pbCommon.RangeUnitsList
+	}
+
+	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
+	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
+	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
+	testCases := []*testCase{
+		{
+			Mnemonic: "web account soft juice relief green account rebel rifle gun follow thunder ski credit judge off educate round advice allow wink bitter first color",
+			AddressPathList: &pbCommon.RangeUnitsList{
+				RangeUnits: []*pbCommon.RangeRequestUnit{
+					{AccountIndex: 3, InternalIndex: 8, AddressIndexFrom: 150, AddressIndexTo: 200},
+					{AccountIndex: 155, InternalIndex: 5, AddressIndexFrom: 4, AddressIndexTo: 54},
+					{AccountIndex: 2555, InternalIndex: 50, AddressIndexFrom: 250, AddressIndexTo: 300},
+				},
+			},
+		},
+	}
+
+	for _, tCase := range testCases {
+		poolUnitIntrf, loopErr := NewPoolUnit(uuid.NewString(), tCase.Mnemonic)
+		if loopErr != nil {
+			t.Fatalf("%s: %e", "unable to create mnemonic wallet pool unit:", loopErr)
+		}
+
+		poolUnit, ok := poolUnitIntrf.(*mnemonicWalletUnit)
+		if !ok {
+			t.Fatalf("%s", "unable to cast interface to pool unit worker")
+		}
+
+		anyRangeUnit := &anypb.Any{}
+		err := anyRangeUnit.MarshalFrom(tCase.AddressPathList)
+		if err != nil {
+			t.Fatalf("%s", "unable to marshal request units list")
+		}
+
+		count, addrList, loopErr := poolUnit.GetMultipleAccounts(context.Background(), anyRangeUnit)
+		if loopErr != nil {
+			t.Fatalf("%s: %e", "unable to get address from pool unit:", loopErr)
+		}
+
+		if count == 0 {
+			t.Fatalf("%s", "addr list count not equal with expected")
+		}
+
+		if addrList == nil {
+			t.Fatalf("%s", "missing addr lsit in pool unit result")
+		}
+
+		if count != uint(len(addrList)) {
+			t.Fatalf("%s", "length of addrlist count not equal with count rseult value")
+		}
+
+		if count != 153 {
+			t.Fatalf("%s", "count value or getAccount result not equal with values count of expected map")
+		}
+
+		err = poolUnit.Shutdown(context.Background())
+		if err != nil {
+			t.Fatalf("%s", "unable to shurdown pool unit")
+		}
 	}
 }
 
@@ -269,6 +342,11 @@ func TestMnemonicWalletUnit_GetMultipleAccounts(t *testing.T) {
 			if accIdentifier.AccountIndex != marshaledAccIdentifier.AccountIndex {
 				t.Fatalf("%s", "marshaled account index not equal with expected")
 			}
+		}
+
+		err = poolUnit.Shutdown(context.Background())
+		if err != nil {
+			t.Fatalf("%s", "unable to shurdown pool unit")
 		}
 	}
 }

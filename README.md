@@ -35,7 +35,7 @@ Currently, support only kubernetes deployment flow via Helm
 
 ### Kubernetes
 Application must be deployed as part of bc-wallet-<BLOCKCHAIN_NAME>-hdwallet bundle.
-Application must be started as single container in Kubernetes Pod with shared volume.
+bc-wallet-tron-hdwallet-api application must be started as single container in Kubernetes Pod with shared volume.
 
 You can see example of HELM-chart deployment application in next repositories:
 * [deploy/helm/hdwallet](deploy/helm/hdwallet)

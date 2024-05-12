@@ -14,9 +14,9 @@
 - name: POSTGRESQL_CONNECTION_RETRY_TIMEOUT
   value: {{ pluck .Values.global.env .Values.common.db.connection_retry_timeout | first | default .Values.common.db.connection_retry_timeout._default | quote }}
 
-- name: REDIS_HOST
+- name: REDIS_SERVICE_HOST
   value: {{ pluck .Values.global.env .Values.common.redis.host | first | default .Values.common.redis.host._default | quote }}
-- name: REDIS_PORT
+- name: REDIS_SERVICE_PORT
   value: {{ pluck .Values.global.env .Values.common.redis.port | first | default .Values.common.redis.port._default | quote }}
 - name: REDIS_DB
   value: {{ pluck .Values.global.env .Values.common.redis.db | first | default .Values.common.redis.db._default | quote }}
