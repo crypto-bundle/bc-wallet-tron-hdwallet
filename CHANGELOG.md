@@ -150,4 +150,17 @@ Start of big application refactoring
 * Fixed bugs in Helm-chart 
 * Changed Docker container build flow:
   * Changed stages in docker file
-* Changed content README.md file 
+* Changed content README.md file
+
+## [v0.0.28] 12.05.2024
+### Added
+* Added usage of lib-profiler
+* Added lib-profiler config ENV ot Helm-chart
+* Added golang ENV variable - GOMAXPROCS and GOMEMLIMIT
+* Added usage of bc-wallet-tron-hdwallet-migration container to Helm-chart
+### Changed
+* Added support of new version bc-wallet-common-hdwallet-controller v0.0.27
+* Changed unix-socket file ENV of gRPC listen flow
+* Changed build of tron-hdwallet-api docker container - now golang:1.22.2-bookworm is stage 1 container
+### Fixed
+* Fixed Redis host and port ENV names
