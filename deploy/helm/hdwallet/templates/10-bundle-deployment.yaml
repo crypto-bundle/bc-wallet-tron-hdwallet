@@ -71,8 +71,11 @@ spec:
           image: {{ .Values.global.controller.image.path }}:{{ .Values.global.controller.image.tag }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
           ports:
-            - name: grpc
-              containerPort: {{ pluck .Values.global.env .Values.controller.grpc_port | first | default .Values.controller.grpc_port._default }}
+            - name: cntrlr-mapi
+              containerPort: {{ pluck .Values.global.env .Values.controller.grpc_port.manager_api | first | default .Values.controller.grpc_port.manager_api._default }}
+              protocol: TCP
+            - name: cntrlr-wapi
+              containerPort: {{ pluck .Values.global.env .Values.controller.grpc_port.wallet_api | first | default .Values.controller.grpc_port.wallet_api._default }}
               protocol: TCP
           {{ if pluck .Values.global.env .Values.controller.profiler.enabled | first | default .Values.controller.profiler.enabled._default }}
             - name: cntrlr-profiler

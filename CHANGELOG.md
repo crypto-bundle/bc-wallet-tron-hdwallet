@@ -164,3 +164,10 @@ Start of big application refactoring
 * Changed build of tron-hdwallet-api docker container - now golang:1.22.2-bookworm is stage 1 container
 ### Fixed
 * Fixed Redis host and port ENV names
+
+## [v0.0.29] 08.06.2024
+### Changed
+* New version of bc-wallet-common-hdwallet-controller dependency - v0.0.28
+* Changed Helm chart for:
+  * Support of ManagerAPI nad WalletAPI of hdwallet-controller application
+  * Support of PoW-shield
