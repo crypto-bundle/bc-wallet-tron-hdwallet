@@ -71,8 +71,14 @@
   value: {{ pluck .Values.global.env .Values.controller.profiler.http_trace_path | first | default .Values.controller.profiler.http_trace_path._default | quote }}
 {{- end }}
 
-- name: API_GRPC_PORT
-  value: {{ pluck .Values.global.env .Values.controller.grpc_port | first | default .Values.controller.grpc_port._default | quote }}
+- name: MANAGER_API_GRPC_PORT
+  value: {{ pluck .Values.global.env .Values.controller.grpc_port.manager_api | first | default .Values.controller.grpc_port.manager_api._default | quote }}
+
+- name: WALLET_API_GRPC_PORT
+  value: {{ pluck .Values.global.env .Values.controller.grpc_port.wallet_api | first | default .Values.controller.grpc_port.wallet_api._default | quote }}
+
+- name: JWT_DEFAULT_TTL
+  value: {{ pluck .Values.global.env .Values.controller.jwt.ttl | first | default .Values.controller.jwt.ttl._default | quote }}
 
 - name: EVENT_CHANNEL_WORKERS_COUNT
   value: {{ pluck .Values.global.env .Values.controller.events.workers_count | first | default .Values.controller.events.workers_count._default | quote }}

@@ -6,7 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.24.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/btcsuite/btcd/btcutil v1.1.5
-	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.27
+	github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.28
 	github.com/ethereum/go-ethereum v1.14.3
 	github.com/google/uuid v1.6.0
 	github.com/shengdoushi/base58 v1.0.0

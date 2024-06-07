@@ -216,6 +216,7 @@ controller:
   vault:
     data_path:
       _default:
+        - kv/data/crypto-bundle/bc-wallet-common/jwt
         - kv/data/crypto-bundle/bc-wallet-common/transit
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/controller
@@ -265,6 +266,11 @@ controller:
       initialDelaySeconds: 8
       periodSeconds: 30
 
+  jwt:
+    ttl:
+      _default: 50y
+      production: 1y
+
   profiler:
     enabled:
       _default: true
@@ -288,8 +294,13 @@ controller:
       _default: /debug/pprof/trace
 
   grpc_port:
-    _default: 8098
-    production: 8098
+    manager_api:
+      _default: 8098
+      production: 8098
+
+    wallet_api:
+      _default: 8099
+      production: 8099
 
   events:
     workers_count:
