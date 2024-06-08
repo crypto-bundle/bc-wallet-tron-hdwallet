@@ -1,3 +1,8 @@
+{{/*
+Copyright (c) 2022-2024 Aleksei Kotelnikov(gudron2s@gmail.com)
+License: MIT NON-AI
+*/}}
+
 {{ define "_env_common" }}
 - name: APP_ENV
   value: {{ pluck .Values.global.env .Values.common.environment | first | default .Values.common.environment._default | quote }}

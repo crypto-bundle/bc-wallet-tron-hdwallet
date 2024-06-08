@@ -47,4 +47,4 @@ written by [Cayman(wemeetagain)](https://github.com/wemeetagain)
 
 ## Licence
 
-**bc-wallet-tron-hdwallet** is licensed under the [MIT](./LICENSE) License.
+**bc-wallet-tron-hdwallet** is licensed under the [MIT NON-AI](./LICENSE) License.

@@ -1,4 +1,9 @@
 {{/*
+Copyright (c) 2022-2024 Aleksei Kotelnikov(gudron2s@gmail.com)
+License: MIT NON-AI
+*/}}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "app.name" -}}

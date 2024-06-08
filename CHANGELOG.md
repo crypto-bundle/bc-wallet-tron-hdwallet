@@ -171,3 +171,8 @@ Start of big application refactoring
 * Changed Helm chart for:
   * Support of ManagerAPI nad WalletAPI of hdwallet-controller application
   * Support of PoW-shield
+
+## [v0.0.30] 08.06.2024
+### Changed
+* Changed MIT License to NON-AI MIT
+* Changed version of hdwallet-controller dependency to v0.0.29
