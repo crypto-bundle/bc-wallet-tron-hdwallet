@@ -26,8 +26,8 @@ github.com/btcsuite/snappy-go v0.0.0-20151229074030-0bdef8d06723/go.mod h1:8woku
 github.com/btcsuite/snappy-go v1.0.0/go.mod h1:8woku9dyThutzjeg+3xrA5iCpBRH8XEEg3lh6TiUghc=
 github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792/go.mod h1:ghJtEyQwv5/p4Mg4C0fgbePVuGr935/5ddU9Z3TmDRY=
 github.com/btcsuite/winsvc v1.0.0/go.mod h1:jsenWakMcC0zFBFurPLEAyrnc/teJEM1O46fmI40EZs=
-github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.28 h1:FH0M36zZbIwkGM8hMDQFT6L5h76RvhGKcgIT5BGTN54=
-github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.28/go.mod h1:QRNNM2RZdHWkEAtjOW+pPH0OTS0Su+OoT2TovlyaPF4=
+github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.29 h1:LMgi0i0qnsn8ti1vieyTtKGOlo8ki6VDGYb9bxmNsSk=
+github.com/crypto-bundle/bc-wallet-common-hdwallet-controller v0.0.29/go.mod h1:QRNNM2RZdHWkEAtjOW+pPH0OTS0Su+OoT2TovlyaPF4=
 github.com/davecgh/go-spew v0.0.0-20171005155431-ecdeabc65495/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
