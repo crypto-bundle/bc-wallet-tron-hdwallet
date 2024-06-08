@@ -67,6 +67,8 @@ func main() {
 	}
 
 	const (
+		tronCoinID = 195
+
 		getPluginNameSymbol          = "GetPluginName"
 		getPluginReleaseTagSymbol    = "GetPluginReleaseTag"
 		getPluginCommitIDSymbol      = "GetPluginCommitID"
@@ -74,9 +76,12 @@ func main() {
 		getPluginBuildNumberSymbol   = "GetPluginBuildNumber"
 		getPluginBuildDateTSSymbol   = "GetPluginBuildDateTS"
 
-		pluginGenerateMnemonicSymbol = "GenerateMnemonic"
-		pluginValidateMnemonicSymbol = "ValidateMnemonic"
-		pluginNewPoolUnitSymbol      = "NewPoolUnit"
+		pluginSetCoinIDSymbol           = "SetCoinID"
+		pluginGetCoinIDSymbol           = "GetCoinID"
+		pluginGetSupportedCoinIDsSymbol = "GetSupportedCoinIDs"
+		pluginGenerateMnemonicSymbol    = "GenerateMnemonic"
+		pluginValidateMnemonicSymbol    = "ValidateMnemonic"
+		pluginNewPoolUnitSymbol         = "NewPoolUnit"
 	)
 
 	stringFuncSymbolLookUp := func(plugin *plugin.Plugin, symbolName string) (func() string, error) {
@@ -115,6 +120,63 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginNameSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginSetCoinIDSymbol)
+
+	pluginFuncSymbol, err := p.Lookup(pluginSetCoinIDSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	setCoinIDFunc, ok := pluginFuncSymbol.(func(int) error)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetCoinIDSymbol)
+	}
+
+	err = setCoinIDFunc(tronCoinID)
+	if err != nil {
+		log.Fatalf("%s: %d, %s", "wrong coinID value", tronCoinID, err)
+	}
+
+	log.Printf("--- PASS: %s\n", pluginSetCoinIDSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginGetCoinIDSymbol)
+
+	pluginGetCoinIDFuncSymbol, err := p.Lookup(pluginGetCoinIDSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	getCoinIDFunc, ok := pluginGetCoinIDFuncSymbol.(func() int)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginGetCoinIDSymbol)
+	}
+
+	currentCoinID := getCoinIDFunc()
+	if currentCoinID != tronCoinID {
+		log.Fatalf("%s - expected: %d, current: %d", "wrong coinID value", tronCoinID, currentCoinID)
+	}
+
+	log.Printf("--- PASS: %s\n", pluginGetCoinIDSymbol)
+
+	log.Printf("=== RUN: %s\n", pluginGetSupportedCoinIDsSymbol)
+
+	supportedCoinIDsPluginFuncSymbol, err := p.Lookup(pluginGetSupportedCoinIDsSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	getSupportedCoinIDsFunc, ok := supportedCoinIDsPluginFuncSymbol.(func() []int)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetCoinIDSymbol)
+	}
+
+	coinIDList := getSupportedCoinIDsFunc()
+	if len(coinIDList) == 0 {
+		log.Fatalf("%s: %d", "empty supported coinID list", len(coinIDList))
+	}
+
+	log.Printf("--- PASS: %s\n", pluginGetSupportedCoinIDsSymbol)
 
 	log.Printf("=== RUN: %s\n", getPluginCommitIDSymbol)
 
