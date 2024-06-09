@@ -34,6 +34,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 )
@@ -74,26 +75,24 @@ var (
 )
 
 var (
-	pluginChainID int = TronCoinNumber
+	pluginChainID = TronCoinNumber
 
 	ErrUnsupportedCoinID = errors.New("unsupported coin id value")
 )
 
 var setChainIDOnce = sync.Once{}
 
-func GetSupportedChainIDs() []int {
-	return []int{TronCoinNumber}
-}
-
-func GetChainID() int {
-	return pluginChainID
-}
-
 func init() {
 	setChainIDOnce.Do(func() {
+		if NetworkChainID == "" {
+			pluginChainID = TronCoinNumber
+
+			return
+		}
+
 		chainIDInt, err := strconv.Atoi(NetworkChainID)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("wrong network chainID format: %w", err))
 		}
 
 		switch chainIDInt {
@@ -135,4 +134,12 @@ func GetPluginBuildNumber() string {
 
 func GetPluginBuildDateTS() string {
 	return BuildDateTS
+}
+
+func GetSupportedChainIDs() []int {
+	return []int{TronCoinNumber}
+}
+
+func GetChainID() int {
+	return pluginChainID
 }

@@ -3,10 +3,10 @@
 ## [v0.0.31] 09.06.2024
 ### Added
 * Added new plugin functions:
-  * GetCoinID
-  * GetSupportedCoinIDs
+  * GetChainID
+  * GetSupportedChainIDs
 * Added plugin init flow - for set pluginChainID variable
-  * Value of pluginChainID variable depends on build-time variable 
+  * Value of _pluginChainID_ variable depends on build-time variable _NetworkChainID_. Default value of pluginChainID - 195
 
 ## [v0.0.30] 08.06.2024
 ### Changed

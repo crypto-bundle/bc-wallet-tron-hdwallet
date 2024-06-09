@@ -75,7 +75,6 @@ const (
 	getPluginBuildNumberSymbol   = "GetPluginBuildNumber"
 	getPluginBuildDateTSSymbol   = "GetPluginBuildDateTS"
 
-	pluginSetChainIDSymbol           = "SetChainID"
 	pluginGetChainIDSymbol           = "GetChainID"
 	pluginGetSupportedChainIDsSymbol = "GetSupportedChainIDs"
 	pluginGenerateMnemonicSymbol     = "GenerateMnemonic"
@@ -107,7 +106,6 @@ func main() {
 	runGetPluginNameTest(p)
 	runReleaseTagTest(p)
 
-	//runSetChainIDTest(p)
 	runGetChainIdTest(p)
 	runGetSupportedChainIDsTest(p)
 
@@ -164,27 +162,6 @@ func runReleaseTagTest(p *plugin.Plugin) {
 	log.Printf("--- PASS: %s\n", getPluginReleaseTagSymbol)
 }
 
-func runSetChainIDTest(p *plugin.Plugin) {
-	log.Printf("=== RUN: %s\n", pluginSetChainIDSymbol)
-
-	pluginFuncSymbol, err := p.Lookup(pluginSetChainIDSymbol)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	setChainIDFunc, ok := pluginFuncSymbol.(func(int) error)
-	if !ok {
-		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetChainIDSymbol)
-	}
-
-	err = setChainIDFunc(tronChainID)
-	if err != nil {
-		log.Fatalf("%s: %d, %s", "wrong coinID value", tronChainID, err)
-	}
-
-	log.Printf("--- PASS: %s\n", pluginSetChainIDSymbol)
-}
-
 func runGetChainIdTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", pluginGetChainIDSymbol)
 
@@ -216,7 +193,7 @@ func runGetSupportedChainIDsTest(p *plugin.Plugin) {
 
 	getSupportedChainIDsFunc, ok := supportedCoinIDsPluginFuncSymbol.(func() []int)
 	if !ok {
-		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetChainIDSymbol)
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginGetSupportedChainIDsSymbol)
 	}
 
 	chainIDList := getSupportedChainIDsFunc()
