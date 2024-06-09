@@ -35,10 +35,8 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
 	"github.com/btcsuite/btcd/chaincfg"
 	bip39 "github.com/tyler-smith/go-bip39"
-	"sync"
 )
 
 const (
@@ -51,43 +49,6 @@ const (
 	TronCoinNumber = 195
 	TronBytePrefix = byte(0x41)
 )
-
-var (
-	pluginCoinID int = TronCoinNumber
-
-	ErrUnsupportedCoinID = errors.New("unsupported coin id value")
-)
-
-func GetSupportedCoinIDs() []int {
-	return []int{TronCoinNumber}
-}
-
-func GetCoinID() int {
-	return pluginCoinID
-}
-
-var setCoinIDOnce = sync.Once{}
-
-func setCoinID(newCoinID int) {
-	pluginCoinID = newCoinID
-}
-
-func SetCoinID(newCoinID int) error {
-	var err error
-
-	switch newCoinID {
-	case TronCoinNumber:
-		setCoinIDOnce.Do(func() {
-			setCoinID(newCoinID)
-		})
-
-		err = nil
-	default:
-		err = ErrUnsupportedCoinID
-	}
-
-	return err
-}
 
 // wallet contains the individual mnemonic and seed
 type wallet struct {

@@ -57,14 +57,14 @@ type tron struct {
 // NewAccount create new account via mnemonic wallet by
 func (w *wallet) NewAccount(account, change, index uint32) (*tron, error) {
 	accKey, extendedKey, err := w.GetChildKey(Bip44Purpose,
-		uint32(pluginCoinID), account, change, index)
+		uint32(pluginChainID), account, change, index)
 	if err != nil {
 		return nil, err
 	}
 
 	return &tron{
 		purpose:          Bip44Purpose,
-		coinType:         pluginCoinID,
+		coinType:         pluginChainID,
 		account:          account,
 		change:           change,
 		addressNumber:    index,
@@ -103,7 +103,7 @@ func (e *tron) GetPurpose() int {
 
 // GetCoinType ...
 func (e *tron) GetCoinType() int {
-	return pluginCoinID
+	return pluginChainID
 }
 
 func (e *tron) CloneECDSAPrivateKey() *ecdsa.PrivateKey {

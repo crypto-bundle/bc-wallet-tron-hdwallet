@@ -19,9 +19,8 @@ Implementation of HdWallet plugin contains exported functions:
 * ```NewPoolUnitfunc(walletUUID string, mnemonicDecryptedData string) (interface{}, error)```
 * ```GenerateMnemonic func() (string, error)```
 * ```ValidateMnemonic func(mnemonic string) bool```
-* ```SetCoinID(newCoinID int) error```
-* ```GetCoinID() int```
-* ```GetSupportedCoinIDs() []int```
+* ```GetChainID() int```
+* ```GetSupportedChainIDs() []int```
 * ```GetPluginName func() string```
 * ```GetPluginReleaseTag func() string```
 * ```GetPluginCommitID func() string```
@@ -32,7 +31,7 @@ Implementation of HdWallet plugin contains exported functions:
 Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
 Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.
 
-Tron HdWallet plugin supports only one possible CoinID value, it is main Tron blockchain coinID - **195**  
+Tron HdWallet plugin supports only one possible ChainID value, it is main Tron blockchain coinID - **195**  
 
 ## Deployment
 

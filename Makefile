@@ -9,6 +9,7 @@ build_plugin:
 
 	CGO_ENABLED=1 go build -trimpath -race -installsuffix cgo -gcflags all=-N \
 		-ldflags "-linkmode external -extldflags -w -s \
+			-X 'main.NetworkChainID=195' \
 			-X 'main.BuildDateTS=${BUILD_DATE_TS}' \
 			-X 'main.BuildNumber=${BUILD_NUMBER}' \
 			-X 'main.ReleaseTag=${RELEASE_TAG}' \
@@ -49,6 +50,7 @@ deploy:
 		--platform $(platform) \
 		--build-arg RACE= \
 		--build-arg PARENT_CONTAINER_IMAGE_NAME=$(parent_api_container_path):latest \
+		--build-arg NETWORK_CHAIN_ID=195 \
 		--build-arg RELEASE_TAG=$(release_tag) \
 		--build-arg COMMIT_ID=$(commit_id) \
 		--build-arg SHORT_COMMIT_ID=$(short_commit_id) \

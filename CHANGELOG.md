@@ -3,9 +3,10 @@
 ## [v0.0.31] 09.06.2024
 ### Added
 * Added new plugin functions:
-  * SetCoinID
   * GetCoinID
   * GetSupportedCoinIDs
+* Added plugin init flow - for set pluginChainID variable
+  * Value of pluginChainID variable depends on build-time variable 
 
 ## [v0.0.30] 08.06.2024
 ### Changed
