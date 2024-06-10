@@ -1,12 +1,14 @@
 # Change Log
 
-## [v0.0.31] 09.06.2024
+## [v0.0.31] 10.06.2024
 ### Added
 * Added new plugin functions:
   * GetChainID
   * GetSupportedChainIDs
 * Added plugin init flow - for set pluginChainID variable
   * Value of _pluginChainID_ variable depends on build-time variable _NetworkChainID_. Default value of pluginChainID - 195
+### Changed
+* Added _**HDWALLET_CHAIN_ID**_ environment variable to helm-chart description
 
 ## [v0.0.30] 08.06.2024
 ### Changed
