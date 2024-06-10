@@ -46,59 +46,105 @@ import (
 	"time"
 )
 
+type walletPoolUnitService interface {
+	UnloadWallet() error
+
+	GetWalletUUID() string
+	LoadAccount(ctx context.Context,
+		accountParameters *anypb.Any,
+	) (*string, error)
+	GetAccountAddress(ctx context.Context,
+		accountParameters *anypb.Any,
+	) (*string, error)
+	GetMultipleAccounts(ctx context.Context,
+		multipleAccountsParameters *anypb.Any,
+	) (uint, []*pbCommon.AccountIdentity, error)
+	SignData(ctx context.Context,
+		accountParameters *anypb.Any,
+		dataForSign []byte,
+	) (*string, []byte, error)
+}
+
+const (
+	tronChainID = 195
+
+	getPluginNameSymbol          = "GetPluginName"
+	getPluginReleaseTagSymbol    = "GetPluginReleaseTag"
+	getPluginCommitIDSymbol      = "GetPluginCommitID"
+	getPluginShortCommitIDSymbol = "GetPluginShortCommitID"
+	getPluginBuildNumberSymbol   = "GetPluginBuildNumber"
+	getPluginBuildDateTSSymbol   = "GetPluginBuildDateTS"
+
+	pluginGetChainIDSymbol           = "GetChainID"
+	pluginGetSupportedChainIDsSymbol = "GetSupportedChainIDs"
+
+	pluginGenerateMnemonicSymbol = "GenerateMnemonic"
+	pluginValidateMnemonicSymbol = "ValidateMnemonic"
+	pluginNewPoolUnitSymbol      = "NewPoolUnit"
+)
+
+var stringFuncSymbolLookUp = func(plugin *plugin.Plugin, symbolName string) (func() string, error) {
+	pluginFuncSymbol, err := plugin.Lookup(symbolName)
+	if err != nil {
+		return nil, err
+	}
+
+	pluginFunc, ok := pluginFuncSymbol.(func() string)
+	if !ok {
+		return nil, fmt.Errorf("%s: %s", "unable to cast plugin symbol", symbolName)
+	}
+
+	return pluginFunc, nil
+}
+
 func main() {
-	type walletPoolUnitService interface {
-		UnloadWallet() error
-
-		GetWalletUUID() string
-		LoadAccount(ctx context.Context,
-			accountParameters *anypb.Any,
-		) (*string, error)
-		GetAccountAddress(ctx context.Context,
-			accountParameters *anypb.Any,
-		) (*string, error)
-		GetMultipleAccounts(ctx context.Context,
-			multipleAccountsParameters *anypb.Any,
-		) (uint, []*pbCommon.AccountIdentity, error)
-		SignData(ctx context.Context,
-			accountParameters *anypb.Any,
-			dataForSign []byte,
-		) (*string, []byte, error)
-	}
-
-	const (
-		getPluginNameSymbol          = "GetPluginName"
-		getPluginReleaseTagSymbol    = "GetPluginReleaseTag"
-		getPluginCommitIDSymbol      = "GetPluginCommitID"
-		getPluginShortCommitIDSymbol = "GetPluginShortCommitID"
-		getPluginBuildNumberSymbol   = "GetPluginBuildNumber"
-		getPluginBuildDateTSSymbol   = "GetPluginBuildDateTS"
-
-		pluginGenerateMnemonicSymbol = "GenerateMnemonic"
-		pluginValidateMnemonicSymbol = "ValidateMnemonic"
-		pluginNewPoolUnitSymbol      = "NewPoolUnit"
-	)
-
-	stringFuncSymbolLookUp := func(plugin *plugin.Plugin, symbolName string) (func() string, error) {
-		pluginFuncSymbol, err := plugin.Lookup(symbolName)
-		if err != nil {
-			return nil, err
-		}
-
-		pluginFunc, ok := pluginFuncSymbol.(func() string)
-		if !ok {
-			return nil, fmt.Errorf("%s: %s", "unable to cast plugin symbol", symbolName)
-		}
-
-		return pluginFunc, nil
-	}
 
 	p, err := plugin.Open("./build/tron.so")
 	if err != nil {
 		log.Fatalf("%s: %e", "unable to load pluggable extension", err)
 	}
 
+	runGetPluginNameTest(p)
+	runReleaseTagTest(p)
+
+	runGetChainIdTest(p)
+	runGetSupportedChainIDsTest(p)
+
+	runGetCommitIDTest(p)
+	runGetShortCommitIDTest(p)
+	runGetPluginBuildNumberTest(p)
+	runGetPluginBuildBuildDateTest(p)
+	runGenerateMnemonicTest(p)
+	runValidateMnemonicTest(p)
+	runNewWalletPoolTest(p)
+
+	log.Println("PASS")
+
+	os.Exit(0)
+}
+
+func runGetPluginNameTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", getPluginNameSymbol)
+
+	getPluginNameFunc, err := stringFuncSymbolLookUp(p, getPluginNameSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if getPluginNameFunc == nil {
+		log.Fatal("missing Get release tag function")
+	}
+
+	pluginName := getPluginNameFunc()
+	if len(pluginName) == 0 {
+		log.Fatalf("%s: %d", "zero length of release tag value", len(pluginName))
+	}
+
+	log.Printf("--- PASS: %s\n", getPluginNameSymbol)
+}
+
+func runReleaseTagTest(p *plugin.Plugin) {
+	log.Printf("=== RUN: %s\n", getPluginReleaseTagSymbol)
 
 	getPluginReleaseTagFunc, err := stringFuncSymbolLookUp(p, getPluginReleaseTagSymbol)
 	if err != nil {
@@ -114,8 +160,52 @@ func main() {
 		log.Fatalf("%s: %d", "zero length of release tag value", len(releaseTag))
 	}
 
-	log.Printf("--- PASS: %s\n", getPluginNameSymbol)
+	log.Printf("--- PASS: %s\n", getPluginReleaseTagSymbol)
+}
 
+func runGetChainIdTest(p *plugin.Plugin) {
+	log.Printf("=== RUN: %s\n", pluginGetChainIDSymbol)
+
+	pluginGetCoinIDFuncSymbol, err := p.Lookup(pluginGetChainIDSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	getCoinIDFunc, ok := pluginGetCoinIDFuncSymbol.(func() int)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginGetChainIDSymbol)
+	}
+
+	currentChainID := getCoinIDFunc()
+	if currentChainID != tronChainID {
+		log.Fatalf("%s - expected: %d, current: %d", "wrong chainID value", tronChainID, currentChainID)
+	}
+
+	log.Printf("--- PASS: %s\n", pluginGetChainIDSymbol)
+}
+
+func runGetSupportedChainIDsTest(p *plugin.Plugin) {
+	log.Printf("=== RUN: %s\n", pluginGetSupportedChainIDsSymbol)
+
+	supportedCoinIDsPluginFuncSymbol, err := p.Lookup(pluginGetSupportedChainIDsSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	getSupportedChainIDsFunc, ok := supportedCoinIDsPluginFuncSymbol.(func() []int)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginGetSupportedChainIDsSymbol)
+	}
+
+	chainIDList := getSupportedChainIDsFunc()
+	if len(chainIDList) == 0 {
+		log.Fatalf("%s: %d", "empty supported coinID list", len(chainIDList))
+	}
+
+	log.Printf("--- PASS: %s\n", pluginGetSupportedChainIDsSymbol)
+}
+
+func runGetCommitIDTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", getPluginCommitIDSymbol)
 
 	getPluginCommitIDFunc, err := stringFuncSymbolLookUp(p, getPluginCommitIDSymbol)
@@ -133,7 +223,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginCommitIDSymbol)
+}
 
+func runGetShortCommitIDTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", getPluginShortCommitIDSymbol)
 
 	getPluginShortCommitIDFunc, err := stringFuncSymbolLookUp(p, getPluginShortCommitIDSymbol)
@@ -152,7 +244,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginShortCommitIDSymbol)
+}
 
+func runGetPluginBuildNumberTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", getPluginBuildNumberSymbol)
 
 	getPluginBuildNumberFunc, err := stringFuncSymbolLookUp(p, getPluginBuildNumberSymbol)
@@ -170,7 +264,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginBuildNumberSymbol)
+}
 
+func runGetPluginBuildBuildDateTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", getPluginBuildDateTSSymbol)
 
 	getPluginBuildDateTSFunc, err := stringFuncSymbolLookUp(p, getPluginBuildDateTSSymbol)
@@ -195,7 +291,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", getPluginBuildDateTSSymbol)
+}
 
+func runGenerateMnemonicTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", pluginGenerateMnemonicSymbol)
 
 	generateMnemonicFuncSymbol, err := p.Lookup(pluginGenerateMnemonicSymbol)
@@ -222,7 +320,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", pluginGenerateMnemonicSymbol)
+}
 
+func runValidateMnemonicTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", pluginValidateMnemonicSymbol)
 
 	validateMnemonicFuncSymbol, err := p.Lookup(pluginValidateMnemonicSymbol)
@@ -250,7 +350,9 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", pluginValidateMnemonicSymbol)
+}
 
+func runNewWalletPoolTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", pluginNewPoolUnitSymbol)
 
 	unitMakerFuncSymbol, err := p.Lookup(pluginNewPoolUnitSymbol)
@@ -265,6 +367,8 @@ func main() {
 		log.Fatal("unable to cast pool unit Maker function")
 	}
 
+	// WARN: DO NOT USE THESE MNEMONICS IN MAINNET OR TESTNET. Usage only in unit-tests
+	mnemoPhrase := "beach large spray gentle buyer hover flock dream hybrid match whip ten mountain pitch enemy lobster afford barrel patrol desk trigger output excuse truck"
 	unitInterface, err := unitMakerFunc(uuid.NewString(), mnemoPhrase)
 	if err != nil {
 		log.Fatal(err)
@@ -276,8 +380,4 @@ func main() {
 	}
 
 	log.Printf("--- PASS: %s\n", pluginNewPoolUnitSymbol)
-
-	log.Println("PASS")
-
-	os.Exit(0)
 }

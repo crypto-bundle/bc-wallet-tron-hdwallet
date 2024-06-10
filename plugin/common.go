@@ -32,6 +32,13 @@
 
 package main
 
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"sync"
+)
+
 const tronPluginName = "tron-hdwallet-plugin"
 
 // DO NOT EDIT THESE VARIABLES DIRECTLY. These are build-time constants
@@ -61,7 +68,49 @@ var (
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
 	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
 	BuildDateTS string = "1713280105"
+	// NetworkChainID - blockchain network ID, Tron blockchain HdWallet coinID = 195
+	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
+	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
+	NetworkChainID = "195"
 )
+
+var (
+	pluginChainID = TronCoinNumber
+
+	ErrUnsupportedCoinID = errors.New("unsupported coin id value")
+)
+
+var setChainIDOnce = sync.Once{}
+
+func init() {
+	setChainIDOnce.Do(func() {
+		if NetworkChainID == "" {
+			pluginChainID = TronCoinNumber
+
+			return
+		}
+
+		chainIDInt, err := strconv.Atoi(NetworkChainID)
+		if err != nil {
+			panic(fmt.Errorf("wrong network chainID format: %w", err))
+		}
+
+		switch chainIDInt {
+		case TronCoinNumber:
+			pluginChainID = chainIDInt
+
+			err = nil
+		default:
+			err = ErrUnsupportedCoinID
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
+		return
+	})
+}
 
 func GetPluginName() string {
 	return tronPluginName
@@ -85,4 +134,12 @@ func GetPluginBuildNumber() string {
 
 func GetPluginBuildDateTS() string {
 	return BuildDateTS
+}
+
+func GetSupportedChainIDs() []int {
+	return []int{TronCoinNumber}
+}
+
+func GetChainID() int {
+	return pluginChainID
 }

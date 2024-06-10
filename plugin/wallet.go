@@ -35,7 +35,6 @@ package main
 
 import (
 	"encoding/hex"
-
 	"github.com/btcsuite/btcd/chaincfg"
 	bip39 "github.com/tyler-smith/go-bip39"
 )

@@ -397,5 +397,8 @@ api:
       _default: 24
       production: 24
 
+    chain_id:
+      _default: 195
+
     plugin_path:
       _default: /usr/local/lib/hdwallet_plugin_tron.so

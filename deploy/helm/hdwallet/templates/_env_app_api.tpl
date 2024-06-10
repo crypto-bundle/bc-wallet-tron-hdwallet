@@ -78,6 +78,8 @@ License: MIT NON-AI
 
 - name: HDWALLET_WORDS_COUNT
   value: {{ pluck .Values.global.env .Values.api.mnemonic.words_count | first | default .Values.api.mnemonic.words_count._default | quote }}
+- name: HDWALLET_CHAIN_ID
+  value: {{ pluck .Values.global.env .Values.api.mnemonic.chain_id | first | default .Values.api.mnemonic.chain_id._default | quote }}
 - name: HDWALLET_PLUGIN_PATH
   value: {{ pluck .Values.global.env .Values.api.mnemonic.plugin_path | first | default .Values.api.mnemonic.plugin_path._default | quote }}
 - name: HDWALLET_UNIX_SOCKET_DIR_PATH
