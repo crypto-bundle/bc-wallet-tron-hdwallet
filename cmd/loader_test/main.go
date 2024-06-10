@@ -77,9 +77,10 @@ const (
 
 	pluginGetChainIDSymbol           = "GetChainID"
 	pluginGetSupportedChainIDsSymbol = "GetSupportedChainIDs"
-	pluginGenerateMnemonicSymbol     = "GenerateMnemonic"
-	pluginValidateMnemonicSymbol     = "ValidateMnemonic"
-	pluginNewPoolUnitSymbol          = "NewPoolUnit"
+
+	pluginGenerateMnemonicSymbol = "GenerateMnemonic"
+	pluginValidateMnemonicSymbol = "ValidateMnemonic"
+	pluginNewPoolUnitSymbol      = "NewPoolUnit"
 )
 
 var stringFuncSymbolLookUp = func(plugin *plugin.Plugin, symbolName string) (func() string, error) {
