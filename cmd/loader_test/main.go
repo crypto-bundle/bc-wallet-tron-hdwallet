@@ -35,15 +35,17 @@ package main
 import (
 	"context"
 	"fmt"
-	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
-	"github.com/google/uuid"
-	"github.com/tyler-smith/go-bip39"
-	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"plugin"
 	"strconv"
 	"time"
+
+	pbCommon "github.com/crypto-bundle/bc-wallet-common-hdwallet-controller/pkg/grpc/common"
+
+	"github.com/google/uuid"
+	"github.com/tyler-smith/go-bip39"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type walletPoolUnitService interface {
@@ -215,32 +217,6 @@ func runGetSupportedCoinTypesInfoTest(p *plugin.Plugin) {
 	log.Printf("--- PASS: %s\n", pluginGetSupportedCoinTypesInfoSymbol)
 }
 
-func runSetChainIdTest(p *plugin.Plugin) {
-	log.Printf("=== RUN: %s\n", pluginSetChainIDSymbol)
-
-	pluginSetChainIDFuncSymbol, err := p.Lookup(pluginSetChainIDSymbol)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	setChainIDFunc, ok := pluginSetChainIDFuncSymbol.(func(int) error)
-	if !ok {
-		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetChainIDSymbol)
-	}
-
-	err = setChainIDFunc(199)
-	if err == nil {
-		log.Fatalf("%s - expected: %d, current: %d", "wrong chainID value", tronChainID, 199)
-	}
-
-	err = setChainIDFunc(tronChainID)
-	if err != nil {
-		log.Fatalf("%s - expected: %d, current: %d", "wrong chainID value", tronChainID, tronChainID)
-	}
-
-	log.Printf("--- PASS: %s\n", pluginSetChainIDSymbol)
-}
-
 func runSetCoinTypeTest(p *plugin.Plugin) {
 	log.Printf("=== RUN: %s\n", pluginSetCoinTypeSymbol)
 
@@ -265,6 +241,32 @@ func runSetCoinTypeTest(p *plugin.Plugin) {
 	}
 
 	log.Printf("--- PASS: %s\n", pluginSetCoinTypeSymbol)
+}
+
+func runSetChainIdTest(p *plugin.Plugin) {
+	log.Printf("=== RUN: %s\n", pluginSetChainIDSymbol)
+
+	pluginSetChainIDFuncSymbol, err := p.Lookup(pluginSetChainIDSymbol)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	setChainIDFunc, ok := pluginSetChainIDFuncSymbol.(func(int) error)
+	if !ok {
+		log.Fatalf("%s: %s", "unable to cast plugin symbol", pluginSetChainIDSymbol)
+	}
+
+	err = setChainIDFunc(199)
+	if err == nil {
+		log.Fatalf("%s - expected: %d, current: %d", "wrong chainID value", tronChainID, 199)
+	}
+
+	err = setChainIDFunc(tronChainID)
+	if err != nil {
+		log.Fatalf("%s - expected: %d, current: %d", "wrong chainID value", tronChainID, tronChainID)
+	}
+
+	log.Printf("--- PASS: %s\n", pluginSetChainIDSymbol)
 }
 
 func runGetChainIdTest(p *plugin.Plugin) {

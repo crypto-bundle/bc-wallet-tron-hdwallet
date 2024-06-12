@@ -2,9 +2,11 @@
 
 ## Description
 
+Implementation of **Hierarchical Deterministic Wallet** for Tron blockchain.
+
 HdWallet-plugin is third and last part of hd-wallet applications bundle. This repository contains implementation of
 **Hierarchical Deterministic Wallet** for Tron blockchain. Also, this repo contains Helm-chart description for deploy full
-hdwallet applications bundle for Tron.  
+hdwallet applications bundle for Tron network.  
 
 Another two parts of hdwallet-bundle is:
 
@@ -20,13 +22,38 @@ Implementation of HdWallet plugin contains exported functions:
 * ```GenerateMnemonic func() (string, error)```
 * ```ValidateMnemonic func(mnemonic string) bool```
 * ```GetChainID() int```
-* ```GetSupportedChainIDs() []int```
+* ```SetChainID(chainID int) error```
+* ```GetSupportedChainIDsInfo() string```
+* ```GetHdWalletCoinType() int```
+* ```SetHdWalletCoinType(coinType int) error```
+* ```GetSupportedCoinTypesInfo() string```
 * ```GetPluginName func() string```
 * ```GetPluginReleaseTag func() string```
 * ```GetPluginCommitID func() string```
 * ```GetPluginShortCommitID func() string```
 * ```GetPluginBuildNumber func() string```
 * ```GetPluginBuildDateTS func() string```
+
+### Build
+Plugin support build-time variables injecting. For example:
+```bash
+RACE=-race CGO_ENABLED=1 go build -trimpath ${RACE} -installsuffix cgo -gcflags all=-N \
+		-ldflags "-linkmode external -extldflags -w -s \
+			-X 'main.BuildDateTS=${BUILD_DATE_TS}' \
+			-X 'main.BuildNumber=${BUILD_NUMBER}' \
+			-X 'main.ReleaseTag=${RELEASE_TAG}' \
+			-X 'main.CommitID=${COMMIT_ID}' \
+			-X 'main.ShortCommitID=${SHORT_COMMIT_ID}'" \
+		-buildmode=plugin \
+		-o ./build/tron.so \
+		./plugin
+```
+
+* **_ReleaseTag_** - release tag in TAG.SHORT_COMMIT_ID.BUILD_NUMBER format.
+* **_CommitID_** - latest GIT commit id.
+* **_ShortCommitID_** - first 12 characters from CommitID.
+* **_BuildNumber_** - ci/cd build number for BuildNumber
+* **_BuildDateTS_** - ci/cd build date in time stamp
 
 Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
 Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.

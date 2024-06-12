@@ -69,24 +69,6 @@ var (
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
 	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
 	BuildDateTS string = "1713280105"
-
-	// CoinType - registered coin type from BIP-0044 standard.
-	// Default value for Tron = 195
-	// See BIP-0044 - https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
-	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
-	// CoinType = "195"
-
-	// NetworkChainID - blockchain network ID, Tron blockchain HdWallet chainID = 195, same with CoinType
-	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
-	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
-	// NetworkChainID = "195"
-
-	// NetworkName - name of the network for which the plugin was built.
-	// Default value Ethereum MainNet network name
-	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
-	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
-	// NetworkName = tronNetworkName
 )
 
 var (
