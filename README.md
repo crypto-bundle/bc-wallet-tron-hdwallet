@@ -49,6 +49,9 @@ You can see example of HELM-chart deployment application in next repositories:
 Some parts of this plugin picked up from another repository - [Go HD Wallet tools](https://github.com/wemeetagain/go-hdwallet)
 written by [Cayman(wemeetagain)](https://github.com/wemeetagain)
 
+## Contributors
+* Author and maintainer - [@gudron (Alex V Kotelnikov)](https://github.com/gudron)
+
 ## Licence
 
 **bc-wallet-tron-hdwallet** is licensed under the [MIT NON-AI](./LICENSE) License.

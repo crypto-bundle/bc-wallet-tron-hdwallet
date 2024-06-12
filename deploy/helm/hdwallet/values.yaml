@@ -392,12 +392,15 @@ api:
     http_trace_path:
       _default: /debug/pprof/trace
 
-  mnemonic:
+  hdwallet:
     words_count:
       _default: 24
       production: 24
 
     chain_id:
+      _default: 195
+
+    coin_type:
       _default: 195
 
     plugin_path:
