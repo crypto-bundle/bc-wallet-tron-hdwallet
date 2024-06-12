@@ -1,5 +1,12 @@
 # Change Log
 
+## [v0.0.32] 12.06.2024
+* Added support of new plugin functions:
+  * SetChainID
+  * GetHdWalletCoinType
+  * GetSupportedCoinTypesInfo
+  * SetHdWalletCoinType
+
 ## [v0.0.31] 10.06.2024
 ### Added
 * Added new plugin functions:

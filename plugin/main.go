@@ -35,11 +35,12 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"sync"
 )
 
-const tronPluginName = "tron-hdwallet-plugin"
+const (
+	tronNetworkName = "tron-hdwallet-plugin"
+	tronPluginName  = "tron-hdwallet-plugin"
+)
 
 // DO NOT EDIT THESE VARIABLES DIRECTLY. These are build-time constants
 // DO NOT USE THESE VARIABLES IN APPLICATION CODE. USE commonConfig.NewLdFlagsManager SERVICE-COMPONENT INSTEAD OF IT
@@ -68,49 +69,29 @@ var (
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
 	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
 	BuildDateTS string = "1713280105"
-	// NetworkChainID - blockchain network ID, Tron blockchain HdWallet coinID = 195
+
+	// CoinType - registered coin type from BIP-0044 standard.
+	// Default value for Tron = 195
+	// See BIP-0044 - https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
 	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
-	NetworkChainID = "195"
+	// CoinType = "195"
+
+	// NetworkChainID - blockchain network ID, Tron blockchain HdWallet chainID = 195, same with CoinType
+	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
+	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
+	// NetworkChainID = "195"
+
+	// NetworkName - name of the network for which the plugin was built.
+	// Default value Ethereum MainNet network name
+	// DO NOT EDIT THIS VARIABLE DIRECTLY. These are build-time constants
+	// DO NOT USE THESE VARIABLES IN APPLICATION CODE
+	// NetworkName = tronNetworkName
 )
 
 var (
-	pluginChainID = TronCoinNumber
-
 	ErrUnsupportedCoinID = errors.New("unsupported coin id value")
 )
-
-var setChainIDOnce = sync.Once{}
-
-func init() {
-	setChainIDOnce.Do(func() {
-		if NetworkChainID == "" {
-			pluginChainID = TronCoinNumber
-
-			return
-		}
-
-		chainIDInt, err := strconv.Atoi(NetworkChainID)
-		if err != nil {
-			panic(fmt.Errorf("wrong network chainID format: %w", err))
-		}
-
-		switch chainIDInt {
-		case TronCoinNumber:
-			pluginChainID = chainIDInt
-
-			err = nil
-		default:
-			err = ErrUnsupportedCoinID
-		}
-
-		if err != nil {
-			panic(err)
-		}
-
-		return
-	})
-}
 
 func GetPluginName() string {
 	return tronPluginName
@@ -136,10 +117,34 @@ func GetPluginBuildDateTS() string {
 	return BuildDateTS
 }
 
-func GetSupportedChainIDs() []int {
-	return []int{TronCoinNumber}
+func GetChainID() int {
+	return TronCoinNumber
 }
 
-func GetChainID() int {
-	return pluginChainID
+func GetSupportedChainIDsInfo() string {
+	return fmt.Sprintf("%s: %d", "Plugin support only one value of chainID", TronCoinNumber)
+}
+
+func SetChainID(chainID int) error {
+	if chainID != TronCoinNumber {
+		return ErrUnsupportedCoinID
+	}
+
+	return nil
+}
+
+func GetSupportedCoinTypesInfo() string {
+	return fmt.Sprintf("%s: %d", "Plugin support only one value of coinType", TronCoinNumber)
+}
+
+func GetHdWalletCoinType() int {
+	return TronCoinNumber
+}
+
+func SetHdWalletCoinType(coinType int) error {
+	if coinType != TronCoinNumber {
+		return ErrUnsupportedCoinID
+	}
+
+	return nil
 }
