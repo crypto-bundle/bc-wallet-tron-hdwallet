@@ -35,7 +35,14 @@ Implementation of HdWallet plugin contains exported functions:
 * ```GetPluginBuildDateTS func() string```
 
 ### Build
-Plugin support build-time variables injecting. For example:
+Plugin support build-time variables injecting. Supported variables:
+* `ReleaseTag` - release tag in TAG.SHORT_COMMIT_ID.BUILD_NUMBER format.
+* `CommitID` - latest GIT commit id.
+* `ShortCommitID` - first 12 characters from CommitID.
+* `BuildNumber` - ci/cd build number for BuildNumber
+* `BuildDateTS` - ci/cd build date in time stamp
+
+Build example:
 ```bash
 RACE=-race CGO_ENABLED=1 go build -trimpath ${RACE} -installsuffix cgo -gcflags all=-N \
 		-ldflags "-linkmode external -extldflags -w -s \
@@ -48,12 +55,6 @@ RACE=-race CGO_ENABLED=1 go build -trimpath ${RACE} -installsuffix cgo -gcflags 
 		-o ./build/tron.so \
 		./plugin
 ```
-
-* **_ReleaseTag_** - release tag in TAG.SHORT_COMMIT_ID.BUILD_NUMBER format.
-* **_CommitID_** - latest GIT commit id.
-* **_ShortCommitID_** - first 12 characters from CommitID.
-* **_BuildNumber_** - ci/cd build number for BuildNumber
-* **_BuildDateTS_** - ci/cd build date in time stamp
 
 Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
 Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.
