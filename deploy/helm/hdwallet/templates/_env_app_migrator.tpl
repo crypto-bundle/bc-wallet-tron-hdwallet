@@ -1,5 +1,5 @@
 {{/*
-Copyright (c) 2022-2024 Aleksei Kotelnikov(gudron2s@gmail.com)
+Copyright (c) 2022-2025 Aleksei Kotelnikov(gudron2s@gmail.com)
 License: MIT NON-AI
 */}}
 
@@ -7,10 +7,10 @@ License: MIT NON-AI
 - name: VAULT_APP_DATA_PATH
   value: {{ pluck .Values.global.env .Values.migrator.vault.data_path | first | default .Values.migrator.vault.data_path._default | join "," | quote }}
 
-- name: VAULT_AUTH_TOKEN
-  valueFrom:
-    secretKeyRef:
-      name: bc-wallet-tron-hdwallet
-      key: vault_migrator_user_token
-      optional: false
+- name: VAULT_AUTH_TOKEN_RENEW_TTL
+  value: {{ pluck .Values.global.env .Values.migrator.vault.renew_ttl | first | default .Values.migrator.vault.renew_ttl._default | quote }}
+
+- name: VAULT_AUTH_TOKEN_FILE_PATH
+  value: {{ pluck .Values.global.env .Values.migrator.vault.token_path | first | default .Values.migrator.vault.token_path._default | quote }}
+
 {{- end }}

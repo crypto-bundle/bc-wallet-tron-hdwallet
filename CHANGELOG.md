@@ -1,5 +1,14 @@
 # Change Log
 
+## [v0.0.33] 28.04.2025
+### Added
+* Added support of chain id parameters.
+  * Tron hdwallet implementation supports only one chainID and coin number 
+### Changed
+* Updated year to 2025 in copyright banners
+* Updated year to 2025 in LICENCE file
+* Bump go version to 1.23
+
 ## [v0.0.32] 12.06.2024
 * Added support of new plugin functions:
   * SetChainID

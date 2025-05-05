@@ -25,3 +25,15 @@ keywords:
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
 version: 0.1.0
+
+#dependencies:
+#  - name: bc-wallet-common-trrfrmr-worker
+#    version: 0.0.2
+#    repository: "file://../../../../bc-wallet-common-trrfrm/deploy/helm/worker"
+
+#  - name: bc-wallet-common-mgrtr
+#    version: 0.0.1
+#    repository: "file://../library"
+#    import-values:
+#      - parent: mgrtr
+#        child: mgrtr

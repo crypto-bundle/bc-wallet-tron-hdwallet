@@ -56,6 +56,15 @@ RACE=-race CGO_ENABLED=1 go build -trimpath ${RACE} -installsuffix cgo -gcflags 
 		./plugin
 ```
 
+Build loader test example:
+```bash
+RACE=-race CGO_ENABLED=1 go build -trimpath -race -trimpath -installsuffix cgo \
+		-gcflags all=-N \
+		-o ./build/loader_test \
+		-ldflags "-linkmode external -extldflags -w -s" \
+		./cmd/loader_test
+```
+
 Example of usage hd-wallet pool_unit you can see in [plugin/pool_unit_test.go](plugin/pool_unit_test.go) file.
 Example of plugin integration in [cmd/loader_test/main.go](cmd/loader_test/main.go) file.
 

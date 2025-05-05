@@ -41,7 +41,17 @@ common:
   nameOverride: "bc-wallet-tron-hdwallet"
   fullnameOverride: ""
 
-  podAnnotations: {}
+  podAnnotations:
+    vault.hashicorp.com/agent-inject: 'true'
+    vault.hashicorp.com/role: 'bc-wallet-tron-hdwallet-app-auth-role'
+    vault.hashicorp.com/agent-pre-populate-only: 'true'
+    vault.hashicorp.com/agent-inject-token: 'true'
+    vault.hashicorp.com/agent-run-as-user: '1000'
+    vault.hashicorp.com/agent-inject-secret-access.token: 'kv/data/crypto-bundle/bc-wallet-tron-hdwallet/vault/app'
+    vault.hashicorp.com/agent-inject-template-access.token: |
+      {{- with secret "kv/data/crypto-bundle/bc-wallet-tron-hdwallet/vault/app" -}}
+      {{- .Data.data.VAULT_AUTH_TOKEN -}}
+      {{- end -}}
 
   podSecurityContext: {}
   # fsGroup: 2000
@@ -204,6 +214,12 @@ migrator:
   migration_dir: /opt/bc-wallet-common-migrator/migrations
 
   vault:
+    token_path:
+      _default: /vault/secrets/token
+
+    renew_ttl:
+      _default: 0
+
     data_path:
       _default:
         - kv/data/crypto-bundle/bc-wallet-tron-hdwallet/common
@@ -217,6 +233,12 @@ controller:
     tag: latest
 
   vault:
+    token_path:
+      _default: /vault/secrets/token
+
+    renew_ttl:
+      _default: 0
+
     data_path:
       _default:
         - kv/data/crypto-bundle/bc-wallet-common/jwt
@@ -319,6 +341,12 @@ api:
     tag: latest
 
   vault:
+    token_path:
+      _default: /vault/secrets/token
+
+    renew_ttl:
+      _default: 0
+
     data_path:
       _default:
         - kv/data/crypto-bundle/bc-wallet-common/transit
