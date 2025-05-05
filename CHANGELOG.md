@@ -7,6 +7,8 @@
 ### Changed
 * Updated year to 2025 in copyright banners
 * Updated year to 2025 in LICENCE file
+* Updated btcsuite/btcd version for fix vulnerabilities
+* Updated ethereum/go-ethereum version for fix vulnerabilities
 * Bump go version to 1.23
 
 ## [v0.0.32] 12.06.2024
